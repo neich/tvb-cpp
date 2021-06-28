@@ -1,0 +1,9 @@
+*
+!/include**
+!/src**
+!/tools**
+!/examples**
+!/Data_Raw**
+!.gitignore
+!CMakeLists.txt
+!README.md
