@@ -15,6 +15,8 @@
 #ifndef TVB_CPP_KSSTATS_H
 #define TVB_CPP_KSSTATS_H
 
-double kolmogn(double n, double x, bool cdf = true);
+#include <definitions.h>
+
+tvb::Float kolmogn(tvb::Float n, tvb::Float x, bool cdf = true);
 
 #endif //TVB_CPP_KSSTATS_H

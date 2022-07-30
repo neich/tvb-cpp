@@ -22,7 +22,7 @@ class SW_FC : public FunctionalConnectivity {
 protected:
     int m_windowSize = 30;
     int m_windowStep = 3;
-    tvb::Vectord m_buffer;
+    tvb::TArray1d m_buffer;
 
 public:
     explicit SW_FC(bool applyFilters = false, const Filter &filter = Filter()) : FunctionalConnectivity(applyFilters, filter) {}
@@ -31,23 +31,23 @@ public:
             FunctionalConnectivity(applyFilters, filter),
             m_windowSize(windowSize), m_windowStep(windowStep) {}
 
-    tvb::Matrixd from_fMRI(const tvb::Matrixd &signal) const override;
+    tvb::TArray2d from_fMRI(const tvb::TArray2d &signal) const override;
 
     void init(int numSubjects, int N) override {
-        m_buffer = tvb::Vectord();
+        m_buffer = tvb::TArray1d();
     }
 
-    void accumulate(const tvb::Matrixd& signal, int nsub)  override {
-        tvb::Vectord new_buffer = tvb::Vectord(m_buffer.size() + signal.rows());
+    void accumulate(const tvb::TArray2d& signal, int nsub)  override {
+        tvb::TArray1d new_buffer = tvb::TArray1d(m_buffer.size() + signal.rows());
         new_buffer << m_buffer, signal.col(0);
         m_buffer = new_buffer;
     }
 
-    tvb::Matrixd postprocess() const override {
+    tvb::TArray2d postprocess() const override {
         return m_buffer;
     }
 
-    double distance(const tvb::Matrixd &fcd1, const tvb::Matrixd &fcd2) const override {
+    double distance(const tvb::TArray2d &fcd1, const tvb::TArray2d &fcd2) const override {
         return FunctionalConnectivity::KolmogorovSmirnovStatistic(fcd1.col(0), fcd2.col(0));
     }
 

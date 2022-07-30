@@ -24,23 +24,23 @@ namespace tvb {
 
     // Load from npz
 
-    Matrixd npz2Matrixd(const std::string &filename, const std::string &index);
+    TArray2d npz2Matrixd(const std::string &filename, const std::string &index);
 
-    MatrixdMap npz2MatrixdMap(const std::string &filename);
+    TArray2dMap npz2MatrixdMap(const std::string &filename);
 
-    std::vector<Matrixd> npz2VecMatrixd(const std::string &filename, const std::string &index);
+    std::vector<TArray2d> npz2VecMatrixd(const std::string &filename, const std::string &index);
 
     std::vector<double>  npz2VecDouble(const std::string &filename, const std::string &index);
 
     // Save to npz
 
-    void vecMatrixd2npz(const std::vector<Matrixd>& data, const std::string& filename, const std::string& index);
+    void vecMatrixd2npz(const std::vector<TArray2d>& data, const std::string& filename, const std::string& index);
 
     void vecDouble2npz(const std::vector<double>& data, const std::string& filename, const std::string& index);
 
-    void MatrixdMap2npz(const std::string &filename, const MatrixdMap& mmap);
+    void MatrixdMap2npz(const std::string &filename, const TArray2dMap& mmap);
 
-    void Matrixd2npz(const Matrixd& data, const std::string& filename, const std::string& index);
+    void Matrixd2npz(const TArray2d& data, const std::string& filename, const std::string& index);
 
 
 }

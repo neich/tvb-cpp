@@ -17,43 +17,47 @@
 using namespace tvb;
 
 State ReducedWongWangExcInh::operator()(const State &x,
-                                        const Matrixd &coupling,
-                                        const Vectord &local_coupling) const {
+                                        const TArray2d &coupling,
+                                        const TArray1d &local_coupling) const {
 
     State derivative(m_n_nodes, m_n_vars);
 
 
-    const Vectord &S_e = x.col(0);
-    const Vectord &S_i = x.col(1);
+    const TArray1d &S_e = x.col(0);
+    const TArray1d &S_i = x.col(1);
 
-    Vectord lc_0 = local_coupling * S_e;
+    TArray1d lc_0 = local_coupling * S_e;
 
-    Vectord total_coupling = this->G * this->J_N * (coupling.col(0) + lc_0);
+    TArray1d total_coupling = this->G * this->J_N * (coupling.col(0) + lc_0);
 
-    Vectord J_N_S_e = this->J_N * S_e;
+    TArray1d J_N_S_e = this->J_N * S_e;
 
 // double I_ext = 0.0;  // Resting state
 
-    Vectord inh = this->J_i * S_i;
+    TArray1d inh = this->J_i * S_i;
 
-    Vectord I_e = this->W_e * this->I_o + this->w_p * J_N_S_e + total_coupling - inh; //  + I_ext;
+    TArray1d I_e = this->W_e * this->I_o + this->w_p * J_N_S_e + total_coupling - inh; //  + I_ext;
 
-    Vectord x_e = this->a_e * I_e - this->b_e;
-    Vectord tmp_x_e_d = 1.0 - (-this->d_e * x_e).exp();
-    Vectord H_e = x_e / tmp_x_e_d;
+    TArray1d x_e = this->a_e * I_e - this->b_e;
+    TArray1d tmp_x_e_d = 1.0 - (-this->d_e * x_e).exp();
+    TArray1d H_e = x_e / tmp_x_e_d;
+    tvb::replace_nan(H_e, Float(0.0));
 
     derivative.col(0) = -(S_e / this->tau_e) + (1.0 - S_e) * H_e * this->gamma_e;
 
-    Vectord I_i = this->W_i * this->I_o + J_N_S_e - S_i + this->lambda * total_coupling;
+    TArray1d I_i = this->W_i * this->I_o + J_N_S_e - S_i + this->lambda * total_coupling;
 
-    Vectord x_i = this->a_i * I_i - this->b_i;
-    Vectord tmp_x_i_d = 1.0 - (-this->d_i * x_i).exp();
-    Vectord H_i = x_i / tmp_x_i_d;
+    TArray1d x_i = this->a_i * I_i - this->b_i;
+    TArray1d tmp_x_i_d = 1.0 - (-this->d_i * x_i).exp();
+    TArray1d H_i = x_i / tmp_x_i_d;
 
     derivative.col(1) = -(S_i / this->tau_i) + H_i * this->gamma_i;
 
     derivative.col(2) = H_e - x.col(2);
     derivative.col(3) = I_e - x.col(3);
+
+    if (Eigen::isnan(derivative).size() < m_n_nodes*m_n_vars)
+        std::cout << "Ein" << std::endl; // TODO: debug!
 
     return derivative;
 

@@ -17,25 +17,25 @@
 using namespace tvb;
 
 
-Matrixd BandPassFilter::apply(const Matrixd &boldSignal) const {
+TArray2d BandPassFilter::apply(const TArray2d &boldSignal) const {
     int N = boldSignal.rows();
     // int Tmax = boldSignal.cols();
     double fnq = 1. / (2. * m_TR); //             # Nyquist frequency
-    Vectord Wn(2);
+    TArray1d Wn(2);
     Wn[0] = m_flp / fnq;
     Wn[1] = m_fhi / fnq; // # butterworth bandpass non-dimensional frequency
     auto[bfilt, afilt] = iirfilter_ba(k, Wn); //   # construct the filter
-    Matrixd signal_filt = Matrixd::Zero(boldSignal.rows(), boldSignal.cols());
+    TArray2d signal_filt = TArray2d::Zero(boldSignal.rows(), boldSignal.cols());
     for (int seed = 0; seed < N; ++seed) {
-        AVectord ts = detrend_linear(boldSignal.row(seed));
+        TArray1d ts = detrend_linear(boldSignal.row(seed));
         ts -= ts.mean();
         double std_dev = std::sqrt((ts - ts.mean()).square().sum() / (ts.size() - 1));
         for (unsigned i = 0; i < ts.size(); ++i) {
             if (ts[i] > 3. * std_dev) ts[i] = 3. * std_dev;    // # Remove strong artefacts
             if (ts[i] < -3. * std_dev) ts[i] = -3. * std_dev;    // # Remove strong artefacts
         }
-        signal_filt.row(seed) = filtfilt_pad(bfilt, vc2vd(afilt), ts, 3 * (std::max(bfilt.size(), afilt.size()) -
-                                                                           1)); //  # Band pass filter. padlen modified to get the same result as in Matlab
+        signal_filt.row(seed) = filtfilt_pad(bfilt, vc2vd(afilt), ts,
+                                             3 * (std::max(bfilt.size(), afilt.size()) - 1)); //  # Band pass filter. padlen modified to get the same result as in Matlab
     }
     return signal_filt;
 

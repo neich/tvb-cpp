@@ -21,15 +21,15 @@
 using namespace std;
 using namespace tvb;
 
-MatrixdMap processBOLDSignals(const vector<tvb::Matrixd>& BOLDsignals,
-                                 const DistanceSettings& distanceSettings,
-                                 const Filter& filter) {
+TArray2dMap processBOLDSignals(const vector<tvb::TArray2d>& BOLDsignals,
+                               const DistanceSettings& distanceSettings,
+                               const Filter& filter) {
 
     int NumSubjects = BOLDsignals.size();
     int N = BOLDsignals[0].rows(); // get the first key to retrieve the value of N = number of areas
 
     // # First, let's create a data structure for the distance measurement operations...
-    MatrixdMap measureValues;
+    TArray2dMap measureValues;
     for (auto const& [ key, measure ] : distanceSettings) {
         measure.init(NumSubjects, N);
     }
@@ -42,7 +42,7 @@ MatrixdMap processBOLDSignals(const vector<tvb::Matrixd>& BOLDsignals,
 
         cout << "Processing subject " << nsub << endl;
         for (auto &[ds, measure] : distanceSettings) { // # Now, let's compute each measure and store the results
-            Matrixd procSignal = measure.from_fMRI(signal);
+            TArray2d procSignal = measure.from_fMRI(signal);
             measure.accumulate(procSignal, nsub);
         }
         nsub++;
@@ -55,10 +55,10 @@ MatrixdMap processBOLDSignals(const vector<tvb::Matrixd>& BOLDsignals,
     return measureValues;
 }
 
-MatrixdMap distanceForOne_G(double we, const tvb::Vectord& J_i,
-                            SimConfig &sim_config, int N, int NumSimSubjects,
-                            const SimulateFCD &sim_fcd,
-                            const DistanceSettings &distanceSettings) {
+TArray2dMap distanceForOne_G(double we, const tvb::TArray1d& J_i,
+                             SimConfig &sim_config, int N, int NumSimSubjects,
+                             const SimulateFCD &sim_fcd,
+                             const DistanceSettings &distanceSettings) {
 
     ReducedWongWangExcInh *model = dynamic_cast<ReducedWongWangExcInh*>(sim_config.model());
     model->G.fill(we);
@@ -67,17 +67,17 @@ MatrixdMap distanceForOne_G(double we, const tvb::Vectord& J_i,
     cout << string_format("   --- BEGIN TIME @ we=%f ---", we) << endl;
     auto start = std::chrono::high_resolution_clock::now();
 
-    vector<tvb::Matrixd> simulatedBOLDs;
+    vector<tvb::TArray2d> simulatedBOLDs;
     for (int nsub = 0; nsub < NumSimSubjects; ++nsub) { //  # trials. Originally it was 20.
         cout << string_format("   Simulating we=%f -> subject %d/%d!!!", we, nsub, NumSimSubjects) << endl;
-        Matrixd bold_signal = sim_fcd.simulateSingleSubject(sim_config);
+        TArray2d bold_signal = sim_fcd.simulateSingleSubject(sim_config);
 //        tvb::Bold bold_monitor(simConfig, {3});
 //        StateTrack bold_result = bold_monitor.apply(result.m_times, result.m_states);
-//        Matrixd bold_signal = stateTrackToMatrix(bold_result);
+//        TArray2d bold_signal = stateTrackToMatrix(bold_result);
         simulatedBOLDs.push_back(bold_signal);
     }
 
-    MatrixdMap dist = processBOLDSignals(simulatedBOLDs, distanceSettings);
+    TArray2dMap dist = processBOLDSignals(simulatedBOLDs, distanceSettings);
     // dist["We"] = we;
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);

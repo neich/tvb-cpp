@@ -16,6 +16,7 @@
 #define TVB_CPP_DEFINITIONS_H
 
 #define EIGEN_USE_MKL_ALL 1
+#define EIGEN_NO_DEBUG 1
 
 #include <iostream>
 #include <fstream>
@@ -28,25 +29,30 @@
 
 namespace tvb {
 
-    typedef typename std::complex<double> complexd;
-    // Eigen::ColMajor is the default
-    typedef typename Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> Matrixd;
-    typedef typename Eigen::ArrayXXi Matrixi;
-    typedef typename Eigen::Array<double, Eigen::Dynamic, 1, Eigen::ColMajor> Vectord;
-    typedef typename Eigen::ArrayXi Vectori;
-    typedef typename Eigen::MatrixXd AMatrixd;
-    typedef typename Eigen::ArrayXd AVectord;
-    typedef typename Eigen::Array<complexd, Eigen::Dynamic,1> AVectorc;
-    typedef typename std::unordered_map<std::string, Matrixd> MatrixdMap;
+    typedef float Float;
+    // typedef double Float;
 
-//    typedef typename Eigen::MatrixXd Matrixd;
-//    typedef typename Eigen::MatrixXi Matrixi;
-//    typedef typename Eigen::VectorXd Vectord;
-//    typedef typename Eigen::VectorXi Vectori;
+    typedef typename std::complex<Float> complexd;
+    // Eigen::ColMajor is the default
+    typedef typename Eigen::Array<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TArray2d;
+    typedef typename Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TMatrix;
+    typedef typename Eigen::ArrayXXi TArray2di;
+    typedef typename Eigen::Array<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TArray1d;
+    typedef typename Eigen::Matrix<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TVector;
+    typedef typename Eigen::ArrayXi TArray1di;
+    typedef typename Eigen::Array<complexd, Eigen::Dynamic,1> TArray1dc;
+    typedef typename std::unordered_map<std::string, TArray2d> TArray2dMap;
+
+    typedef typename Eigen::Array<Float*, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> Matrixdp;
+
+//    typedef typename Eigen::MatrixXd TArray2d;
+//    typedef typename Eigen::MatrixXi TArray2di;
+//    typedef typename Eigen::VectorXd TArray1d;
+//    typedef typename Eigen::VectorXi TArray1di;
 //    typedef typename Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic> AMatrixd;
 //    typedef typename Eigen::ArrayXd AVectord;
-//    typedef typename Eigen::Array<complexd, Eigen::Dynamic,1> AVectorc;
-//    typedef typename std::unordered_map<std::string, Matrixd> MatrixdMap;
+//    typedef typename Eigen::Array<complexd, Eigen::Dynamic,1> TArray1dc;
+//    typedef typename std::unordered_map<std::string, TArray2d> TArray2dMap;
 
 
     template<class M, class G>
@@ -83,16 +89,16 @@ namespace tvb {
     }
 
     inline
-    Vectord operator/(const Vectord &v1, const Vectord &v2) {
-        Vectord result(v1.size());
+    TArray1d operator/(const TArray1d &v1, const TArray1d &v2) {
+        TArray1d result(v1.size());
         for (unsigned i = 0; i < v1.size(); ++i)
             result(i) = v1(i) / v2(i);
         return result;
     }
 
     inline
-    Vectord operator-(const double d, const Vectord &v) {
-        Vectord result(v.size());
+    TArray1d operator-(const double d, const TArray1d &v) {
+        TArray1d result(v.size());
         for (unsigned i = 0; i < v.size(); ++i)
             result(i) = d - v(i);
         return result;
@@ -103,6 +109,44 @@ namespace tvb {
         int result = (index % mod) + shift;
         return result >= 0 ? result : result + mod;
     }
+
+    inline
+    bool isnan(const TArray1d& vector) {
+        for (auto v: vector)
+            if (std::isnan(v))
+                return true;
+        return false;
+    }
+
+    inline
+    bool isnan(const TArray2d& matrix) {
+        for (auto v: matrix.reshaped())
+            if (std::isnan(v))
+                return true;
+        return false;
+    }
+
+    inline
+    bool replace_nan(TArray1d& vector, Float value) {
+        for (auto &v: vector)
+            if (std::isnan(v))
+                v = value;
+        return false;
+    }
+
+    template<typename Numeric>
+    std::vector<Numeric> range(Numeric start, Numeric finish, int intervals) {
+        Numeric delta = (finish - start) / intervals;
+        std::vector<Numeric> result(intervals+1);
+        Numeric current = start;
+        for (int i = 0; i < intervals; ++i) {
+            result[i] = current;
+            current += delta;
+        }
+        result[intervals] = finish;
+        return result;
+    }
+
 
 }
 

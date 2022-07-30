@@ -16,12 +16,10 @@
 #define TVB_CPP_MONITOR_H
 
 #include <definitions.h>
-#include <simulator/simulate.h>
+#include <simulator/model.h>
 
 namespace tvb {
 // Abstract base class for monitor implementations.
-
-    typedef std::pair<double, State> MSample;
 
     class Monitor {
     protected:
@@ -60,44 +58,44 @@ namespace tvb {
         //clsname = self.__class__.__name__
         //return '%s(period=%f, voi=%s)' % (clsname, self.period, self.variables_of_interest.tolist())
 
-        virtual void config_for_sim(const SimConfig &sim_config, const std::vector<int> &voi) {
-            m_n_nodes = sim_config.n_nodes();
-            m_n_voi = voi.size();
-            //"""Configure monitor for given simulator.
-            //
-            //Grab the Simulator's integration step size. Set the monitor's variables
-            //        of interest based on the Monitor's 'variables_of_interest' attribute, if
-            //it was specified, otherwise use the 'variables_of_interest' specified
-            //for the Model. Calculate the number of integration steps (isteps)
-            //between returns by the record method. This method is called from within
-            //the the Simulator's configure() method.
-            //
-            //"""
-            m_dt = sim_config.dt();
-            m_istep = int(round(m_period / m_dt));
-            m_vars_of_interest = voi;
-        }
+//        virtual void config_for_sim(const SimConfig &sim_config, const std::vector<int> &voi) {
+//            m_n_nodes = sim_config.n_nodes();
+//            m_n_voi = voi.size();
+//            //"""Configure monitor for given simulator.
+//            //
+//            //Grab the Simulator's integration step size. Set the monitor's variables
+//            //        of interest based on the Monitor's 'variables_of_interest' attribute, if
+//            //it was specified, otherwise use the 'variables_of_interest' specified
+//            //for the Model. Calculate the number of integration steps (isteps)
+//            //between returns by the record method. This method is called from within
+//            //the the Simulator's configure() method.
+//            //
+//            //"""
+//            m_dt = sim_config.dt();
+//            m_istep = int(round(m_period / m_dt));
+//            m_vars_of_interest = voi;
+//        }
+//
+//        virtual void config_for_sim(int N, double dt, const std::vector<int> &voi) {
+//            m_n_nodes = N;
+//            m_n_voi = voi.size();
+//            //"""Configure monitor for given simulator.
+//            //
+//            //Grab the Simulator's integration step size. Set the monitor's variables
+//            //        of interest based on the Monitor's 'variables_of_interest' attribute, if
+//            //it was specified, otherwise use the 'variables_of_interest' specified
+//            //for the Model. Calculate the number of integration steps (isteps)
+//            //between returns by the record method. This method is called from within
+//            //the the Simulator's configure() method.
+//            //
+//            //"""
+//            m_dt = dt;
+//            m_istep = int(round(m_period / m_dt));
+//            m_vars_of_interest = voi;
+//        }
 
-        virtual void config_for_sim(int N, double dt, const std::vector<int> &voi) {
-            m_n_nodes = N;
-            m_n_voi = voi.size();
-            //"""Configure monitor for given simulator.
-            //
-            //Grab the Simulator's integration step size. Set the monitor's variables
-            //        of interest based on the Monitor's 'variables_of_interest' attribute, if
-            //it was specified, otherwise use the 'variables_of_interest' specified
-            //for the Model. Calculate the number of integration steps (isteps)
-            //between returns by the record method. This method is called from within
-            //the the Simulator's configure() method.
-            //
-            //"""
-            m_dt = dt;
-            m_istep = int(round(m_period / m_dt));
-            m_vars_of_interest = voi;
-        }
 
-
-        MSample record(int step, const State &observed) {
+        void record(int step, const State &observed) {
             //"""Record a sample of the observed state at given step.
             //
             //This is a final method called by the simulator to obtain samples from a
@@ -105,10 +103,10 @@ namespace tvb {
             //        rather implement the `sample` method.
             //
             //"""
-            return this->sample(step, observed);
+            this->sample(step, observed);
         }
 
-        virtual MSample sample(int step, const State &state) = 0;
+        virtual void sample(int step, const State &state) = 0;
         //"""
         //This method provides monitor output, and should be overridden by subclasses.
         //
@@ -140,25 +138,52 @@ namespace tvb {
         //        return TimeSeries(sample_period = self.period,
         //                          title = ' ' + self.__class__.__name__)
         //    }
-        virtual StateTrack apply(const std::vector<double>& times, const std::vector<State>& states) {
-            StateTrack result;
-            for (unsigned step = 0; step < times.size(); ++step) {
-                auto [time, sample] = this->sample(step+1, states[step]);
-                if (time >= 0.0) result.push(sample, time);
-            }
-            return result;
-        }
-
-        virtual Matrixd apply(const Matrixd& signal) {
-            Matrixd result(signal.rows(), signal.cols());
-            for (unsigned step = 0; step < signal.size(); ++step) {
-                auto [time, sample] = this->sample(step+1, signal.col(step));
-                result.col(step) = sample;
-            }
-            return result;
-        }
+//        virtual StateTrack apply(const std::vector<double>& times, const std::vector<State>& states) {
+//            StateTrack result;
+//            for (unsigned step = 0; step < times.size(); ++step) {
+//                auto [time, sample] = this->sample(step+1, states[step]);
+//                if (time >= 0.0) result.push(sample, time);
+//            }
+//            return result;
+//        }
+//
+//        virtual TArray2d apply(const TArray2d& signal) {
+//            TArray2d result(signal.rows(), signal.cols());
+//            for (unsigned step = 0; step < signal.size(); ++step) {
+//                auto [time, sample] = this->sample(step+1, signal.col(step));
+//                result.col(step) = sample;
+//            }
+//            return result;
+//        }
 
     };
+
+    class Raw : public Monitor {
+        std::vector<State> m_records;
+
+    public:
+        Raw() = default;
+
+        void sample(int step, const State &state) override {
+            m_records.push_back(state);
+        }
+    };
+
+    class RawSubSample : public Monitor {
+        std::vector<State> m_records;
+        int m_every_n;
+
+    public:
+        explicit RawSubSample(int every_n): m_every_n(every_n) {}
+
+        void sample(int step, const State &state) override {
+            if (step % m_every_n == 0)
+                m_records.push_back(state);
+        }
+
+        [[nodiscard]] const std::vector<State>& getRecords() const { return m_records; }
+    };
+
 
 }
 

@@ -16,10 +16,8 @@
 #include <simulator/models/reduced_ww_ext.h>
 
 #include <fic/functions/balance_fic.h>
-#include <matplotlibcpp.h>
 
 using namespace tvb;
-namespace plt = matplotlibcpp;
 
 OptResult optimize_fic(double G, SimConfig &sim_config) {
 
@@ -30,19 +28,19 @@ OptResult optimize_fic(double G, SimConfig &sim_config) {
 
     double be_ae = model->b_e(0) / model->a_e(0);
 
-    Vectord delta(N);
+    TArray1d delta(N);
     delta.fill(1.0);
-    Vectord distance(N);
+    TArray1d distance(N);
     distance.fill(10.0);
     State initial_state;
     double prev_largest_distance = 0;
     // double sf = 1.0;
     double speed = 1.0;
 
-    Vectord J_i = model->J_i;
-    Vectord prev_J_i = model->J_i;
+    TArray1d J_i = model->J_i;
+    TArray1d prev_J_i = model->J_i;
     // double best_distance = 1e6;
-    Vectord best_Ji;
+    TArray1d best_Ji;
     OptResult result;
     StateTrack sim_result;
 
@@ -53,41 +51,21 @@ OptResult optimize_fic(double G, SimConfig &sim_config) {
         model->J_i = J_i;
         sim_result = tvb::simulate(sim_config);
 
-//        size_t t_max = sim_result.m_states.size();
-//
-//        std::vector<std::vector<double>> y_plot(N, std::vector<double>(t_max));
-//        for (unsigned t = 0; t < t_max; ++t)
-//            for (unsigned r = 0; r < N; ++r)
-//                y_plot[r][t] = sim_result.m_states[t](r, 3);
-//
-//        plt::figure_size(1200, 780);
-//        // Plot line from given x and y data. Color is selected automatically.
-//        for (unsigned i = 0; i < N; ++i)
-//            plt::plot(sim_result.m_times, y_plot[i]);
-//        // Plot a red dashed line from given x and y data.
-//        // plt::plot(x, w,"r--");
-//        // Plot a line whose name will show up as "log(x)" in the legend.
-//
-//        plt::title("Sample figure");
-//        // Enable legend.
-//        plt::legend();
-//        plt::ylim(0.0, 0.5);
-//        // Save the image (file format is determined by the extension)
-//        plt::save("./sim_test.png");
+
 
 
         unsigned num_above_error = 0;
         unsigned n_states = sim_result.m_states.size();
         double largest_distance = 0.0;
         unsigned largest_distance_i = 0;
-        Vectord distance(N);
-        Vectord min_distance(N);
+        TArray1d distance(N);
+        TArray1d min_distance(N);
 
-        Vectord total_ie = Vectord::Zero(N);
+        TArray1d total_ie = TArray1d::Zero(N);
         int skip_n_states = int(0.2 * n_states);
         for (unsigned j = skip_n_states; j < n_states; ++j)
             total_ie += sim_result.m_states[j].col(3);
-        Vectord ie = total_ie / (n_states - skip_n_states);
+        TArray1d ie = total_ie / (n_states - skip_n_states);
 
         for (int i = 0; i < N; ++i) {
             double d = ie(i) - be_ae + 0.026;

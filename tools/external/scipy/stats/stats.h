@@ -20,10 +20,10 @@
 
 using namespace tvb;
 
-double corrcoef(const Vectord &x, const Vectord &y);
+double corrcoef(const TArray1d &x, const TArray1d &y);
 
-std::pair<double, double> ks_2samp(const Vectord &data1,
-                                   const Vectord &y,
+std::pair<double, double> ks_2samp(const TArray1d &data1,
+                                   const TArray1d &y,
                                    const std::string& alternative="two-sided",
                                    std::string mode="auto");
 

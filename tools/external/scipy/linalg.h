@@ -17,6 +17,6 @@
 
 #include <definitions.h>
 
-Eigen::MatrixXd companion(const tvb::Vectord& a);
+tvb::TMatrix companion(const tvb::TArray1d& a);
 
 #endif //TVB_CPP_LINALG_H

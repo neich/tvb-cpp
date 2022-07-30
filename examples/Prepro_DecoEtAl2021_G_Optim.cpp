@@ -31,8 +31,8 @@
 #include <simulator/integrators/euler_stochastic.h>
 
 
-std::string baseInPath = "Data_Raw/DecoEtAl2021/";
-std::string baseOutPath = "Data_Produced/DecoEtAl2021/";
+std::string baseInPath = "Data_Raw/DecoEtAl2020/";
+std::string baseOutPath = "Data_Produced/DecoEtAl2020/";
 
 using namespace std;
 using namespace tvb;
@@ -45,13 +45,13 @@ void prepro() {
 
     // load genetic info
     cout << "Loading DKcortex_selectedGenes.npz" << endl;
-    Matrixd expMeasures = npz2Matrixd(baseInPath + "DKcortex_selectedGenes.npz", "expMeasures");
+    TArray2d expMeasures = npz2Matrixd(baseInPath + "DKcortex_selectedGenes.npz", "expMeasures");
 
     cout << "Rows: " << expMeasures.rows() << ", cols: " << expMeasures.cols() << endl;
 
     auto coefei = expMeasures(Eigen::all, Eigen::seq(17, 24)).rowwise().sum()
                   / expMeasures(Eigen::all, Eigen::seq(1, 5)).rowwise().sum();  // ampa+nmda/gaba
-    auto ratioEI = Vectord(N).setZero();
+    auto ratioEI = TArray1d(N).setZero();
     ratioEI(Eigen::seq(0, coefei.size() - 1)) = coefei / (coefei.maxCoeff() - coefei.minCoeff());
     ratioEI = ratioEI - ratioEI.maxCoeff() + 1.0;
     ratioEI(Eigen::seq(35, 67)) = ratioEI(Eigen::seq(1, 33));
@@ -59,9 +59,9 @@ void prepro() {
     cout << "loading SC_GenCog_PROB_30.npz" << endl;
     auto GrCV = npz2Matrixd(baseInPath + "SC_GenCog_PROB_30.npz", "GrCV");
     cout << "loading DKatlas_noGSR_timeseries.npz";
-    std::vector<tvb::Matrixd> ts = npz2VecMatrixd(baseInPath + "DKatlas_noGSR_timeseries.npz", "ts");
+    std::vector<tvb::TArray2d> ts = npz2VecMatrixd(baseInPath + "DKatlas_noGSR_timeseries.npz", "ts");
 
-    Matrixd C(N, N);
+    TArray2d C(N, N);
     C.topLeftCorner(34, 34) = GrCV(Eigen::seq(0, 33), Eigen::seq(0, 33));
     C.topRightCorner(34, 34) = GrCV(Eigen::seq(0, 33), Eigen::seq(41, 74));
     C.bottomLeftCorner(34, 34) = GrCV(Eigen::seq(41, 74), Eigen::seq(0, 33));
@@ -79,51 +79,53 @@ void prepro() {
 
     // Transform empirical subjects
     cout << "Transforming empirical subjects\n";
-    Vectori tcrange(N);
+    TArray1di tcrange(N);
     tcrange << arange<int>(0, 34), arange<int>(41, 75);
-    std::vector<Matrixd> tc_transf(NSUB);
-    std::fill(tc_transf.begin(), tc_transf.end(), tvb::Matrixd::Zero(N, ts.size()));
+
+
+    std::vector<TArray2d> tc_transf(NSUB);
+    std::fill(tc_transf.begin(), tc_transf.end(), tvb::TArray2d::Zero(N, ts.size()));
 
     for (unsigned i = 0; i < NSUB; ++i)
         for (unsigned j = 0; j < ts.size(); ++j)
             tc_transf[i].col(j) = ts[j](tcrange, i);
 
     cout << "Processing empirical subjects\n";
-    MatrixdMap FCemp_cotsampling =
+    TArray2dMap FCemp_cotsampling =
             tvb::load_or_compute(baseOutPath + "fNeuro_emp.npz",
-                                 [&tc_transf, &distanceSettings]() -> MatrixdMap {
+                                 [&tc_transf, &distanceSettings]() -> TArray2dMap {
                                      return processEmpiricalSubjects(tc_transf,
                                                                      distanceSettings);
                                  }
             );
 
-    Matrixd FCemp = FCemp_cotsampling["FC"];
-    Matrixd cotsampling = FCemp_cotsampling["swFCD"];
-    Matrixd GBCemp = FCemp_cotsampling["GBC"];
+    TArray2d FCemp = FCemp_cotsampling["FC"];
+    TArray2d cotsampling = FCemp_cotsampling["swFCD"];
+    TArray2d GBCemp = FCemp_cotsampling["GBC"];
 
     std::string J_fileNames = baseOutPath + "J_Balance_we%.1f.npz";
     std::string baseName = baseOutPath + "fitting_we%.1f.npz";
 
-    // Vectord WEs = arange<double>(0, 3, 0.1);
-    Vectord WEs = arange<double>(0, 0.001, 0.001); //  DEBUG only!!!
+    // TArray1d WEs = arange<double>(0, 3, 0.1);
+    TArray1d WEs = arange<double>(0, 0.001, 0.001); //  DEBUG only!!!
     int numWEs = WEs.size();
-    Vectord FCfitt = Vectord::Zero(numWEs);
-    Vectord swFCDfitt = Vectord::Zero(numWEs);
-    Vectord GBCfitt = Vectord::Zero(numWEs);
+    TArray1d FCfitt = TArray1d::Zero(numWEs);
+    TArray1d swFCDfitt = TArray1d::Zero(numWEs);
+    TArray1d GBCfitt = TArray1d::Zero(numWEs);
 
     // Configure simulation
     tvb::SimConfig sim_config;
 
-    tvb::Matrixd tl(N, N);
+    tvb::TArray2d tl(N, N);
     tvb::generate(tl, []() { return (5.0 * (double) rand() / (RAND_MAX)); });
     tvb::Connectivity con(C, tl, 1e100);
-    auto *ho = new tvb::ReducedWongWangExcInh(N);
-    // ho->G.fill(we);
-    Vectord sigmas(4);
+    auto *model = new tvb::ReducedWongWangExcInh(N);
+    // model->G.fill(we);
+    TArray1d sigmas(4);
     sigmas << 3e-5, 3e-5, 0.0, 0.0;
     auto *integrator = new tvb::EulerStochastic(new Additive(sigmas, 0.1));
 
-    sim_config.setModel(ho);
+    sim_config.setModel(model);
     sim_config.setIntegrator(integrator);
     sim_config.setConnectivity(&con);
     sim_config.setHistory(new HistoryNoDelays(con.weights(), con.delays(), {3}));
@@ -136,15 +138,15 @@ void prepro() {
         double we = WEs[pos];
 
 
-        Matrixd J_i =
+        TArray2d J_i =
                 tvb::load_or_compute_index(string_format(J_fileNames, we), "J_i",
-                                           [&we, &sim_config]() -> Matrixd {
+                                           [&we, &sim_config]() -> TArray2d {
                                                return optimize_fic(we, sim_config).m_Jis;
                                            });
 
-        MatrixdMap FCsimul_cotsamplingsim =
+        TArray2dMap FCsimul_cotsamplingsim =
                 tvb::load_or_compute(string_format(baseName, we),
-                                     [we, &sim_config, &J_i, &N, &NumTrials, &sim_fcd, &distanceSettings]() -> MatrixdMap {
+                                     [we, &sim_config, &J_i, &N, &NumTrials, &sim_fcd, &distanceSettings]() -> TArray2dMap {
                                          return distanceForOne_G(we, J_i,
                                                                  sim_config, N, NumTrials,
                                                                  sim_fcd,
@@ -152,9 +154,9 @@ void prepro() {
                                      });
 
 
-        Matrixd FC_sim = FCsimul_cotsamplingsim["FC"];
-        Matrixd swFCD_sim = FCsimul_cotsamplingsim["swFCD"];
-        Matrixd GBC_sim = FCsimul_cotsamplingsim["GBC"];
+        TArray2d FC_sim = FCsimul_cotsamplingsim["FC"];
+        TArray2d swFCD_sim = FCsimul_cotsamplingsim["swFCD"];
+        TArray2d GBC_sim = FCsimul_cotsamplingsim["GBC"];
 
         swFCDfitt[pos] = swFCD.distance(cotsampling, swFCD_sim);
         FCfitt[pos] = FC.distance(FCemp, FC_sim);

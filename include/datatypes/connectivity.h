@@ -24,17 +24,17 @@ namespace tvb {
 
     class Connectivity {
         int m_num_nodes;
-        Matrixd m_weights;
-        Matrixd m_tract_lengths;
+        TArray2d m_weights;
+        TArray2d m_tract_lengths;
         double m_speed;
 
-        Matrixd m_delays;
+        TArray2d m_delays;
 
     public:
 
         Connectivity(int n_nodes = 0) : m_num_nodes(n_nodes) {}
 
-        Connectivity(const Matrixd &weights, const Matrixd &tract_lengths, double speed) {
+        Connectivity(const TArray2d &weights, const TArray2d &tract_lengths, double speed) {
             assert(weights.rows() == weights.cols());
             assert(tract_lengths.rows() == tract_lengths.cols());
             assert(tract_lengths.rows() == weights.rows());
@@ -46,21 +46,21 @@ namespace tvb {
 
         }
 
-        void setWeights(const Matrixd &weights) {
+        void setWeights(const TArray2d &weights) {
             assert(weights.rows() == m_num_nodes);
             assert(weights.cols() == m_num_nodes);
             m_weights = weights;
         }
 
-        void setTractLengths(const Matrixd &tract_lengths) {
+        void setTractLengths(const TArray2d &tract_lengths) {
             assert(tract_lengths.rows() == m_num_nodes);
             assert(tract_lengths.cols() == m_num_nodes);
             m_tract_lengths = tract_lengths;
         }
 
-        const Matrixd &weights() const { return m_weights; }
+        const TArray2d &weights() const { return m_weights; }
 
-        const Matrixd &delays() const { return m_delays; }
+        const TArray2d &delays() const { return m_delays; }
 
         void setSpeed(double speed) { m_speed = speed; }
     };

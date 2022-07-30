@@ -24,7 +24,7 @@
 using namespace std;
 
 int binomialCoefficients(int n, int k) {
-    tvb::Vectori C = tvb::Vectori::Zero(k + 1);
+    tvb::TArray1di C = tvb::TArray1di::Zero(k + 1);
     C[0] = 1;
     for (int i = 1; i <= n; i++) {
         for (int j = min(i, k); j > 0; j--)
@@ -33,7 +33,7 @@ int binomialCoefficients(int n, int k) {
     return C[k];
 }
 
-double corrcoef(const Vectord &x, const Vectord &y) {
+double corrcoef(const TArray1d &x, const TArray1d &y) {
     assert(x.size() == y.size());
     double xy_s = 0.0;
     double x_s = 0.0;
@@ -161,7 +161,7 @@ int count_paths_outside_method(int m, int n, int g, int h) {
 //    # B[j] == B(x_j, j)
     if (lxj == 0)
         return binomialCoefficients(m + n, n);
-    Vectord B(lxj);
+    TArray1d B(lxj);
     B.setZero();
     B[0] = 1;
 //    # Compute the B(x, y) terms
@@ -246,7 +246,7 @@ double compute_prob_inside_method(int m, int n, int g, int h) {
 //    # the column and keep track of an exponent separately and apply
 //    # it at the end of the calculation.  Similarly when multiplying by
 //    # the binomial coefficint
-    Vectord A(lenA);
+    TArray1d A(lenA);
 //    # Initialize the first column
     A(Eigen::seq(minj, maxj)) = 1.0;
     int expnt = 0;
@@ -342,8 +342,8 @@ tuple<bool, double, double> attempt_exact_2kssamp(int n1, int n2, int g, double 
     return {true, d, prob};
 }
 
-std::pair<double, double> ks_2samp(const Vectord &d1,
-                                   const Vectord &d2,
+std::pair<double, double> ks_2samp(const TArray1d &d1,
+                                   const TArray1d &d2,
                                    const std::string& alternative,
                                    std::string mode) {
     static vector<string> modes = {"auto", "exact", "asymp"};
@@ -351,30 +351,30 @@ std::pair<double, double> ks_2samp(const Vectord &d1,
     static vector<string> alternatives = {"two-sided", "greater", "less"};
     assert(find(alternatives.begin(), alternatives.end(), alternative) != alternatives.end());
     unsigned MAX_AUTO_N = 10000;  // "auto" will attempt to be exact if n1,n2 <= MAX_AUTO_N
-    Vectord data1 = d1;
-    Vectord data2 = d2;
+    TArray1d data1 = d1;
+    TArray1d data2 = d2;
     sort(data1.begin(), data1.end());
     sort(data2.begin(), data2.end());
     auto n1 = data1.size();
     auto n2 = data2.size();
     assert(n1 > 0 && n2 > 0);
 
-    Vectord data_all(n1+n2);
+    TArray1d data_all(n1 + n2);
     data_all << data1, data2;
     // using searchsorted solves equal data problem
-    Vectord cdf1 = searchsorted(data1, data_all, "right").cast<double>() / double(n1);
-    Vectord cdf2 = searchsorted(data2, data_all, "right").cast<double>() / double(n2);
-//    Vectord cdf1(cdfi1.size()), cdf2(cdfi2.size());
+    TArray1d cdf1 = searchsorted(data1, data_all, "right").cast<Float>() / Float(n1);
+    TArray1d cdf2 = searchsorted(data2, data_all, "right").cast<Float>() / Float(n2);
+//    TArray1d cdf1(cdfi1.size()), cdf2(cdfi2.size());
 //    std::transform(cdfi1.begin(), cdfi1.end(), cdf1.begin(), [n1](int v) { return double(v)/n1; });
 //    std::transform(cdfi2.begin(), cdfi2.end(), cdf2.begin(), [n2](int v) { return double(v)/n2; });
 
-    Vectord cddiffs = cdf1 - cdf2;
-    double minS = std::clamp(-cddiffs.minCoeff(), 0.0, 1.0);  // Ensure sign of minS is not negative.
-    double maxS = cddiffs.maxCoeff();
-    unordered_map<string, double>  alt2Dvalue = {{"less", minS},
+    TArray1d cddiffs = cdf1 - cdf2;
+    Float minS = std::clamp(-cddiffs.minCoeff(), Float(0.0), Float(1.0));  // Ensure sign of minS is not negative.
+    Float maxS = cddiffs.maxCoeff();
+    unordered_map<string, Float>  alt2Dvalue = {{"less", minS},
                                                  {"greater", maxS},
                                                  {"two-sided", max(minS, maxS)}};
-    double d = alt2Dvalue[alternative];
+    Float d = alt2Dvalue[alternative];
     int g = gcd(n1, n2);
     int n1g = n1 / g;
     int n2g = n2 / g;

@@ -12,6 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <algorithm>
+
 #include <simulator/simulator.h>
 
 using namespace tvb;
@@ -19,8 +21,8 @@ using namespace tvb;
 StateTrack* Simulator::run(const Model *model,
                            const Connectivity *connectivity,
                            Integrator *integrator,
-                           const Coupling *coupling,
-                           History *history,
+                           Monitor* monitor,
+                           Coupling *coupling,
                            double start_time, double end_time, double dt,
                            State *initial_state,
                            int samplingRate) {
@@ -36,23 +38,28 @@ StateTrack* Simulator::run(const Model *model,
     double t = start_time;
 
     // HistoryDense history(connectivity->weights(), connectivity->delays(), model->cvars());
-    history->init(dt, state);
+    coupling->init(dt, state);
 
     auto n_reg = connectivity->weights().rows();
     // result->push(state, t);
 
-    Vectord local_coupling = Vectord::Zero(n_reg);
-    Vectord stimulus = Vectord::Zero(n_reg);
+    TArray1d local_coupling = TArray1d::Zero(n_reg);
+    TArray1d stimulus = TArray1d::Zero(n_reg);
 
     for (int step = 1; step <= n_steps; ++step) {
-        Matrixd node_coupling = this->_loop_compute_node_coupling(step, *history);
-        this->_loop_update_stimulus(step, Vectord()); // TODO: handle stimulus
+        TArray2d node_coupling = this->_loop_compute_node_coupling(step);
+//        if (tvb::isnan(node_coupling))
+//            std::cout << "Ein"; // TODO: debug! remove!
+        this->_loop_update_stimulus(step, TArray1d()); // TODO: handle stimulus
         state = integrator->scheme(state, *model, node_coupling, local_coupling, stimulus);
+//        if (tvb::isnan(state))
+//            std::cout << "Ein"; // TODO: debug! remove!
+        monitor->record(step, state);
         t += integrator->dt();
-        if (step % samplingRate == 0)
-            result->push(state, t);
-        this->_loop_update_history(*history, step, n_reg, state);
-        // Vectord output = this->_loop_monitor_output(step, state)
+//        if (step % samplingRate == 0)
+//            result->push(state, t);
+        this->_loop_update_history(*coupling, step, state);
+        // TArray1d output = this->_loop_monitor_output(step, state)
 
     }
 

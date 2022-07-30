@@ -17,11 +17,11 @@
 
 #include <definitions.h>
 
-tvb::Vectord poly(const tvb::Vectord& seq_of_zeros);
-tvb::Vectord poly(const tvb::AVectorc& seq_of_zeros);
+tvb::TArray1d poly(const tvb::TArray1d& seq_of_zeros);
+tvb::TArray1d poly(const tvb::TArray1dc& seq_of_zeros);
 
-tvb::Vectord convolve(const tvb::Vectord &a, const tvb::Vectord &b);
-tvb::AVectorc convolve(const tvb::AVectorc &a, const tvb::AVectorc &b);
+tvb::TArray1d convolve(const tvb::TArray1d &a, const tvb::TArray1d &b);
+tvb::TArray1dc convolve(const tvb::TArray1dc &a, const tvb::TArray1dc &b);
 
 
 #endif //TVB_CPP_NUMERIC_H

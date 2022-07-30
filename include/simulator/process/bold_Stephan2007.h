@@ -25,7 +25,6 @@ namespace tvb {
 
     class BoldStephan2007 {
         double m_T;
-        double m_dt;
 
         double m_t_min = 20; // seconds
 
@@ -61,27 +60,18 @@ namespace tvb {
         }
 
     public:
-        BoldStephan2007(double T, int N, double dt, const std::vector<int> &voi) {
-            // m_period = 0.5;
-            this->config(T, N, dt, voi);
+        BoldStephan2007(double T, int N, double dt) {
+            this->config(T, N, dt);
         }
 
-        void config(double T, int N, double dt, const std::vector<int> &voi) {
+        void config(double T, int N, double dt) {
             m_T = T;
-            m_dt = dt;
             init();
         }
 
-        StateTrack apply(const std::vector<double>& times, const std::vector<State>& states)  {
-            throw("Not implemented!");
-        }
-
         TArray2d apply(const TArray2d& signal);
-
-
-//        virtual MSample sample(int step, const State &state) override;
     };
 }
 
 
-#endif //TVB_CPP_BOLD_H
+#endif // TVB_CPP_BOLDSTEPHAN2007_H

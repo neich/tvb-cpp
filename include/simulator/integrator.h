@@ -68,9 +68,9 @@ namespace tvb {
 
         virtual State scheme(const State &state,
                              const System &sys,
-                             const Matrixd &coupling,
-                             const Vectord &local_coupling,
-                             const Vectord &stimulus) = 0;
+                             const TArray2d &coupling,
+                             const TArray1d &local_coupling,
+                             const TArray1d &stimulus) = 0;
     };
 }
 

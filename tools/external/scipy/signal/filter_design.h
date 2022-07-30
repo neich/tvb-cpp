@@ -19,10 +19,10 @@
 
 #include <definitions.h>
 
-typedef std::tuple<tvb::Vectord, tvb::AVectorc, double> ZeroPoleGain;
+typedef std::tuple<tvb::TArray1d, tvb::TArray1dc, tvb::Float> ZeroPoleGain;
 
 ZeroPoleGain iirfilter_zpk(int N,
-                           const tvb::Vectord &Wn,
+                           const tvb::TArray1d &Wn,
                            float rp = 0.0,
                            float rs = 0.0,
                            const std::string &btype = "band",
@@ -30,14 +30,14 @@ ZeroPoleGain iirfilter_zpk(int N,
                            const std::string &ftype = "butter",
                            float fs = 0.0);
 
-std::pair <tvb::Vectord, tvb::Vectord> iirfilter_ba(int N,
-                                                     const tvb::Vectord &Wn,
-                                                     float rp = 0.0,
-                                                     float rs = 0.0,
-                                                     const std::string &btype = "bandpass",
-                                                     bool analog = false,
-                                                     const std::string &ftype = "butter",
-                                                     float fs = 0.0);
+std::pair <tvb::TArray1d, tvb::TArray1d> iirfilter_ba(int N,
+                                                      const tvb::TArray1d &Wn,
+                                                      float rp = 0.0,
+                                                      float rs = 0.0,
+                                                      const std::string &btype = "bandpass",
+                                                      bool analog = false,
+                                                      const std::string &ftype = "butter",
+                                                      float fs = 0.0);
 
 
 #endif //TVB_CPP_FILTER_DESIGN_H

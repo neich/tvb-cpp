@@ -24,20 +24,20 @@ namespace tvb {
 
     class ReducedWongWangExcInh : public Model {
     public:
-        Vectord d_i;
+        TArray1d d_i;
 //    = NArray(
 //            label=":external:`d_i`",
 //    default=numpy.array([0.087, ]),
 //    domain=Range(lo=0.01, hi=0.2, step=0.001),
 //            doc="""[s]. Inhibitory population input scaling parameter chosen to fit numerical solutions.""")
 //
-        Vectord a_e;
+        TArray1d a_e;
 //            label=":external:`a_e`",
 //    default=numpy.array([310., ]),
 //    domain=Range(lo=0., hi=500., step=1.),
 //            doc="[n/C]. Excitatory population input gain parameter, chosen to fit numerical solutions.")
 
-        Vectord b_e;
+        TArray1d b_e;
 //        = NArray(
 //                label = ":external:`b_e`",
 //        default=numpy.array([125., ]),
@@ -45,7 +45,7 @@ namespace tvb {
 //                doc = "[Hz]. Excitatory population input shift parameter chosen to fit numerical solutions."
 //        )
 
-        Vectord d_e;
+        TArray1d d_e;
 //        = NArray(
 //                label = ":external:`d_e`",
 //        default=numpy.array([0.160, ]),
@@ -53,7 +53,7 @@ namespace tvb {
 //                doc = """[s]. Excitatory population input scaling parameter chosen to fit numerical solutions."""
 //        )
 
-        Vectord gamma_e;
+        TArray1d gamma_e;
 //        = NArray(
 //                label = r
 //        ":external:`\gamma_e`",
@@ -62,7 +62,7 @@ namespace tvb {
 //                doc = """Excitatory population kinetic parameter"""
 //        )
 
-        Vectord tau_e;
+        TArray1d tau_e;
 //        = NArray(
 //                label = r
 //        ":external:`\tau_e`",
@@ -71,7 +71,7 @@ namespace tvb {
 //                doc = """[ms]. Excitatory population NMDA decay time constant."""
 //        )
 
-        Vectord w_p;
+        TArray1d w_p;
 //        = NArray(
 //                label = r
 //        ":external:`w_p`",
@@ -80,7 +80,7 @@ namespace tvb {
 //                doc = """Excitatory population recurrence weight"""
 //        )
 
-        Vectord J_N;
+        TArray1d J_N;
 //        = NArray(
 //                label = r
 //        ":external:`J_{N}`",
@@ -89,7 +89,7 @@ namespace tvb {
 //                doc = """[nA] NMDA current"""
 //        )
 
-        Vectord W_e;
+        TArray1d W_e;
 //        = NArray(
 //                label = r
 //        ":external:`W_e`",
@@ -98,7 +98,7 @@ namespace tvb {
 //                doc = """Excitatory population external input scaling weight"""
 //        )
 
-        Vectord a_i;
+        TArray1d a_i;
 //        = NArray(
 //                label = ":external:`a_i`",
 //        default=numpy.array([615., ]),
@@ -106,7 +106,7 @@ namespace tvb {
 //                doc = "[n/C]. Inhibitory population input gain parameter, chosen to fit numerical solutions."
 //        )
 
-        Vectord b_i;
+        TArray1d b_i;
 //        = NArray(
 //                label = ":external:`b_i`",
 //        default=numpy.array([177.0, ]),
@@ -114,7 +114,7 @@ namespace tvb {
 //                doc = "[Hz]. Inhibitory population input shift parameter chosen to fit numerical solutions."
 //        )
 
-        Vectord gamma_i;
+        TArray1d gamma_i;
 //        = NArray(
 //                label = r
 //        ":external:`\gamma_i`",
@@ -123,7 +123,7 @@ namespace tvb {
 //                doc = """Inhibitory population kinetic parameter"""
 //        )
 
-        Vectord tau_i;
+        TArray1d tau_i;
 //        = NArray(
 //                label = r
 //        ":external:`\tau_i`",
@@ -132,7 +132,7 @@ namespace tvb {
 //                doc = """[ms]. Inhibitory population NMDA decay time constant."""
 //        )
 
-        Vectord J_i;
+        TArray1d J_i;
 //        = NArray(
 //                label = r
 //        ":external:`J_{i}`",
@@ -141,7 +141,7 @@ namespace tvb {
 //                doc = """[nA] Local inhibitory current"""
 //        )
 
-        Vectord W_i;
+        TArray1d W_i;
 //        = NArray(
 //                label = r
 //        ":external:`W_i`",
@@ -150,7 +150,7 @@ namespace tvb {
 //                doc = """Inhibitory population external input scaling weight"""
 //        )
 
-        Vectord I_o;
+        TArray1d I_o;
 //        = NArray(
 //                label = ":external:`I_{o}`",
 //        default=numpy.array([0.382, ]),
@@ -158,7 +158,7 @@ namespace tvb {
 //                doc = """[nA]. Effective external input"""
 //        )
 
-        Vectord G;
+        TArray1d G;
 //        = NArray(
 //                label = ":external:`G`",
 //        default=numpy.array([2.0, ]),
@@ -166,7 +166,7 @@ namespace tvb {
 //                doc = """Global coupling scaling"""
 //        )
 
-        Vectord lambda;
+        TArray1d lambda;
 //        = NArray(
 //                label = ":external:`\lambda`",
 //        default=numpy.array([0.0, ]),
@@ -218,14 +218,14 @@ namespace tvb {
             J_i.fill(1.0);
             W_i.fill(0.7);
             I_o.fill(0.382);
-            G.fill(2.0);
+            G.fill(1.0);
             lambda.fill(0.0);
         }
 
         [[nodiscard]] State initial() const override {
             State result(m_n_nodes, m_n_vars);
-            Vectord init_state(m_n_vars);
-            init_state << 0.001, 0.001, 0.0, 0.0;
+            TArray1d init_state(m_n_vars);
+            init_state << 0.0, 0.0, 0.0, 0.0;
             for (int i = 0; i < m_n_nodes; ++i)
                 result.row(i) = init_state;
             return result;
@@ -233,7 +233,7 @@ namespace tvb {
 
         void initial(State& state) const override {
             state.resize(m_n_nodes, m_n_vars);
-            Vectord init_state(m_n_vars);
+            TArray1d init_state(m_n_vars);
             init_state << 0.001, 0.001, 0.0, 0.0;
             for (int i = 0; i < m_n_nodes; ++i)
                 state.row(i) = init_state;
@@ -242,8 +242,8 @@ namespace tvb {
 
 
         State operator()(const State &x,
-                const Matrixd &coupling,
-                const Vectord &local_coupling) const override;
+                const TArray2d &coupling,
+                const TArray1d &local_coupling) const override;
 
     };
 

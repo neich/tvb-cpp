@@ -50,8 +50,8 @@ public:
         recomputeTmaxneuronal();
     }
 
-    tvb::Matrixd computeSubjectBold(const tvb::StateTrack& signal, double dt, const tvb::Vectori& areasToSimulate={}) const;
-    tvb::Matrixd simulateSingleSubject(tvb::SimConfig &simConfig) const;
+    tvb::TArray2d computeSubjectBold(const tvb::StateTrack& signal, double dt, const tvb::TArray1di& areasToSimulate={}) const;
+    tvb::TArray2d simulateSingleSubject(tvb::SimConfig &simConfig) const;
 
 };
 

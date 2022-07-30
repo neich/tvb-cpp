@@ -6,7 +6,7 @@
 
 using namespace tvb;
 
-Matrixd tvb::npz2Matrixd(const std::string& filename, const std::string& index) {
+TArray2d tvb::npz2Matrixd(const std::string& filename, const std::string& index) {
     cnpy::NpyArray w_npy = cnpy::npz_load(filename, index);
     assert(w_npy.shape.size() == 2);
     assert(w_npy.word_size == sizeof(double));
@@ -16,7 +16,7 @@ Matrixd tvb::npz2Matrixd(const std::string& filename, const std::string& index) 
 
     double* loaded_data = w_npy.data<double>();
 
-    Matrixd w(rows, cols);
+    TArray2d w(rows, cols);
 
     for (unsigned r = 0; r < rows; ++r)
         for (unsigned c = 0; c < cols; ++c)
@@ -25,10 +25,10 @@ Matrixd tvb::npz2Matrixd(const std::string& filename, const std::string& index) 
     return w;
 }
 
-MatrixdMap tvb::npz2MatrixdMap(const std::string& filename) {
+TArray2dMap tvb::npz2MatrixdMap(const std::string& filename) {
     cnpy::npz_t npy_map = cnpy::npz_load(filename);
 
-    MatrixdMap result;
+    TArray2dMap result;
     for (auto& [key, w_npy]: npy_map) {
         assert(w_npy.shape.size() == 2);
         assert(w_npy.word_size == sizeof(double));
@@ -38,7 +38,7 @@ MatrixdMap tvb::npz2MatrixdMap(const std::string& filename) {
 
         double *loaded_data = w_npy.data<double>();
 
-        Matrixd w(rows, cols);
+        TArray2d w(rows, cols);
 
         for (unsigned r = 0; r < rows; ++r)
             for (unsigned c = 0; c < cols; ++c)
@@ -51,7 +51,7 @@ MatrixdMap tvb::npz2MatrixdMap(const std::string& filename) {
 }
 
 
-std::vector<Matrixd> tvb::npz2VecMatrixd(const std::string& filename, const std::string& index) {
+std::vector<TArray2d> tvb::npz2VecMatrixd(const std::string& filename, const std::string& index) {
     cnpy::NpyArray w_npy = cnpy::npz_load(filename, index);
     assert(w_npy.shape.size() == 3);
     assert(w_npy.word_size == sizeof(double));
@@ -62,8 +62,8 @@ std::vector<Matrixd> tvb::npz2VecMatrixd(const std::string& filename, const std:
 
     auto* loaded_data = w_npy.data<double>();
 
-    std::vector<Matrixd> result(d0);
-    std::fill(result.begin(), result.end(), tvb::Matrixd(d1, d2));
+    std::vector<TArray2d> result(d0);
+    std::fill(result.begin(), result.end(), tvb::TArray2d(d1, d2));
     for (unsigned i2 = 0; i2 < d2; ++i2)
         for (unsigned i1 = 0; i1 < d1; ++i1)
                 for (unsigned i0 = 0; i0 < d0; ++i0)
@@ -88,7 +88,7 @@ std::vector<double> tvb::npz2VecDouble(const std::string& filename, const std::s
 }
 
 
-void tvb::vecMatrixd2npz(const std::vector<Matrixd>& data, const std::string& filename, const std::string& index) {
+void tvb::vecMatrixd2npz(const std::vector<TArray2d>& data, const std::string& filename, const std::string& index) {
     unsigned mat_size = data[0].rows()*data[0].cols();
     double* raw_data = new double[data.size()*mat_size];
     for (unsigned i = 0; i < data.size(); ++i)
@@ -97,7 +97,7 @@ void tvb::vecMatrixd2npz(const std::vector<Matrixd>& data, const std::string& fi
     delete[] raw_data;
 }
 
-void tvb::Matrixd2npz(const Matrixd& data, const std::string& filename, const std::string& index) {
+void tvb::Matrixd2npz(const TArray2d& data, const std::string& filename, const std::string& index) {
     unsigned mat_size = data.rows()*data.cols();
     // TODO: it assumes default ColMajor
     double* raw_data = new double[mat_size];
@@ -113,11 +113,11 @@ void tvb::vecDouble2npz(const std::vector<double>& data, const std::string& file
     cnpy::npz_save(filename, index, data.data(), {data.size()}, "a");
 }
 
-void tvb::MatrixdMap2npz(const std::string &filename, const MatrixdMap& mmap) {
+void tvb::MatrixdMap2npz(const std::string &filename, const TArray2dMap& mmap) {
     bool first = true;
     for (auto& [key, matrix]: mmap) {
         std::string mode = first ? "w" : "a";
-        Eigen::Matrix<double, -1, -1, Eigen::RowMajor> mrowmajor = matrix;
+        Eigen::Matrix<tvb::Float, -1, -1, Eigen::RowMajor> mrowmajor = matrix;
         cnpy::npz_save(filename, key, mrowmajor.data(), { (size_t)mrowmajor.rows(),  (size_t)mrowmajor.cols()}, mode);
         first = false;
     }

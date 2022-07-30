@@ -16,7 +16,7 @@
 
 using namespace tvb;
 
-int searchsorted(const Vectord &a, double v, const std::string &side) {
+int searchsorted(const TArray1d &a, double v, const std::string &side) {
     auto it = side.compare("left") == 0 ?
               std::lower_bound(a.begin(), a.end(), v)
                                         :
@@ -24,16 +24,16 @@ int searchsorted(const Vectord &a, double v, const std::string &side) {
     return it - a.begin();
 }
 
-Vectori searchsorted(const Vectord& a,
-                              const Vectord& v,
-                              const std::string& side) {
-    Vectori result(v.size());
+TArray1di searchsorted(const TArray1d& a,
+                       const TArray1d& v,
+                       const std::string& side) {
+    TArray1di result(v.size());
     std::transform(v.begin(), v.end(), result.begin(),
                    [&a, &side](double d) { return searchsorted(a, d, side); });
     return result;
 }
 
-double polyval(const std::vector<double>& p, double x) {
+Float polyval(const std::vector<Float>& p, Float x) {
     double r = 0.0;
     unsigned N = p.size();
     for (unsigned n = 0; n < N; ++n)
@@ -43,10 +43,10 @@ double polyval(const std::vector<double>& p, double x) {
 
 
 
-Vectord tril_indices(const Matrixd& m, int N, int k) {
+TArray1d tril_indices(const TArray2d& m, int N, int k) {
     int R = k < 0 ? -k : 0;
     int C = k >= 0 ? k : 0;
-    Vectord y(N*N);
+    TArray1d y(N * N);
     int yi = 0;
     int CL = 1;
     for (int r = R; r < N; ++r) {
@@ -57,24 +57,24 @@ Vectord tril_indices(const Matrixd& m, int N, int k) {
     return y(Eigen::seqN(0, yi));
 }
 
-tvb::Matrixd corrcoef(const tvb::Matrixd& x, const tvb::Matrixd& y, bool rowvar) {
-    Matrixd c = cov(x, y, rowvar);
-    Vectord d = c.matrix().diagonal().array();
-    Vectord stddev = d.sqrt();
+tvb::TArray2d corrcoef(const tvb::TArray2d& x, const tvb::TArray2d& y, bool rowvar) {
+    TArray2d c = cov(x, y, rowvar);
+    TArray1d d = c.matrix().diagonal().array();
+    TArray1d stddev = d.sqrt();
     c = c.colwise() / stddev;
     c = c.rowwise() / stddev.transpose();
     c = c.min(1.0).max(-1.0);
     return c;
 }
 
-tvb::Matrixd cov(const tvb::Matrixd& m, const tvb::Matrixd& Y, bool rowvar,
-                 int ddof, bool bias) {
-    Matrixd X = m;
-    Matrixd y = Y;
+tvb::TArray2d cov(const tvb::TArray2d& m, const tvb::TArray2d& Y, bool rowvar,
+                  int ddof, bool bias) {
+    TArray2d X = m;
+    TArray2d y = Y;
     if (!rowvar)
         X.transposeInPlace();
     if (X.size() == 0)
-        return Matrixd();
+        return TArray2d();
     if (y.size() > 0)  {
         if (!rowvar)
             y.transposeInPlace();
@@ -94,21 +94,21 @@ tvb::Matrixd cov(const tvb::Matrixd& m, const tvb::Matrixd& Y, bool rowvar,
         fact = 0;
 
     X = X.colwise() - avg;
-    Matrixd X_T = X.transpose();
-    Matrixd c(X.matrix() * X_T.matrix());
+    TArray2d X_T = X.transpose();
+    TArray2d c(X.matrix() * X_T.matrix());
     c = c * 1.0/fact;
     return c;
 }
 
-std::pair<Vectord, Vectord> average(const Matrixd& x, bool row, const Vectord& weights) {
+std::pair<TArray1d, TArray1d> average(const TArray2d& x, bool row, const TArray1d& weights) {
     if (weights.size() == 0) {
-        Vectord avg;
+        TArray1d avg;
         if (row)
             avg = x.colwise().mean();
         else
             avg = x.rowwise().mean();
         double scl = double(x.size()) / avg.size();
-        return { avg, Vectord::Constant(avg.size(), scl) };
+        return {avg, TArray1d::Constant(avg.size(), scl) };
     } else {
         throw("Average with weights not implemented!");
     }

@@ -18,14 +18,14 @@ using namespace tvb;
 
 State EulerStochastic::scheme(const State &state,
                                  const System &dfun,
-                                 const Matrixd &coupling,
-                                 const Vectord &local_coupling,
-                                 const Vectord &stimulus) {
+                                 const TArray2d &coupling,
+                                 const TArray1d &local_coupling,
+                                 const TArray1d &stimulus) {
     State d_state = dfun(state, coupling, local_coupling);
-    // Matrixd gfun = m_noise->gfun(state).transpose();
-    // Matrixd noise_gen = m_noise->generate(state.rows(), state.cols());
-    // Matrixd noise2 = noise_gen.rowwise() * gfun;
-    Matrixd noise = m_noise->generate(state.rows(), state.cols()).rowwise() * m_noise->gfun(state).transpose();
+    // TArray2d gfun = m_noise->gfun(state).transpose();
+    // TArray2d noise_gen = m_noise->generate(state.rows(), state.cols());
+    // TArray2d noise2 = noise_gen.rowwise() * gfun;
+    TArray2d noise = m_noise->generate(state.rows(), state.cols()).rowwise() * m_noise->gfun(state).transpose();
     State state_next = state + this->dt() * (d_state + 0.0) + noise; // 0.0 should be stimulus
 //    State state_next = state + this->dt() * (d_state + 0.0) ; // 0.0 should be stimulus
 //        if self.state_variable_boundaries is not None:

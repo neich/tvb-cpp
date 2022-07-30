@@ -7,9 +7,9 @@
 
 #include <definitions.h>
 
-tvb::Vectord detrend_linear(const tvb::Vectord& data);
+tvb::TArray1d detrend_linear(const tvb::TArray1d& data);
 
-tvb::Vectord filtfilt_pad(const tvb::Vectord& b, const tvb::Vectord& a, const tvb::Vectord& x,
-                     int padlen = 0, const std::string& padtype = "odd");
+tvb::TArray1d filtfilt_pad(const tvb::TArray1d& b, const tvb::TArray1d& a, const tvb::TArray1d& x,
+                           int padlen = 0, const std::string& padtype = "odd");
 
 #endif //TVB_CPP_SIGNALTOOLS_H

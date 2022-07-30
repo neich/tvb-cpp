@@ -20,12 +20,12 @@
 
 using namespace tvb;
 
-inline Matrixd circshift(Matrixd data, int a, int b = 0) {
+inline TArray2d circshift(TArray2d data, int a, int b = 0) {
 
     unsigned row = data.rows();
     unsigned col = data.cols();
-    Matrixd out(row, col);
-    Matrixd y(row, col);
+    TArray2d out(row, col);
+    TArray2d y(row, col);
     if (a > 0) // move down a line
     {
         out.topRows(a) = data.bottomRows(a);

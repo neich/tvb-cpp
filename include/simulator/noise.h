@@ -40,13 +40,13 @@ public:
 
 
 class Noise {
-    double m_ntau;
-    double m_dt_sqrt;
+    tvb::Float m_ntau;
+    tvb::Float m_dt_sqrt;
     UniformRandomNumberGenerator* m_random_stream;
-    std::normal_distribution<double> m_normal_dist;
+    std::normal_distribution<tvb::Float> m_normal_dist;
 
 public:
-    Noise(double dt, double ntau = 0.0, UniformRandomNumberGenerator* urng = NULL):
+    Noise(tvb::Float dt, tvb::Float ntau = 0.0, UniformRandomNumberGenerator* urng = NULL):
     m_ntau(ntau),
     m_normal_dist(0.0, 1.0)
     {
@@ -57,7 +57,7 @@ public:
             m_random_stream = urng;
     }
 
-    tvb::Matrixd generate(int rows, int cols) {
+    tvb::TArray2d generate(int rows, int cols) {
         if (m_ntau > 0.0)
             // TODO: implement coloured noise
             throw("Coloured noise not implemented!");
@@ -65,24 +65,24 @@ public:
             return this->white(rows, cols);
     }
 
-    tvb::Matrixd white(int rows, int cols) {
-        tvb::Matrixd random_matrix = Eigen::MatrixXd::NullaryExpr(rows, cols, [this]() { return this->m_normal_dist(*this->m_random_stream); });
+    tvb::TArray2d white(int rows, int cols) {
+        tvb::TArray2d random_matrix = tvb::TArray2d::NullaryExpr(rows, cols, [this]() { return this->m_normal_dist(*this->m_random_stream); });
         return random_matrix * m_dt_sqrt;
     }
 
-    virtual tvb::Vectord gfun(const tvb::Matrixd& X) = 0;
+    virtual tvb::TArray1d gfun(const tvb::TArray2d& X) = 0;
 
 };
 
 class Additive : public Noise {
-    tvb::Vectord m_sqrt_2nsig;
+    tvb::TArray1d m_sqrt_2nsig;
 
 public:
-    Additive(const tvb::Vectord& nsig, double dt, double ntau = 0.0): Noise(dt, ntau) {
+    Additive(const tvb::TArray1d& nsig, double dt, double ntau = 0.0): Noise(dt, ntau) {
         m_sqrt_2nsig = sqrt((2.0 * nsig).array());
     }
 
-    tvb::Vectord gfun(const tvb::Matrixd& X) override {
+    tvb::TArray1d gfun(const tvb::TArray2d& X) override {
         return m_sqrt_2nsig;
     }
 

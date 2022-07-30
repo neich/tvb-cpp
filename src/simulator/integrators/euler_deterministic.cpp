@@ -18,11 +18,14 @@ using namespace tvb;
 
 State EulerDeterministic::scheme(const State &state,
                                  const System &dfun,
-                                 const Matrixd &coupling,
-                                 const Vectord &local_coupling,
-                                 const Vectord &stimulus) {
+                                 const TArray2d &coupling,
+                                 const TArray1d &local_coupling,
+                                 const TArray1d &stimulus) {
     State d_state = dfun(state, coupling, local_coupling);
-    State state_next = state + this->dt() * (d_state + 0.0); // 0.0 should be stimulus
+    // TVB applies stimulus to the first state variable
+    d_state.col(0) += stimulus;
+    State t2 = this->dt() * d_state;
+    State state_next = state + t2; // 0.0 should be stimulus
 //        if self.state_variable_boundaries is not None:
 //        self.bound_state(state_next)
 //        if self.clamped_state_variable_values is not None:

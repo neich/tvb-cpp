@@ -25,6 +25,7 @@
 #include <simulator/integrator.h>
 #include <simulator/coupling.h>
 #include <datatypes/connectivity.h>
+#include <simulator/monitor.h>
 
 namespace tvb {
 
@@ -34,23 +35,21 @@ namespace tvb {
     };
 
     inline
-    tvb::Matrixd stateTrackToMatrix(const StateTrack& signal, int axis= 0) {
+    tvb::TArray2d stateTrackToMatrix(const StateTrack& signal, int axis= 0) {
         assert(signal.m_states.size() > 0);
-        Matrixd result(signal.m_states[0].rows(), signal.m_states.size());
+        TArray2d result(signal.m_states[0].rows(), signal.m_states.size());
         for (unsigned t = 0; t < signal.m_states.size(); ++t)
             result.col(t) = signal.m_states[t].col(axis);
         return result;
     }
 
     class SimConfig {
-    public:
-
     private:
         Model *m_model;
         Integrator *m_integrator;
+        Monitor *m_monitor;
         Connectivity *m_connectivity;
         Coupling *m_coupling;
-        History *m_history;
         double m_start_time;
         double m_end_time;
         double m_dt;
@@ -66,8 +65,7 @@ namespace tvb {
             m_model(NULL),
             m_integrator(NULL),
             m_connectivity(NULL),
-            m_coupling(new Coupling()),
-            m_history(NULL),
+            m_coupling(NULL),
             m_sim_mode(SIM_FIXED),
             m_delta_integration(0.0),
             m_n_iterations(1),
@@ -76,7 +74,7 @@ namespace tvb {
             {}
 
         bool is_configured() const {
-            return m_model != NULL && m_connectivity != NULL && m_coupling != NULL && m_integrator != NULL && m_history != NULL;
+            return m_model != NULL && m_connectivity != NULL && m_coupling != NULL && m_integrator != NULL;
         }
 
         void setModel(Model *model) { m_model = model; }
@@ -89,8 +87,6 @@ namespace tvb {
         void setIntegrator(Integrator *integrator) { m_integrator = integrator; }
 
         void setCoupling(Coupling *coupling) { m_coupling = coupling; }
-
-        void setHistory(History* history) { m_history = history; }
 
         void setSamplingRate(int samplingRate) {
             m_sampling_rate = samplingRate;
@@ -108,11 +104,13 @@ namespace tvb {
             return m_integrator;
         }
 
+        Monitor *monitor() {
+            return m_monitor;
+        }
+
         Coupling *coupling() {
             return m_coupling;
         }
-
-        History *history() { return m_history; }
 
         int n_nodes() const { return m_n_nodes; }
 
@@ -147,6 +145,10 @@ namespace tvb {
 
         void setTimeDelta(double dt) {
             m_dt = dt;
+        }
+
+        void setMonitor(tvb::Monitor *pMonitor) {
+            m_monitor = pMonitor;
         }
     };
 

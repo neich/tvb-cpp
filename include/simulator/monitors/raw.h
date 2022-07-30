@@ -22,7 +22,7 @@ namespace tvb {
     class Raw: public Monitor {
     public:
 
-        void config_for_sim(const SimConfig &sim_config, const Vectori &voi) override {
+        void config_for_sim(const SimConfig &sim_config, const TArray1di &voi) override {
             if (this->period() != sim_config.dt())
                 this->m_dt = sim_config.dt();
             Monitor::config_for_sim(sim_config, voi);

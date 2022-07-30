@@ -32,7 +32,7 @@ class BandPassFilter : public Filter {
 public:
     BandPassFilter(double flp, double fhi, double TR=2.0): m_flp(flp), m_fhi(fhi), m_TR(TR) {}
 
-    tvb::Matrixd apply(const tvb::Matrixd& boldSignal) const override;
+    tvb::TArray2d apply(const tvb::TArray2d& boldSignal) const override;
 };
 
 #endif //TVB_CPP_FILTER_H

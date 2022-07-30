@@ -22,27 +22,27 @@
 
 namespace tvb {
 
-    MatrixdMap
+    TArray2dMap
     load_or_compute(const std::string &filename,
-                    const std::function<MatrixdMap()> &func) {
+                    const std::function<TArray2dMap()> &func) {
         std::ifstream f(filename.c_str());
         if (f.good())
             return npz2MatrixdMap(filename);
         else {
-            MatrixdMap result = func();
+            TArray2dMap result = func();
             MatrixdMap2npz(filename, result);
             return result;
         }
     }
 
-    Matrixd
+    TArray2d
     load_or_compute_index(const std::string &filename, const std::string &index,
-                          const std::function<Vectord()> &func) {
+                          const std::function<TArray1d()> &func) {
         std::ifstream f(filename.c_str());
         if (f.good())
             return npz2Matrixd(filename, index);
         else {
-            Matrixd result = func();
+            TArray2d result = func();
             Matrixd2npz(result, filename, index);
             return result;
         }

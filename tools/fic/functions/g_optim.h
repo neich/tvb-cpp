@@ -27,20 +27,20 @@
 
 typedef std::unordered_map<std::string, FunctionalConnectivity&> DistanceSettings;
 
-MatrixdMap processBOLDSignals(const std::vector<tvb::Matrixd>& BOLDsignals,
-                                 const DistanceSettings& distanceSettings,
-                                 const Filter& filter=Filter());
+TArray2dMap processBOLDSignals(const std::vector<tvb::TArray2d>& BOLDsignals,
+                               const DistanceSettings& distanceSettings,
+                               const Filter& filter=Filter());
 
 
 inline
-MatrixdMap processEmpiricalSubjects(const std::vector<tvb::Matrixd>& BOLDsignals,
-                              DistanceSettings& distanceSettings) {
+TArray2dMap processEmpiricalSubjects(const std::vector<tvb::TArray2d>& BOLDsignals,
+                                     DistanceSettings& distanceSettings) {
     return processBOLDSignals(BOLDsignals, distanceSettings);
 }
 
-MatrixdMap distanceForOne_G(double we, const tvb::Vectord& J_i,
-                            SimConfig &sim_config, int N, int NumSimSubjects,
-                            const SimulateFCD &sim_fcd,
-                            const DistanceSettings& distanceSettings);
+TArray2dMap distanceForOne_G(double we, const tvb::TArray1d& J_i,
+                             SimConfig &sim_config, int N, int NumSimSubjects,
+                             const SimulateFCD &sim_fcd,
+                             const DistanceSettings& distanceSettings);
 
 #endif //TVB_CPP_G_OPTIM_H

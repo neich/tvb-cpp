@@ -18,12 +18,12 @@
 using namespace tvb;
 
 HistoryDense::QResult HistoryDense::query(int step) const {
-//            Matrixi time_idx(m_idelays.rows(), m_idelays.cols());
+//            TArray2di time_idx(m_idelays.rows(), m_idelays.cols());
 //            tvb::transform(m_idelays, time_idx, (step - 1 - boost::phoenix::placeholders::arg1 + m_ntime) % m_ntime);
-    // Matrixd delayed(m_idelays.rows(), m_idelays.cols());
-    std::vector<Matrixd> delayed(m_nnodes);
-    std::fill_n(delayed.begin(), m_nnodes, tvb::Matrixd(m_nvars, m_nnodes));
-    Matrixd current(m_idelays.rows(), m_cvars.size());
+    // TArray2d delayed(m_idelays.rows(), m_idelays.cols());
+    std::vector<TArray2d> delayed(m_nnodes);
+    std::fill_n(delayed.begin(), m_nnodes, tvb::TArray2d(m_nvars, m_nnodes));
+    TArray2d current(m_idelays.rows(), m_cvars.size());
 
     int c_idx = (step - 1) % m_ntime;
     current = m_buffer(c_idx);

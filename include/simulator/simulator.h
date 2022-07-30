@@ -19,6 +19,7 @@
 
 #include <simulator/integrator.h>
 #include <simulator/coupling.h>
+#include <simulator/monitor.h>
 #include <datatypes/connectivity.h>
 
 using namespace std;
@@ -32,24 +33,24 @@ namespace tvb {
     public:
         typedef typename std::unique_ptr<Simulator> UPtr;
 
-        Matrixd _loop_compute_node_coupling(int step, History& history) {
-            return m_coupling->couple(step, history);
+        TArray2d _loop_compute_node_coupling(int step) {
+            return m_coupling->couple(step);
         }
 
-        Vectord _loop_update_stimulus(int step, const Vectord &stimulus) {
-            return tvb::Vectord();
+        TArray1d _loop_update_stimulus(int step, const TArray1d &stimulus) {
+            return tvb::TArray1d();
         }
 
-        void _loop_update_history(History &history, int step, int n_reg, const State &state) {
-            history.update(step, n_reg, state);
+        void _loop_update_history(Coupling &coupling, int step, const State &state) {
+            coupling.update(step, state);
         }
 
 
         StateTrack *run(const Model* model,
                         const Connectivity* connectivity,
                         Integrator* integrator,
-                        const Coupling* coupling,
-                        History* history,
+                        Monitor* monitor,
+                        Coupling* coupling,
                         double start_time, double end_time, double dt,
                         State *initial_state = NULL,
                         int samplingRate = 1);

@@ -24,7 +24,7 @@
 
 namespace tvb {
 
-    class BoldTVB : public Monitor {
+    class BoldTVB {
 
         double m_hrf_length = 20000.0;
         std::unique_ptr<HRFKernelEquation> m_hrf_kernel;
@@ -44,21 +44,19 @@ namespace tvb {
         void init();
 
     public:
-        BoldTVB(const SimConfig &sim_config, const std::vector<int> &voi) : m_hrf_kernel(new FirstOrderVolterra()) {
-            m_period = 0.5;
-            this->config(sim_config, voi);
+        BoldTVB(const SimConfig &sim_config) : m_hrf_kernel(new FirstOrderVolterra()) {
+            this->config(sim_config);
         }
-        BoldTVB(int N, double dt, const std::vector<int> &voi) : m_hrf_kernel(new FirstOrderVolterra()) {
-            m_period = 0.5;
-            this->config(N, dt, voi);
+        BoldTVB(int N, double dt) : m_hrf_kernel(new FirstOrderVolterra()) {
+            this->config(N, dt);
         }
 
-        void config(const SimConfig &sim_config, const std::vector<int> &voi)  {
+        void config(const SimConfig &sim_config) {
 //            Monitor::config_for_sim(sim_config, voi);
             init();
         }
 
-        void config(int N, double dt, const std::vector<int> &voi)  {
+        void config(int N, double dt) {
 //            Monitor::config_for_sim(N, dt, voi);
             init();
         }

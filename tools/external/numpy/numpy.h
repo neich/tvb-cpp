@@ -20,11 +20,11 @@
 
 #include <definitions.h>
 
-int searchsorted(const tvb::Vectord &a, double v, const std::string &side);
+int searchsorted(const tvb::TArray1d &a, double v, const std::string &side);
 
-tvb::Vectori searchsorted(const tvb::Vectord &a, const tvb::Vectord &v, const std::string &side);
+tvb::TArray1di searchsorted(const tvb::TArray1d &a, const tvb::TArray1d &v, const std::string &side);
 
-double polyval(const std::vector<double> &p, double x);
+tvb::Float polyval(const std::vector<tvb::Float> &p, tvb::Float x);
 
 
 template<typename _Scalar>
@@ -40,8 +40,8 @@ Eigen::Array<_Scalar, Eigen::Dynamic,1> arange(_Scalar start, _Scalar end, _Scal
 }
 
 inline
-tvb::Vectord cumsum(const tvb::Vectord& a) {
-    tvb::Vectord result(a.size());
+tvb::TArray1d cumsum(const tvb::TArray1d& a) {
+    tvb::TArray1d result(a.size());
     double accum = 0.0;
     for (int i = 0; i != a.size(); ++i) {
         result[i] = accum + a[i];
@@ -52,20 +52,20 @@ tvb::Vectord cumsum(const tvb::Vectord& a) {
 
 }
 
-tvb::Matrixd corrcoef(const tvb::Matrixd& x,
-                      const tvb::Matrixd& y=tvb::Matrixd(),
-                      bool rowvar=true);
+tvb::TArray2d corrcoef(const tvb::TArray2d& x,
+                       const tvb::TArray2d& y=tvb::TArray2d(),
+                       bool rowvar=true);
 
-tvb::Matrixd cov(const tvb::Matrixd& x,
-                 const tvb::Matrixd& y=tvb::Matrixd(),
-                 bool rowvar=true,
-                 int ddof=-1,
-                 bool bias=false);
+tvb::TArray2d cov(const tvb::TArray2d& x,
+                  const tvb::TArray2d& y=tvb::TArray2d(),
+                  bool rowvar=true,
+                  int ddof=-1,
+                  bool bias=false);
 
-std::pair<tvb::Vectord, tvb::Vectord> average(const tvb::Matrixd& x,
-                                        bool row=true,
-                                        const tvb::Vectord& weights={});
+std::pair<tvb::TArray1d, tvb::TArray1d> average(const tvb::TArray2d& x,
+                                                bool row=true,
+                                                const tvb::TArray1d& weights={});
 
-tvb::Vectord tril_indices(const tvb::Matrixd& m, int N, int k=0);
+tvb::TArray1d tril_indices(const tvb::TArray2d& m, int N, int k=0);
 
 #endif //TVB_CPP_NUMPY_H

@@ -16,7 +16,7 @@
 
 using namespace tvb;
 
-Eigen::MatrixXd companion(const Vectord& a) {
+TMatrix companion(const TArray1d& a) {
 /*
     """
     Create a companion matrix.
@@ -49,7 +49,7 @@ Eigen::MatrixXd companion(const Vectord& a) {
 
     References
     ----------
-    .. [1] R. A. Horn & C. R. Johnson, *Matrix Analysis*.  Cambridge, UK:
+    .. [1] R. A. Horn & C. R. Johnson, *TMatrix Analysis*.  Cambridge, UK:
         Cambridge University Press, 1999, pp. 146-7.
 
     Examples
@@ -75,8 +75,8 @@ Eigen::MatrixXd companion(const Vectord& a) {
     if (a[0] == 0)
         throw("The first coefficient in `a` must not be zero.");
 
-    Vectord first_row = -a(Eigen::seqN(1, n-1)) / (1.0 * a[0]);
-    Eigen::MatrixXd c = Eigen::MatrixXd::Zero(n-1, n-1); //np.zeros((n - 1, n - 1), dtype=first_row.dtype)
+    TVector first_row = -a(Eigen::seqN(1, n - 1)) / (1.0 * a[0]);
+    TMatrix c = TMatrix::Zero(n - 1, n - 1); //np.zeros((n - 1, n - 1), dtype=first_row.dtype)
     c.row(0) = first_row;
     for (unsigned i = 0; i < n-2; ++i)
         c(i+1, i) = 1.0;

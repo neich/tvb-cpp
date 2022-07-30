@@ -31,8 +31,8 @@ StateTrack tvb::simulate(SimConfig &sim_config) {
         StateTrack *stateTrack = simulator.run(sim_config.model(),
                                                sim_config.connectivity(),
                                                sim_config.integrator(),
+                                               sim_config.monitor(),
                                                sim_config.coupling(),
-                                               sim_config.history(),
                                                sim_config.start_time(), sim_config.end_time(), sim_config.dt(),
                                                NULL,
                                                sim_config.samplingRate());

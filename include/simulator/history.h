@@ -22,11 +22,11 @@ namespace tvb {
 
     class History {
     public:
-        typedef typename std::pair<Matrixd, std::vector<Matrixd>> QResult;
+        typedef typename std::pair<TArray2d, std::vector<TArray2d>> QResult;
 
     protected:
-        Matrixd m_weights;
-        Matrixd m_delays;
+        TArray2d m_weights;
+        TArray2d m_delays;
         std::vector<int> m_cvars;
         int m_nvars;
         int m_nnodes;
@@ -37,7 +37,7 @@ namespace tvb {
 
         History(int n_nodes, int n_cvar) : m_weights(n_nodes, n_nodes), m_cvars(n_cvar) {}
 
-        History(const Matrixd &weights, const Matrixd &delays, const std::vector<int> &cvars) {
+        History(const TArray2d &weights, const TArray2d &delays, const std::vector<int> &cvars) {
             m_weights = weights;
             m_delays = delays;
             m_cvars = cvars;
@@ -49,9 +49,9 @@ namespace tvb {
 
         const std::vector<int>& c_vars() const { return m_cvars; }
 
-        [[nodiscard]] const Matrixd &weights() const { return m_weights; }
+        [[nodiscard]] const TArray2d &weights() const { return m_weights; }
 
-        Matrixd &delays() { return m_delays; }
+        TArray2d &delays() { return m_delays; }
 
         std::vector<int> &cvars() { return m_cvars; }
 
@@ -62,19 +62,19 @@ namespace tvb {
 
         [[nodiscard]] virtual QResult query(int step) const = 0;
 
-        virtual void update(int step, int n_reg, const State& state) = 0;
+        virtual void update(int step, const State& state) = 0;
 
+        virtual const TArray2d &getCurrent() const = 0;
     };
 
     class HistoryDense : public History {
     public:
-        typedef typename Eigen::Matrix<Matrixd, Eigen::Dynamic, 1> Buffer; // (time, vars, nodes)
 
     private:
-        Matrixi m_idelays;
+        TArray2di m_idelays;
         int m_ntime = 1;
 
-        Buffer m_buffer;
+        std::vector<TArray2d> m_buffer;
 
     public:
 
@@ -82,22 +82,28 @@ namespace tvb {
 
         // HistoryDense(int n_nodes, int n_cvar) : History(n_nodes, n_cvar) {}
 
-        HistoryDense(const Matrixd &weights, const Matrixd &delays, const std::vector<int> &cvars): History(weights, delays, cvars) {}
+        HistoryDense(const TArray2d &weights, const TArray2d &delays, const std::vector<int> &cvars): History(weights, delays, cvars) {}
 
         void init(double dt, const State& init_state) override {
             History::init(dt, init_state);
-            m_idelays = Matrixi(m_weights.rows(), m_weights.cols());
+            m_idelays = TArray2di(m_weights.rows(), m_weights.cols());
             // tvb::transform(m_delays, m_idelays, rint(boost::phoenix::placeholders::arg1 / dt));
             tvb::transform(m_delays, m_idelays, [&dt](double arg1) { return int(lround(arg1 / dt)); });
             m_ntime = m_idelays.maxCoeff() + 1;
-            m_buffer = Buffer(m_ntime);
-            tvb::fill(m_buffer, init_state);
+            m_buffer = std::vector<TArray2d>(m_cvars.size());
+//            std::fill_n(m_buffer, m_cvars.size(), TArray2d(this->num_nodes(), m_ntime));
+            this->update(0, init_state);
         }
 
         [[nodiscard]] QResult query(int step) const override;
 
-        void update(int step, int n_reg, const State& state) override {
-            m_buffer(step % m_ntime) = state(Eigen::all, m_cvars);
+        void update(int step, const State& state) override {
+            for (int c = 0; c < m_cvars.size(); ++c)
+                m_buffer[c].col(step % m_ntime) = state.col(c);
+        }
+
+        virtual const TArray2d &getCurrent() const override {
+            throw "Cannot use getCurrent() with HistoryDense";
         }
 
     };
@@ -105,31 +111,32 @@ namespace tvb {
     class HistoryNoDelays : public History {
     private:
 
-        tvb::Matrixd m_buffer;
+        tvb::TArray2d m_buffer;
 
     public:
 
         HistoryNoDelays(): History() {}
 
-        HistoryNoDelays(int n_nodes, int n_cvar) : History(n_nodes, n_cvar) {}
-
-        HistoryNoDelays(const Matrixd &weights, const Matrixd &delays, const std::vector<int> &cvars): History(weights, delays, cvars) {}
+        HistoryNoDelays(const TArray2d &weights, const TArray2d &delays, const std::vector<int> &cvars): History(weights, delays, cvars) {}
 
         void init(double dt, const State& init_state) override {
             History::init(dt, init_state);
             m_buffer = init_state(Eigen::all, m_cvars);
         }
 
-        QResult query(int step) const override {
-            std::vector<tvb::Matrixd> delayed(m_nnodes);
-            std::fill_n(delayed.begin(), m_nnodes, m_buffer.transpose());
-            return History::QResult(m_buffer, delayed);
+        [[nodiscard]] QResult query(int step) const override {
+            std::vector<tvb::TArray2d> delayed(m_nnodes);
+            std::fill_n(delayed.begin(), m_nnodes, m_buffer);
+            return {m_buffer, delayed};
         }
 
-        void update(int step, int n_reg, const State& state) override {
+        void update(int step, const State& state) override {
             m_buffer = state(Eigen::all, m_cvars);
         }
 
+        [[nodiscard]] const TArray2d &getCurrent() const override {
+            return m_buffer;
+        }
     };
 
 

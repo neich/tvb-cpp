@@ -25,10 +25,10 @@ int calc_length(int start, int end, int step) {
     return 1 + (end - start - 1) / step;
 }
 
-Matrixd SW_FC::from_fMRI(const Matrixd& signal) const {  // Compute the FCD of an input BOLD signal
+TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of an input BOLD signal
     int N = signal.rows();
     int Tmax = signal.cols();
-    Matrixd signal_filtered;
+    TArray2d signal_filtered;
     if (m_apply_filters)
         signal_filtered = m_filter.apply(signal);  // Filters seem to be always applied...
     else
@@ -40,16 +40,16 @@ Matrixd SW_FC::from_fMRI(const Matrixd& signal) const {  // Compute the FCD of a
     // compute the correlation between the two.
     int lastWindow = Tmax - m_windowSize;  // 190 = 220 - 30
     int N_windows = calc_length(0, lastWindow, m_windowStep);  // N_windows = len(np.arange(0, lastWindow, windowStep))
-    Vectord cotsampling = Vectord::Zero((int(N_windows*(N_windows-1)/2)));
+    TArray1d cotsampling = TArray1d::Zero((int(N_windows * (N_windows - 1) / 2)));
     int kk = 0;
     int ii2 = 0;
     for (int t = 0; t < lastWindow; t+=m_windowStep) {
         int jj2 = 0;
-        Matrixd sfilt = signal_filtered(Eigen::all, Eigen::seqN(t, m_windowSize + 1)).transpose();
-        Matrixd cc = corrcoef(sfilt, Matrixd(), false);  // Pearson correlation coefficients
+        TArray2d sfilt = signal_filtered(Eigen::all, Eigen::seqN(t, m_windowSize + 1)).transpose();
+        TArray2d cc = corrcoef(sfilt, TArray2d(), false);  // Pearson correlation coefficients
         for (int t2 = 0; t2 < lastWindow; t2+=m_windowStep) {
-            Matrixd sfilt2 = signal_filtered(Eigen::all, Eigen::seqN(t2, m_windowSize + 1)).transpose();
-            Matrixd cc2 = corrcoef(sfilt2, Matrixd(), false);  // Pearson correlation coefficients
+            TArray2d sfilt2 = signal_filtered(Eigen::all, Eigen::seqN(t2, m_windowSize + 1)).transpose();
+            TArray2d cc2 = corrcoef(sfilt2, TArray2d(), false);  // Pearson correlation coefficients
             double ca = pearson_r(tril_indices(cc, N, -1), tril_indices(cc2, N, -1));  // Correlation between both FC
             if (jj2 > ii2) {  // Only keep the upper triangular part
                 cotsampling[kk++] = ca;

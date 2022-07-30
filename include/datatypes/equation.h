@@ -50,8 +50,8 @@ namespace tvb {
             return m_expression.value();
         }
 
-        Vectord evaluate(const std::string& var, const Vectord& values) const {
-            Vectord result(values.size());
+        TArray1d evaluate(const std::string& var, const TArray1d& values) const {
+            TArray1d result(values.size());
             for (unsigned i = 0; i < values.size(); ++i) {
                 m_symbol_table.get_variable(var)->ref() = values[i];
                 result[i] = m_expression.value();

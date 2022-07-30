@@ -24,7 +24,7 @@
 using namespace tvb;
 using namespace std;
 
-Vectord detrend_linear(const tvb::Vectord& data) {
+TArray1d detrend_linear(const tvb::TArray1d& data) {
     double xmean, ymean;
     double temp;
     double Sxy;
@@ -34,8 +34,8 @@ Vectord detrend_linear(const tvb::Vectord& data) {
     double yint;
 
     int m = data.size();
-    Vectord x(m);
-    Vectord y = data;
+    TArray1d x(m);
+    TArray1d y = data;
 
     /********************************
     Set the X axis Liner Values
@@ -85,7 +85,7 @@ Vectord detrend_linear(const tvb::Vectord& data) {
 }
 
 
-//Vectord detrend(const Vectord& data, const string& type, const Vectori& bp=, bool overwrite_data) {
+//TArray1d detrend(const TArray1d& data, const string& type, const TArray1di& bp=, bool overwrite_data) {
 ////    """
 ////    Remove linear trend along axis from data.
 ////
@@ -135,7 +135,7 @@ Vectord detrend_linear(const tvb::Vectord& data) {
 ////    if dtype not in "dfDF":
 ////        dtype = "d"
 //    if (type == "constant" || type == "c") {
-//        Vectord ret = data - data.sum()/data.size();
+//        TArray1d ret = data - data.sum()/data.size();
 //        return ret;
 //    }
 //    else {
@@ -176,7 +176,7 @@ Vectord detrend_linear(const tvb::Vectord& data) {
 //        return ret
 
 
-Vectord even_ext(const Vectord&x, int n) {
+TArray1d even_ext(const TArray1d&x, int n) {
 /*
     """
     Even extension at the boundaries of an array
@@ -217,21 +217,21 @@ Vectord even_ext(const Vectord&x, int n) {
     if (n > x.size() - 1)
         throw (string_format("The extension length n (%d) is too big. It must not exceed x.shape[axis]-1, which is %d.", n,
                       x.size() - 1));
-    Vectord left_ext = x(Eigen::seqN(n, n, -1));
+    TArray1d left_ext = x(Eigen::seqN(n, n, -1));
     // left_ext = axis_slice(x, start=n, stop=0, step=-1, axis=axis)
-    Vectord right_ext = x(Eigen::seqN(Eigen::last, n, -1));
+    TArray1d right_ext = x(Eigen::seqN(Eigen::last, n, -1));
     // right_ext = axis_slice(x, start=-2, stop=-(n + 2), step=-1, axis=axis)
 //    ext = np.concatenate((left_ext,
 //                          x,
 //                          right_ext),
 //                         axis=axis)
-    Vectord ext(x.size() + 2 * n);
+    TArray1d ext(x.size() + 2 * n);
     ext << left_ext, x, right_ext;
     return ext;
 }
 
 
-Vectord const_ext(const Vectord& x, int n) {
+TArray1d const_ext(const TArray1d& x, int n) {
 /*
     """
     Constant extension at the boundaries of an array
@@ -273,14 +273,14 @@ Vectord const_ext(const Vectord& x, int n) {
 */
     if (n < 1)
         return x;
-    Vectord left_ext = Vectord::Constant(x(0), n);
-    Vectord right_ext = Vectord::Constant(x(Eigen::last), n);
-    Vectord ext(x.size() + 2 * n);
+    TArray1d left_ext = TArray1d::Constant(x(0), n);
+    TArray1d right_ext = TArray1d::Constant(x(Eigen::last), n);
+    TArray1d ext(x.size() + 2 * n);
     ext << left_ext, x, right_ext;
     return ext;
 }
 
-Vectord odd_ext(const Vectord&x, int n) {
+TArray1d odd_ext(const TArray1d&x, int n) {
     /*  """
       Odd extension at the boundaries of an array
 
@@ -321,14 +321,14 @@ Vectord odd_ext(const Vectord&x, int n) {
         throw (string_format("The extension length n (%d) is too big. It must not exceed x.shape[axis]-1, which is %d.",
                       n, x.size() - 1));
     double left_end = x[0]; // axis_slice(x, start=0, stop=1, axis=axis)
-    Vectord left_ext = x(Eigen::seqN(n, n, -1)); // axis_slice(x, start=n, stop=0, step=-1, axis=axis)
+    TArray1d left_ext = x(Eigen::seqN(n, n, -1)); // axis_slice(x, start=n, stop=0, step=-1, axis=axis)
     double right_end = x(Eigen::last); // axis_slice(x, start=-1, axis=axis)
-    Vectord right_ext = x(Eigen::seqN(Eigen::last - 1, n, -1)); // axis_slice(x, start=-2, stop=-(n + 2), step=-1, axis=axis)
+    TArray1d right_ext = x(Eigen::seqN(Eigen::last - 1, n, -1)); // axis_slice(x, start=-2, stop=-(n + 2), step=-1, axis=axis)
 //    ext = np.concatenate((2 * left_end - left_ext,
 //                                 x,
 //                                 2 * right_end - right_ext),
 //                         axis = axis)
-    Vectord ext(x.size() + 2 * n);
+    TArray1d ext(x.size() + 2 * n);
     ext(Eigen::seqN(0, n)) = 2*left_end - left_ext;
     ext(Eigen::seqN(n, x.size())) = x;
     ext(Eigen::seqN(n+x.size(), n)) = 2*right_end - right_ext;
@@ -336,7 +336,7 @@ Vectord odd_ext(const Vectord&x, int n) {
     return ext;
 }
 
-pair<int, Vectord> _validate_pad(const string& padtype, int padlen, const Vectord& x, int ntaps) {
+pair<int, TArray1d> _validate_pad(const string& padtype, int padlen, const TArray1d& x, int ntaps) {
     // """Helper to validate padding for filtfilt"""
     static const unordered_set<string> pad_types = {"even", "odd", "constant", "none"};
     if (pad_types.count(padtype) != 1)
@@ -351,7 +351,7 @@ pair<int, Vectord> _validate_pad(const string& padtype, int padlen, const Vector
     if (x.size() <= edge)
         throw (string_format("The length of the input vector x must be greater than padlen, which is %d.", edge));
 
-    Vectord ext;
+    TArray1d ext;
     if (padtype != "none" && edge > 0) {
 //        # Make an extension of length `edge` at each
 //        # end of the input array.
@@ -366,7 +366,7 @@ pair<int, Vectord> _validate_pad(const string& padtype, int padlen, const Vector
     return {edge, ext};
 }
 
-Vectord lfilter_zi(const Vectord& B, const Vectord& A) {
+TArray1d lfilter_zi(const TArray1d& B, const TArray1d& A) {
     /*  """
       Construct initial conditions for lfilter for step response steady-state.
 
@@ -486,10 +486,10 @@ Vectord lfilter_zi(const Vectord& B, const Vectord& A) {
     else if (b.size() < n)
         b.conservativeResize(n);
 
-    Eigen::MatrixXd IminusA = Eigen::MatrixXd::Identity(n - 1, n - 1) - companion(a).transpose();
-    Eigen::VectorXd bb = b(Eigen::seqN(1, Eigen::last)) - a(Eigen::seqN(1, Eigen::last)) * b[0];
+    TMatrix IminusA = TMatrix::Identity(n - 1, n - 1) - companion(a).transpose();
+    TVector bb = b(Eigen::seqN(1, Eigen::last)) - a(Eigen::seqN(1, Eigen::last)) * b[0];
     // # Solve zi = A*zi + B
-    Vectord zi = IminusA.colPivHouseholderQr().solve(bb).array();
+    TArray1d zi = IminusA.colPivHouseholderQr().solve(bb).array();
     // zi = np.linalg.solve(IminusA, B)
 
 //    # For future reference: we could also use the following
@@ -508,13 +508,13 @@ Vectord lfilter_zi(const Vectord& B, const Vectord& A) {
 }
 
 
-Vectord _linear_filter(const Vectord &B, const Vectord &A, const Vectord &x, const Vectord& zi={})
+TArray1d _linear_filter(const TArray1d &B, const TArray1d &A, const TArray1d &x, const TArray1d& zi={})
 {
     /* normalize the filter coefs only once. */
-    Vectord b = B / A(0);
-    Vectord a = A / A(0);
-    Vectord y(x.size());
-    Vectord z = zi;
+    TArray1d b = B / A(0);
+    TArray1d a = A / A(0);
+    TArray1d y(x.size());
+    TArray1d z = zi;
 
     for (unsigned k = 0; k < x.size(); k++) {
         if (b.size() > 1) {
@@ -533,7 +533,7 @@ Vectord _linear_filter(const Vectord &B, const Vectord &A, const Vectord &x, con
 }
 
 
-Vectord lfilter(const Vectord& b, const Vectord& a, const Vectord& x, const Vectord& zi={}) {
+TArray1d lfilter(const TArray1d& b, const TArray1d& a, const TArray1d& x, const TArray1d& zi={}) {
 /*
     """
     Filter data along one-dimension with an IIR or FIR filter.
@@ -735,8 +735,8 @@ Vectord lfilter(const Vectord& b, const Vectord& a, const Vectord& x, const Vect
 }
 
 
-Vectord filtfilt_pad(const Vectord& b, const Vectord& a, const Vectord& x,
-         int padlen, const string& padtype) {
+TArray1d filtfilt_pad(const TArray1d& b, const TArray1d& a, const TArray1d& x,
+                      int padlen, const string& padtype) {
    /* """
     Apply a digital filter forward and backward to a signal.
 
@@ -896,9 +896,9 @@ Vectord filtfilt_pad(const Vectord& b, const Vectord& a, const Vectord& x,
     a = np.atleast_1d(a)
     x = np.asarray(x)*/
 
-    pair<int, Vectord> p = _validate_pad(padtype, padlen, x, max(a.size(), b.size()));
+    pair<int, TArray1d> p = _validate_pad(padtype, padlen, x, max(a.size(), b.size()));
     int edge = p.first;
-    Vectord ext = p.second;
+    TArray1d ext = p.second;
 
     // # Get the steady state of the filter's step response.
     auto zi = lfilter_zi(b, a);
@@ -912,7 +912,7 @@ Vectord filtfilt_pad(const Vectord& b, const Vectord& a, const Vectord& x,
     double x0 = ext[0]; // axis_slice(ext, stop=1, axis=axis)
 
 //    # Forward filter.
-    Vectord y = lfilter(b, a, ext, zi * x0);
+    TArray1d y = lfilter(b, a, ext, zi * x0);
 
 //    # Backward filter.
 //    # Create y0 so zi*y0 broadcasts appropriately.

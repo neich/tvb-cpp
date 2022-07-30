@@ -27,9 +27,9 @@ namespace tvb {
 
         State scheme(const State &state,
                      const System &dfun,
-                     const Matrixd &coupling,
-                     const Vectord &local_coupling,
-                     const Vectord &stimulus) override;
+                     const TArray2d &coupling,
+                     const TArray1d &local_coupling,
+                     const TArray1d &stimulus) override;
 
     };
 

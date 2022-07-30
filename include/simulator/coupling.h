@@ -21,16 +21,98 @@
 namespace tvb {
 
     class Coupling {
+    protected:
+        TArray2d m_weights;
+        TArray2d m_delays;
+        std::vector<int> m_cvars;
+        int m_nvars;
+        int m_nnodes;
+
     public:
 
-        Matrixd couple(int step, const History &history) const;
+        Coupling(const TArray2d &weights, const TArray2d &delays, const std::vector<int> &cvars) {
+            m_weights = weights;
+            m_delays = delays;
+            m_cvars = cvars;
+            m_nnodes = weights.cols();
+            m_nvars = cvars.size();
+        }
 
-        std::vector<tvb::Matrixd>  pre(const Matrixd &x_i, std::vector<tvb::Matrixd>  &x_j) const {
+        virtual void init(double dt, const State &init_state) = 0;
+
+        virtual TArray2d couple(int step) const = 0;
+
+        virtual std::vector<tvb::TArray2d> pre(const TArray2d &x_i, std::vector<tvb::TArray2d> &x_j) const {
             return x_j;
         }
 
-        Matrixd post(const Matrixd &gx) const {
+        virtual TArray2d post(const TArray2d &gx) const {
             return gx;
+        }
+
+        virtual void update(int step, const State &state) = 0;
+
+    };
+
+    class CouplingLinearDense : public Coupling {
+    protected:
+        TArray2di m_idelays;
+        int m_ntime;
+        double m_dt;
+
+        std::vector<TArray2d> m_buffer;
+
+    public:
+        CouplingLinearDense(const TArray2d &weights, const TArray2d &delays, const std::vector<int> &cvars) : Coupling(
+                weights, delays, cvars) {};
+
+        void init(double dt, const State &init_state) override {
+            m_dt = dt;
+            m_idelays = TArray2di(m_weights.rows(), m_weights.cols());
+            // tvb::transform(m_delays, m_idelays, rint(boost::phoenix::placeholders::arg1 / dt));
+            tvb::transform(m_delays, m_idelays, [&dt](double arg1) { return int(lround(arg1 / dt)); });
+            m_ntime = m_idelays.maxCoeff() + 1;
+            m_buffer = std::vector<TArray2d>(m_cvars.size());
+            std::fill_n(m_buffer.begin(), m_cvars.size(), TArray2d::Zero(this->m_nnodes, m_ntime));
+            this->update(0, init_state);
+        }
+
+
+        virtual TArray2d couple(int step) const override;
+
+        virtual void update(int step, const State &state) override {
+            for (int c = 0; c < m_cvars.size(); ++c)
+                m_buffer[c].col(step % m_ntime) = state.col(c);
+        }
+
+    };
+
+    class CouplingLinearSparse : public Coupling {
+    protected:
+        TArray2di m_idelays;
+        int m_ntime = 1;
+        double m_dt;
+
+        std::vector<TArray2d> m_buffer;
+
+        TArray1di m_index_sizes;
+        std::vector<TArray1d> m_wsparse;
+        std::vector<TArray1di> m_dsparse;
+        std::vector<std::vector<std::vector<Float*>>> m_pbuffer;
+
+
+    public:
+        CouplingLinearSparse(const TArray2d &weights, const TArray2d &delays, const std::vector<int> &cvars) : Coupling(
+                weights, delays, cvars) {};
+
+        void init(double dt, const State &init_state) override;
+
+
+        TArray2d couple(int step) const override;
+
+        void update(int step, const State &state) override {
+            for (int c = 0; c < m_cvars.size(); ++c)
+                m_buffer[c].col(step % m_ntime) = state.col(m_cvars[c]);
         }
 
     };

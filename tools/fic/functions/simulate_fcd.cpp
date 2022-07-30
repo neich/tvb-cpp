@@ -19,20 +19,20 @@
 
 using namespace tvb;
 
-Matrixd SimulateFCD::computeSubjectBold(const StateTrack& signal, double dt, const Vectori& areasToSimulate) const {
+TArray2d SimulateFCD::computeSubjectBold(const StateTrack& signal, double dt, const TArray1di& areasToSimulate) const {
     BoldStephan2007 bold(signal.m_states.size()*dtt,signal.m_states[0].rows(), dtt, {2});
-    Matrixd result = bold.apply(stateTrackToMatrix(signal, 2));
+    TArray2d result = bold.apply(stateTrackToMatrix(signal, 2));
     int step = int(round(TR/dtt));
     return result(Eigen::all, Eigen::seq(step-1, Eigen::last, step));
 }
 
 
-Matrixd SimulateFCD::simulateSingleSubject(SimConfig &simConfig) const{
+TArray2d SimulateFCD::simulateSingleSubject(SimConfig &simConfig) const{
     simConfig.setIntegrationInterval(0.0, Tmaxneuronal);
     simConfig.setTimeDelta(dt);
     simConfig.setSamplingRate(10);
     StateTrack sresult = simulate(simConfig);
-    Matrixd bds = computeSubjectBold(sresult, simConfig.dt());
+    TArray2d bds = computeSubjectBold(sresult, simConfig.dt());
     return bds;
 }
 

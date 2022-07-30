@@ -12,23 +12,23 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include <simulator/monitors/bold_Stephan2007.h>
+#include "simulator/monitors/bold_Stephan2007.h"
 
 using namespace tvb;
 
 
-MSample BoldStephan2007::sample(int step, const State &state) {
+//MSample BoldStephan2007::sample(int step, const State &state) {
+//
+//    return MSample(-1, {});
+//}
 
-    return MSample(-1, {});
-}
-
-Matrixd BoldStephan2007::apply(const Matrixd& signal) {
+TArray2d BoldStephan2007::apply(const TArray2d& signal) {
     // # Initial conditions
 
-    Matrixd x0 = Matrixd::Zero(signal.rows(), signal.cols());
-    Matrixd x1 = Matrixd::Zero(signal.rows(), signal.cols());
-    Matrixd x2 = Matrixd::Zero(signal.rows(), signal.cols());
-    Matrixd x3 = Matrixd::Zero(signal.rows(), signal.cols());
+    TArray2d x0 = TArray2d::Zero(signal.rows(), signal.cols());
+    TArray2d x1 = TArray2d::Zero(signal.rows(), signal.cols());
+    TArray2d x2 = TArray2d::Zero(signal.rows(), signal.cols());
+    TArray2d x3 = TArray2d::Zero(signal.rows(), signal.cols());
     x0.col(0) = 0.0;
     x1.col(0) = 1.0;
     x2.col(0) = 1.0;
@@ -47,9 +47,9 @@ Matrixd BoldStephan2007::apply(const Matrixd& signal) {
         x2.col(n + 1) = x2.col(n) + m_dt * itauo * (x1.col(n) - x2.col(n).pow(ialpha));
         x3.col(n + 1) = x3.col(n) + m_dt * itauo * (x1.col(n) * (1.0 - pow((1 - Eo), (1/x1.col(n))))/Eo - x2.col(n).pow(ialpha) * x3.col(n)/x2.col(n));
     }
-    Matrixd v = x2(Eigen::all, Eigen::seq(n_min, n_t-1));
-    Matrixd q = x3(Eigen::all, Eigen::seq(n_min, n_t-1));
-    Matrixd b = vo * (k1 * (1 - q) + k2 * (1 - q / v) + k3 * (1 - v));
+    TArray2d v = x2(Eigen::all, Eigen::seq(n_min, n_t - 1));
+    TArray2d q = x3(Eigen::all, Eigen::seq(n_min, n_t - 1));
+    TArray2d b = vo * (k1 * (1 - q) + k2 * (1 - q / v) + k3 * (1 - v));
 
 
     return b;

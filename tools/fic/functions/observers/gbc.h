@@ -32,16 +32,16 @@ public:
             FunctionalConnectivityStandard(applyFilters, filter)
     {}
 
-    [[nodiscard]] double distance(const tvb::Matrixd& fcd1, const tvb::Matrixd& fcd2) const override {
+    [[nodiscard]] double distance(const tvb::TArray2d& fcd1, const tvb::TArray2d& fcd2) const override {
         return FunctionalConnectivity::pearson_r(fcd1.row(0), fcd2.row(0));
     }
 
-    [[nodiscard]] tvb::Matrixd postprocess() const override {
-        tvb::Matrixd fc_emp = FunctionalConnectivityStandard::postprocess();
+    [[nodiscard]] tvb::TArray2d postprocess() const override {
+        tvb::TArray2d fc_emp = FunctionalConnectivityStandard::postprocess();
         int N = fc_emp.rows();
-        tvb::Matrixd onesd = Matrixd::Zero(N, N);
-        onesd.matrix().diagonal() = Vectord::Ones(N);
-        tvb::Matrixd result = fc_emp * onesd;
+        tvb::TArray2d onesd = TArray2d::Zero(N, N);
+        onesd.matrix().diagonal() = TArray1d::Ones(N);
+        tvb::TArray2d result = fc_emp * onesd;
         result = fc_emp - result;
         result = result.colwise().mean();
         return result;

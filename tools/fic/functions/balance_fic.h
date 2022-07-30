@@ -22,7 +22,7 @@
 struct OptResult {
     std::vector<tvb::State> m_states;
     std::vector<double> m_times;
-    tvb::Vectord m_Jis;
+    tvb::TArray1d m_Jis;
 };
 
 OptResult optimize_fic(double G, tvb::SimConfig& sim_config);

@@ -24,7 +24,7 @@
 
 class Filter {
 public:
-    virtual tvb::Matrixd apply(const tvb::Matrixd& signal) const {
+    virtual tvb::TArray2d apply(const tvb::TArray2d& signal) const {
         return signal;
     }
 };

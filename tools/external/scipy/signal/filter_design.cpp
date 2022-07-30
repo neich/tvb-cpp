@@ -51,7 +51,7 @@ static unordered_map<string, string> band_dict = {
         {"hp", "highpass"},
 };
 
-int _relative_degree(const Vectord& z, const AVectorc& p) {
+int _relative_degree(const TArray1d& z, const TArray1dc& p) {
 //    """
 //    Return relative degree of transfer function from zeros and poles
 //    """
@@ -74,12 +74,12 @@ ZeroPoleGain buttap(double N) {
 //    """
     if (abs(int(N)) != N)
         throw("Filter order must be a nonnegative integer");
-    Vectord z;
-    Vectord m = arange<double>(-N+1, N, 2);
+    TArray1d z;
+    TArray1d m = arange<Float>(-N + 1, N, 2);
     int size = m.size();
-    AVectorc p(size);
+    TArray1dc p(size);
     for (unsigned i = 0; i < size; ++i)
-        p[i] = -exp(1i * M_PI * m[i] / (2.0*size));
+        p[i] = -exp(std::complex<tvb::Float>(1i) * tvb::Float(M_PI) * m[i] / (tvb::Float(2.0)*tvb::Float(size)));
     // # Middle value is 0 to ensure an exactly real pole
     // p = -numpy.exp(1i * pi * m / (2 * N))
     double k = 1;
@@ -87,7 +87,7 @@ ZeroPoleGain buttap(double N) {
 }
 
 
-ZeroPoleGain lp2lp_zpk(const Vectord& z, const AVectorc& p, double k, double wo=1.0) {
+ZeroPoleGain lp2lp_zpk(const TArray1d& z, const TArray1dc& p, double k, double wo=1.0) {
 /*
     r"""
     Transform a lowpass filter prototype to a different frequency.
@@ -139,8 +139,8 @@ ZeroPoleGain lp2lp_zpk(const Vectord& z, const AVectorc& p, double k, double wo=
     int degree = _relative_degree(z, p);
 
     // # Scale all points radially from origin to shift cutoff frequency
-    Vectord z_lp = wo * z;
-    AVectorc p_lp = wo * p;
+    TArray1d z_lp = wo * z;
+    TArray1dc p_lp = wo * p;
 
 //    # Each shifted pole decreases gain by wo, each shifted zero increases it.
 //    # Cancel out the net change to keep overall gain the same
@@ -149,7 +149,7 @@ ZeroPoleGain lp2lp_zpk(const Vectord& z, const AVectorc& p, double k, double wo=
     return {z_lp, p_lp, k_lp};
 }
 
-ZeroPoleGain lp2hp_zpk(const Vectord& z, const AVectorc& p, double k, double wo=1.0) {
+ZeroPoleGain lp2hp_zpk(const TArray1d& z, const TArray1dc& p, double k, double wo=1.0) {
 //    r"""
 //    Transform a lowpass filter prototype to a highpass filter.
 //
@@ -202,12 +202,12 @@ ZeroPoleGain lp2hp_zpk(const Vectord& z, const AVectorc& p, double k, double wo=
 
 //    # Invert positions radially about unit circle to convert LPF to HPF
 //    # Scale all points radially from origin to shift cutoff frequency
-    Vectord zz_hp = wo / z;
-    AVectorc p_hp = wo / p;
+    TArray1d zz_hp = wo / z;
+    TArray1dc p_hp = wo / p;
 
     // # If lowpass had zeros at infinity, inverting moves them to origin.
-    Vectord z_hp(zz_hp.size() + degree);
-    z_hp << zz_hp, Vectord::Zero(degree);
+    TArray1d z_hp(zz_hp.size() + degree);
+    z_hp << zz_hp, TArray1d::Zero(degree);
 
     // # Cancel out gain change caused by inversion
     double k_hp = k * real((-z).prod() / (-p).prod());
@@ -216,7 +216,7 @@ ZeroPoleGain lp2hp_zpk(const Vectord& z, const AVectorc& p, double k, double wo=
 }
 
 
-ZeroPoleGain lp2bp_zpk(const Vectord& z, const AVectorc& p, double k,
+ZeroPoleGain lp2bp_zpk(const TArray1d& z, const TArray1dc& p, double k,
                        double wo=1.0, double bw=1.0) {
 /*
     r"""
@@ -276,25 +276,25 @@ ZeroPoleGain lp2bp_zpk(const Vectord& z, const AVectorc& p, double k,
     int degree = _relative_degree(z, p);
 
     // # Scale poles and zeros to desired bandwidth
-    Vectord zz_lp = z * bw / 2.0;
-    AVectorc z_lp = zz_lp;
-    AVectorc p_lp = p * bw / 2.0;
+    TArray1d zz_lp = z * bw / 2.0;
+    TArray1dc z_lp = zz_lp;
+    TArray1dc p_lp = p * bw / 2.0;
 
     // # Square root needs to produce complex result, not NaN
 //    z_lp = z_lp.astype(complex);
 //    p_lp = p_lp.astype(complex);
 
     // # Duplicate poles and zeros and shift from baseband to +wo and -wo
-    AVectorc zz_bp(z_lp.size() * 2);
-    AVectorc p_bp(p_lp.size() * 2);
+    TArray1dc zz_bp(z_lp.size() * 2);
+    TArray1dc p_bp(p_lp.size() * 2);
     zz_bp << z_lp + (z_lp.pow(2.0) - pow(wo, 2.0)).sqrt(),
             z_lp - (z_lp.pow(2.0) - pow(wo, 2.0)).sqrt();
     p_bp << p_lp + (p_lp.pow(2.0) - pow(wo, 2.0)).sqrt(),
             p_lp - (p_lp.pow(2.0) - pow(wo, 2.0)).sqrt();
 
     // # Move degree zeros to origin, leaving degree zeros at infinity for BPF
-    AVectorc z_bp(zz_bp.size() + degree);
-    z_bp << zz_bp, AVectorc::Zero(degree);
+    TArray1dc z_bp(zz_bp.size() + degree);
+    z_bp << zz_bp, TArray1dc::Zero(degree);
 
     // # Cancel out gain change from frequency scaling
     double k_bp = k * pow(bw, degree);
@@ -303,8 +303,8 @@ ZeroPoleGain lp2bp_zpk(const Vectord& z, const AVectorc& p, double k,
 }
 
 
-ZeroPoleGain lp2bs_zpk(const Vectord& z, const AVectorc& p, double k,
-                       double wo=1.0, double bw=1.0) {
+ZeroPoleGain lp2bs_zpk(const TArray1d& z, const TArray1dc& p, double k,
+                       Float wo=1.0, Float bw=1.0) {
 //    r"""
 //    Transform a lowpass filter prototype to a bandstop filter.
 //
@@ -361,27 +361,27 @@ ZeroPoleGain lp2bs_zpk(const Vectord& z, const AVectorc& p, double k,
     int degree = _relative_degree(z, p);
 
     // # Invert to a highpass filter with desired bandwidth
-    Vectord z_hp = (bw / 2) / z;
-    AVectorc p_hp = (bw / 2) / p;
+    TArray1d z_hp = (bw / 2) / z;
+    TArray1dc p_hp = (bw / 2) / p;
 
 //    # Square root needs to produce complex result, not NaN
 //    z_hp = z_hp.astype(complex)
 //    p_hp = p_hp.astype(complex)
-    Vectord zz_lp = z * bw / 2.0;
-    AVectorc z_lp = zz_lp;
-    AVectorc p_lp = p * bw / 2.0;
+    TArray1d zz_lp = z * bw / 2.0;
+    TArray1dc z_lp = zz_lp;
+    TArray1dc p_lp = p * bw / 2.0;
 
     // # Duplicate poles and zeros and shift from baseband to +wo and -wo
-    AVectorc zz_bp(z_lp.size() * 2);
-    AVectorc p_bp(p_lp.size() * 2);
+    TArray1dc zz_bp(z_lp.size() * 2);
+    TArray1dc p_bp(p_lp.size() * 2);
     zz_bp << z_lp + (z_lp.pow(2.0) - pow(wo, 2.0)).sqrt(),
             z_lp - (z_lp.pow(2.0) - pow(wo, 2.0)).sqrt();
     p_bp << p_lp + (p_lp.pow(2.0) - pow(wo, 2.0)).sqrt(),
             p_lp - (p_lp.pow(2.0) - pow(wo, 2.0)).sqrt();
 
     // # Move any zeros that were at infinity to the center of the stopband
-    AVectorc z_bp(zz_bp.size() + 2 * degree);
-    z_bp << z_bp, AVectorc::Constant(degree, +1i * wo), AVectorc::Constant(degree, -1i * wo);
+    TArray1dc z_bp(zz_bp.size() + 2 * degree);
+    z_bp << z_bp, TArray1dc::Constant(degree, std::complex<Float>(+1i) * wo), TArray1dc::Constant(degree, std::complex<Float>(-1i) * wo);
 
     // # Cancel out gain change caused by inversion
     double k_bp = k * pow(bw, degree);
@@ -389,7 +389,7 @@ ZeroPoleGain lp2bs_zpk(const Vectord& z, const AVectorc& p, double k,
     return {vc2vd(z_bp), p_bp, k_bp};
 }
 
-ZeroPoleGain bilinear_zpk(const Vectord& z, const AVectorc& p, double k, double fs) {
+ZeroPoleGain bilinear_zpk(const TArray1d& z, const TArray1dc& p, double k, double fs) {
 //    r"""
 //    Return a digital IIR filter from an analog one using a bilinear transform.
 //
@@ -453,12 +453,12 @@ ZeroPoleGain bilinear_zpk(const Vectord& z, const AVectorc& p, double k, double 
     double fs2 = 2.0 * fs;
 
     // # Bilinear transform the poles and zeros
-    Vectord z_z = Vectord(fs2 + z) / Vectord(fs2 - z);
-    AVectorc p_z = (fs2 + p) / (fs2 - p);
+    TArray1d z_z = TArray1d(fs2 + z) / TArray1d(fs2 - z);
+    TArray1dc p_z = (fs2 + p) / (fs2 - p);
 
     // # Any zeros that were at infinity get moved to the Nyquist frequency
-    Vectord zz(z_z.size() + degree);
-    zz << z_z, -Vectord::Ones(degree);
+    TArray1d zz(z_z.size() + degree);
+    zz << z_z, -TArray1d::Ones(degree);
 
     // # Compensate for gain change
     double k_z = k * real((fs2 - z).prod() / (fs2 - p).prod());
@@ -467,7 +467,7 @@ ZeroPoleGain bilinear_zpk(const Vectord& z, const AVectorc& p, double k, double 
 }
 
 
-pair<Vectord, Vectord> zpk2tf(const Vectord& z, const AVectorc& p, double k) {
+pair<TArray1d, TArray1d> zpk2tf(const TArray1d& z, const TArray1dc& p, double k) {
 /*
     """
     Return polynomial transfer function representation from zeros and poles
@@ -500,8 +500,8 @@ pair<Vectord, Vectord> zpk2tf(const Vectord& z, const AVectorc& p, double k) {
 //        for i in range(z.shape[0]):
 //            b[i] = k[i] * poly(z[i])
 //    else:
-    Vectord b = k * poly(z);
-    Vectord a = poly(p);
+    TArray1d b = k * poly(z);
+    TArray1d a = poly(p);
 
 //    # Use real output if possible. Copied from numpy.poly, since
 //    # we can't depend on a specific version of numpy.
@@ -530,7 +530,7 @@ pair<Vectord, Vectord> zpk2tf(const Vectord& z, const AVectorc& p, double k) {
 
 
 ZeroPoleGain _iirfilter(int N,
-                           const tvb::Vectord& wn,
+                           const tvb::TArray1d& wn,
                            float rp,
                            float rs,
                            const std::string& btype,
@@ -541,7 +541,7 @@ ZeroPoleGain _iirfilter(int N,
 
     // ftype, btype, output = [x.lower() for x in (ftype, btype, output)]
     // Wn = asarray(Wn)
-    Vectord Wn = wn;
+    TArray1d Wn = wn;
     if (fs != 0.0) {
 //        if (analog)
 //            raise ValueError("fs cannot be specified for an analog filter")
@@ -565,8 +565,8 @@ ZeroPoleGain _iirfilter(int N,
 //        raise ValueError("stopband attenuation (rs) must be positive")
 //
 //    # Get analog lowpass prototype
-    Vectord z;
-    AVectorc p;
+    TArray1d z;
+    TArray1dc p;
     double k;
 
     if (ftype == "butter")
@@ -592,7 +592,7 @@ ZeroPoleGain _iirfilter(int N,
         throw std::runtime_error(string_format("\"%s\" not implemented in iirfilter.", ftype.c_str()));
 
     // # Pre-warp frequencies for digital filter design
-    Vectord warped(Wn.size());
+    TArray1d warped(Wn.size());
     if (!analog) {
         if ((Wn <= 0).any() || (Wn >= 1).any()) {
             if (fs > 0.0)
@@ -607,8 +607,8 @@ ZeroPoleGain _iirfilter(int N,
         warped = Wn;
 
     // # transform to lowpass, bandpass, highpass, or bandstop
-    Vectord zz;
-    AVectorc pp;
+    TArray1d zz;
+    TArray1dc pp;
     double kk;
     if (btype == "lowpass" || btype == "highpass") {
         if (Wn.size() != 1)
@@ -652,7 +652,7 @@ ZeroPoleGain _iirfilter(int N,
 }
 
 ZeroPoleGain iirfilter_zpk(int N,
-                           const tvb::Vectord& wn,
+                           const tvb::TArray1d& wn,
                            float rp,
                            float rs,
                            const std::string& btype,
@@ -663,14 +663,14 @@ ZeroPoleGain iirfilter_zpk(int N,
     return {z, p, k};
 }
 
-pair<Vectord, Vectord> iirfilter_ba(int N,
-                                     const tvb::Vectord& wn,
-                                     float rp,
-                                     float rs,
-                                     const std::string& btype,
-                                     bool analog,
-                                     const std::string& ftype,
-                                     float fs) {
+pair<TArray1d, TArray1d> iirfilter_ba(int N,
+                                      const tvb::TArray1d& wn,
+                                      float rp,
+                                      float rs,
+                                      const std::string& btype,
+                                      bool analog,
+                                      const std::string& ftype,
+                                      float fs) {
     auto[z, p, k] = _iirfilter(N, wn, rp, rs, btype, analog, ftype, fs);
     return zpk2tf(z, p, k);
 }

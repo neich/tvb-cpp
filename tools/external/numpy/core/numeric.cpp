@@ -16,8 +16,8 @@
 
 using namespace tvb;
 
-Vectord convolve(const Vectord& A, const Vectord& B) {
-    Vectord a, b;
+TArray1d convolve(const TArray1d& A, const TArray1d& B) {
+    TArray1d a, b;
     if (A.size() < B.size()) {
         a = B;
         b = A;
@@ -29,7 +29,7 @@ Vectord convolve(const Vectord& A, const Vectord& B) {
     b.reverseInPlace();
 
     int len = b.size() + a.size() - 1;
-    Vectord result = Vectord::Zero(len);
+    TArray1d result = TArray1d::Zero(len);
     int bs = b.size() - 1;
     for (int i = 0; i < len; ++i) {
         double v = 0.0;
@@ -43,8 +43,8 @@ Vectord convolve(const Vectord& A, const Vectord& B) {
 
 }
 
-AVectorc convolve(const AVectorc& A, const AVectorc& B) {
-    AVectorc a, b;
+TArray1dc convolve(const TArray1dc& A, const TArray1dc& B) {
+    TArray1dc a, b;
     if (A.size() < B.size()) {
         a = B;
         b = A;
@@ -56,7 +56,7 @@ AVectorc convolve(const AVectorc& A, const AVectorc& B) {
     b.reverseInPlace();
 
     int len = b.size() + a.size() - 1;
-    AVectorc result = AVectorc::Zero(len);
+    TArray1dc result = TArray1dc::Zero(len);
     int bs = b.size() - 1;
     for (int i = 0; i < len; ++i) {
         std::complex<double> v = 0.0;
@@ -70,7 +70,7 @@ AVectorc convolve(const AVectorc& A, const AVectorc& B) {
 }
 
 
-Vectord poly(const Vectord& seq_of_zeros) {
+TArray1d poly(const TArray1d& seq_of_zeros) {
 /*
     """
     Find the coefficients of a polynomial with the given sequence of roots.
@@ -172,12 +172,12 @@ Vectord poly(const Vectord& seq_of_zeros) {
         raise ValueError("input must be 1d or non-empty square 2d array.")
 */
 
-    Vectord a = Vectord::Ones(1);
+    TArray1d a = TArray1d::Ones(1);
     if (seq_of_zeros.size() == 0)
         return a;
     // dt = seq_of_zeros.dtype
     for (unsigned k = 0; k < seq_of_zeros.size(); ++k) {
-        Vectord b(2);
+        TArray1d b(2);
         b[0] = 1.0;
         b[1] = -seq_of_zeros[k];
         a = convolve(a, b);
@@ -191,7 +191,7 @@ Vectord poly(const Vectord& seq_of_zeros) {
     return a;
 }
 
-Vectord poly(const AVectorc& seq_of_zeros) {
+TArray1d poly(const TArray1dc& seq_of_zeros) {
 /*
     """
     Find the coefficients of a polynomial with the given sequence of roots.
@@ -293,18 +293,18 @@ Vectord poly(const AVectorc& seq_of_zeros) {
         raise ValueError("input must be 1d or non-empty square 2d array.")
 */
 
-    AVectorc a = AVectorc::Ones(1);
+    TArray1dc a = TArray1dc::Ones(1);
     if (seq_of_zeros.size() > 0) {
         // dt = seq_of_zeros.dtype
         for (unsigned k = 0; k < seq_of_zeros.size(); ++k) {
-            AVectorc v(2);
+            TArray1dc v(2);
             v[0] = 1.0;
             v[1] = -seq_of_zeros[k];
             a = convolve(a, v);
         }
     }
 
-    Vectord result(a.size());
+    TArray1d result(a.size());
     for (unsigned i = 0; i < a.size(); ++i)
         result(i) = a(i).real();
 

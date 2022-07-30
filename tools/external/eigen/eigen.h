@@ -18,8 +18,8 @@
 #include <definitions.h>
 
 inline
-tvb::Vectord vc2vd(const tvb::AVectorc& x) {
-    tvb::Vectord y(x.size());
+tvb::TArray1d vc2vd(const tvb::TArray1dc& x) {
+    tvb::TArray1d y(x.size());
     for (unsigned i = 0; i < x.size(); ++i)
         y[i] = x[i].real();
     return y;

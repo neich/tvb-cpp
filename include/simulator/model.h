@@ -23,7 +23,7 @@
 namespace tvb {
 
 
-    typedef Matrixd State; // (node, variable)
+    typedef TArray2d State; // (node, variable)
 
     class StateTrack {
     public:
@@ -57,7 +57,7 @@ namespace tvb {
     class System {
     public:
 
-        virtual State operator()(const State &x, const Matrixd &coupling, const Vectord &local_coupling) const = 0;
+        virtual State operator()(const State &x, const TArray2d &coupling, const TArray1d &local_coupling) const = 0;
     };
 
 
@@ -65,6 +65,7 @@ namespace tvb {
     protected:
         int m_n_nodes;
         int m_n_vars;
+
         std::vector<int> m_cvars;
         std::vector<std::string> m_state_vars;
 
@@ -88,9 +89,13 @@ namespace tvb {
         }
 
         const std::vector<int>& cvars() const { return m_cvars; }
+        int n_vars() const { return m_n_vars; }
 
         const std::vector<std::string>& state_vars() const { return  m_state_vars; }
 
+        State operator()(const State &x,
+                const TArray2d &coupling,
+                const TArray1d &local_coupling) const = 0;
 
     };
 }
