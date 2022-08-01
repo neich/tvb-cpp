@@ -46,10 +46,11 @@ namespace tvb {
         int m_istep;
         double m_dt;
         //        voi = None
-        //        _stock = numpy.empty([])
+        //        _stock = numpy.finished([])
 
     public:
         Monitor() : m_n_voi(1), m_period(0.9765625), m_vars_of_interest({0})  {}
+        virtual ~Monitor() = default;
 
 
         double period() const { return m_period; }
