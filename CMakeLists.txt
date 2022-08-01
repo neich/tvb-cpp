@@ -110,7 +110,7 @@ set_source_files_properties(tools/external/numpy/core/numeric.cpp PROPERTIES COM
 set_source_files_properties(tools/external/scipy/special/cephes/dd_real.cpp PROPERTIES COMPILE_FLAGS "/Od")
 ]]
 
-add_executable(zerlaut_explore examples/zerlaut_explore.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
+add_executable(zerlaut_explore examples/parameter_sweep.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 add_executable(test_simulation examples/test_simulation.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 add_executable(plot_model examples/plot_model.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 add_executable(test_Deco examples/test_Deco.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
@@ -160,6 +160,7 @@ endif()
 if (UNIX)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -ffast-math -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_RELEASE  "-O3  -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
+    # set(CMAKE_CXX_FLAGS_DEBUG  "-g -save-temps" CACHE STRING "" FORCE)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
     target_link_libraries(zerlaut_explore Threads::Threads)
@@ -172,6 +173,10 @@ endif()
 
 find_package (Eigen3 3.4 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR}/)
+
+find_package(Boost 1.67.0 COMPONENTS program_options )
+include_directories(${Boost_INCLUDE_DIRS})
+target_link_libraries(zerlaut_explore Boost::program_options)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
