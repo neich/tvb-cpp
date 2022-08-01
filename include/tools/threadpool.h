@@ -29,6 +29,7 @@ namespace tvb {
             {
                 std::unique_lock<std::mutex> lock(queue_mutex);
                 jobs.push(job);
+                pending++;
             }
             mutex_condition.notify_one();
         }
@@ -45,13 +46,8 @@ namespace tvb {
             threads.clear();
         }
 
-        bool empty() {
-            bool pool_empty;
-            {
-                std::unique_lock<std::mutex> lock(queue_mutex);
-                pool_empty = jobs.empty();
-            }
-            return pool_empty;
+        bool finished() {
+            return pending == 0 && !has_results();
         }
 
         std::optional<R> get_result() {
@@ -100,6 +96,7 @@ namespace tvb {
                 {
                     std::unique_lock<std::mutex> lock(queue_mutex);
                     results.push_back(r);
+                    pending--;
                 }
             }
         }
@@ -111,6 +108,7 @@ namespace tvb {
         std::vector<std::thread> threads;
         std::queue<std::function<R()>> jobs;
         std::vector<R> results;
+        int pending = 0;
 
     };
 }
