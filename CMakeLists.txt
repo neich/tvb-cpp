@@ -25,8 +25,6 @@ set(TVB_SOURCES
         include/simulator/model.h
         include/datatypes/connectivity.h
         include/definitions.h
-#        include/simulator/history.h
-#        src/simulator/history.cpp
         include/simulator/coupling.h
         src/simulator/coupling.cpp
         include/simulator/models/reduced_ww_ext.h
@@ -91,25 +89,6 @@ set(TVB_TOOLS_SOURCES
         tools/load_or_compute.h
 )
 
-#[[
-set_source_files_properties(src/simulator/models/reduced_ww_ext.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(src/simulator/integrators/euler_deterministic.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(src/simulator/integrators/euler_stochastic.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(src/simulator/coupling.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(src/simulator/history.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(src/simulator/simulate.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(src/simulator/simulator.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(src/simulator/noise.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(tools/external/scipy/stats/stats.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(tools/fic/functions/bold_filters.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(tools/external/scipy/signal/signaltools.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(tools/external/scipy/special/cephes/kolmogorov.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(tools/external/numpy/numpy.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(tools/external/scipy/linalg.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(tools/external/numpy/core/numeric.cpp PROPERTIES COMPILE_FLAGS "/Od")
-set_source_files_properties(tools/external/scipy/special/cephes/dd_real.cpp PROPERTIES COMPILE_FLAGS "/Od")
-]]
-
 add_executable(parameter_sweep examples/parameter_sweep.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 add_executable(test_simulation examples/test_simulation.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 add_executable(plot_model examples/plot_model.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
@@ -128,28 +107,13 @@ if (MKL_FOUND)
 endif()
 
 if (MSVC)
-#    add_library(mkl_lapack95_lp64 UNKNOWN IMPORTED)
-#    set_property(TARGET mkl_lapack95_lp64 PROPERTY IMPORTED_LOCATION "C:\\Program Files (x86)\\Intel\\oneAPI\\mkl\\2022.0.3\\lib\\intel64\\mkl_lapack95_lp64.lib")
-#    target_link_libraries(test_simulation mkl_lapack95_lp64)
-#
-#    add_library(mkl_intel_lp64 UNKNOWN IMPORTED)
-#    set_property(TARGET mkl_intel_lp64 PROPERTY IMPORTED_LOCATION "C:\\Program Files (x86)\\Intel\\oneAPI\\mkl\\2022.0.3\\lib\\intel64\\mkl_intel_lp64.lib")
-#    target_link_libraries(test_simulation mkl_intel_lp64)
-
     add_library(mkl_rt UNKNOWN IMPORTED)
     set_property(TARGET mkl_rt PROPERTY IMPORTED_LOCATION "C:\\Program Files (x86)\\Intel\\oneAPI\\mkl\\2022.0.3\\lib\\intel64\\mkl_rt.lib")
     target_link_libraries(parameter_sweep mkl_rt)
     target_link_libraries(test_simulation mkl_rt)
     target_link_libraries(plot_model mkl_rt)
-
-#    add_library(mkl_vml UNKNOWN IMPORTED)
-#    set_property(TARGET mkl_vml PROPERTY IMPORTED_LOCATION "C:\\Program Files (x86)\\Intel\\oneAPI\\mkl\\2022.0.3\\redist\\intel64\\mkl_vml_def2.lib")
-#    target_link_libraries(test_simulation mkl_vml)
-#
-#    add_library(mkl_blas95_lp64 UNKNOWN IMPORTED)
-#    set_property(TARGET mkl_blas95_lp64 PROPERTY IMPORTED_LOCATION "C:\\Program Files (x86)\\Intel\\oneAPI\\mkl\\2022.0.3\\lib\\intel64\\mkl_blas95_lp64.lib")
-
 endif()
+
 if (UNIX)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -ffast-math -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_RELEASE  "-O3  -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
@@ -165,7 +129,7 @@ if (UNIX)
     endif()
 endif()
 
-find_package (Eigen3 3.4 REQUIRED)
+find_package(Eigen3 3.4 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR}/)
 
 find_package(Boost 1.67.0 COMPONENTS program_options )
@@ -191,7 +155,3 @@ target_link_libraries( test_simulation ${ZLIB_LIBRARIES} )
 target_link_libraries( plot_model ${ZLIB_LIBRARIES} )
 target_link_libraries( plot_npz ${ZLIB_LIBRARIES} )
 target_link_libraries( draft_cpp  ${ZLIB_LIBRARIES} )
-
-# find_package(MKL)
-# set(MKL_INCLUDE_DIR "/usr/include/mkl")
-# include_directories( ${MKL_INCLUDE_DIR} )
