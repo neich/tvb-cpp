@@ -98,7 +98,7 @@ add_executable(draft_cpp examples/Prepro_DecoEtAl2021_G_Optim.cpp ${TVB_SOURCES}
 find_package(MKL CONFIG)
 
 if (MKL_FOUND)
-    message(STATUS "${MKL_IMPORTED_TARGETS}") #Provides available list of targets based on input
+    add_definitions( -DEIGEN_USE_MKL_ALL )
     target_compile_options(draft_cpp PUBLIC $<TARGET_PROPERTY:MKL::mkl_core,INTERFACE_COMPILE_OPTIONS>)
     target_include_directories(draft_cpp INTERFACE $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
     include_directories(${MKL_H})
