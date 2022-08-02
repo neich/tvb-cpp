@@ -194,7 +194,11 @@ int main(int argc, char **argv) {
         options_description desc{"Options"};
         desc.add_options()
                 ("help,h", "Help screen")
-                ("params", value<std::vector<std::string>>()->multitoken(), "Parameters to sweep");
+                ("params", value<std::vector<std::string>>()->multitoken()->required(), "Parameters to sweep")
+                ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
+                ("length-matrix", value<std::string>()->required(), "Connection lengths matrix matrix")
+                ("speed", value<float>()->default_value(1e6), "Signal speed")
+                ("out-file-prefix", value<std::string>()->required(), "Output file prefix");
 
         variables_map vm;
         store(parse_command_line(argc, argv, desc), vm);
@@ -244,11 +248,10 @@ int main(int argc, char **argv) {
         tp.start();
         for (auto &pc: param_combs) {
             pc.monitor = new tvb::RawSubSample(10);
-//            pc.file_weights = R"(/mnt/d/Dropbox/work/git/research/neuro/tvb/fast_tvb/step2_create_Docker_container/input/gavg_SC_weights.csv)";
-//            pc.file_lengths = R"(/mnt/d/Dropbox/work/git/research/neuro/tvb/fast_tvb/step2_create_Docker_container/input/gavg_SC_distances.csv)";
-            pc.file_weights = R"(/mnt/d/Dropbox/work/git/research/neuro/tvb/example/hpc_data/jubrain/HCP_N272_SC_JuBrain_294Regions_with_blank_cerebellum/209834_JuBrain_294Regions_10M_ctx_count.csv)";
-            pc.file_lengths = R"(/mnt/d/Dropbox/work/git/research/neuro/tvb/example/hpc_data/jubrain/HCP_N272_SC_JuBrain_294Regions_with_blank_cerebellum/209834_JuBrain_294Regions_10M_ctx_length.csv)";
-            pc.file_prefix = R"(./simulation_JB_Z)";
+            pc.file_weights = vm["sc-matrix"].as<std::string>();
+            pc.file_lengths = vm["length-matrix"].as<std::string>();
+            pc.file_prefix = vm["out-file-prefix"].as<std::string>();
+            pc.speed = vm["speed"].as<float>();
             tp.queue_job([pc] { return run(pc); });
         }
 
