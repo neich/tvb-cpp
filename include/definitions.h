@@ -15,8 +15,6 @@
 #ifndef TVB_CPP_DEFINITIONS_H
 #define TVB_CPP_DEFINITIONS_H
 
-#define EIGEN_USE_MKL_ALL 1
-#define EIGEN_NO_DEBUG 1
 
 #include <iostream>
 #include <fstream>
