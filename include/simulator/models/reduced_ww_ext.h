@@ -181,6 +181,10 @@ namespace tvb {
             m_state_vars = { "S_e", "S_i", "H_e", "I_e" };
         }
 
+        void set_param(const std::string& param, Float value) {
+            ADD_SETTER(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
+        }
+
         void configure(int n_nodes) {
             d_i.resize(n_nodes);
             a_e.resize(n_nodes);
