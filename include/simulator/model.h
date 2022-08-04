@@ -137,9 +137,11 @@ namespace tvb {
     #define FOR_EACH(action,...) \
       GET_MACRO(_0,__VA_ARGS__,FE_30,FE_29,FE_28,FE_27,FE_26,FE_25,FE_24,FE_23,FE_22,FE_21,FE_20,FE_19,FE_18,FE_17,FE_16,FE_15,FE_14,FE_13,FE_12,F_11,FE_10,FE_9,FE_8,FE_7,FE_6,FE_5,FE_4,FE_3,FE_2,FE_1,FE_0)(action,__VA_ARGS__)
 
-    #define SETTER(field) if (#field == param) this->field.fill(value); \
+    #define SETTER_FIRST(field) if (#field == param) this->field.fill(value); \
 
-    #define ADD_SETTER(...) FOR_EACH(SETTER, __VA_ARGS__)
+    #define SETTER(field) else if (#field == param) this->field.fill(value); \
+
+    #define ADD_SETTER(_0, ...) SETTER_FIRST(_0) FOR_EACH(SETTER, __VA_ARGS__)
 }
 
 #endif //TVB_CPP_MODEL_H
