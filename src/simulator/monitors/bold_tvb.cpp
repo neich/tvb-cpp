@@ -41,7 +41,11 @@ void BoldTVB::compute_hrf() {
     //   self.hemodynamic_response_function.shape, this->m_interim_period, this->m_interim_istep)
 }
 
-void BoldTVB::init() {
+void BoldTVB::config(int N, float period, float dt, const std::vector<int> &voi)  {
+    init(period, dt, voi);
+    m_n_nodes = N;
+    m_interim_stock.clear();
+    m_stock.clear();
     this->compute_hrf();
     TArray2d init_stock(m_n_nodes, m_vars_of_interest.size());
     init_stock.setZero();
@@ -50,49 +54,49 @@ void BoldTVB::init() {
 }
 
 
-//MSample BoldTVB::sample(int step, const State &state) {
-//    // Update the interim-stock at every step
-//    this->m_interim_stock[index_circ(step, m_interim_istep, -1)] = state(Eigen::all, this->m_vars_of_interest);
-//    // At stock's period update it with the temporal average of interim-stock
-//    if (step % m_interim_istep == 0) {
-//        TArray2d avg_state(m_n_nodes, m_n_voi);
-//        avg_state.setZero();
-//        for (unsigned i = 0; i < m_interim_stock.size(); ++i)
-//            avg_state += m_interim_stock[i];
-//        TArray2d avg_intermin_stock = avg_state / m_interim_stock.size();
-//        m_stock[index_circ(step / m_interim_istep, m_stock_steps, -1)] = avg_intermin_stock;
-//    }
-//
-//    if (step % m_istep == 0) {
-//        double time = step * m_dt;
-//        int shift = (int(step / m_interim_istep) % m_stock_steps) - 1;
-//        TArray2d hrf = circshift(m_hemodynamic_response_function, shift);
-//        FirstOrderVolterra *fov = dynamic_cast<FirstOrderVolterra *>(m_hrf_kernel.get());
-//        State bold(m_n_nodes, m_n_voi);
-//        bold.setZero();
-//        if (fov != NULL) {
-//            double k1_V0 = m_hrf_kernel->getVariableValue("k_1") * m_hrf_kernel->getVariableValue("V_0");
-////            std::cout << "k_1 " << m_hrf_kernel->getVariableValue("k_1") << ", V_0 "
-////                      << m_hrf_kernel->getVariableValue("V_0") << ", k1_V0 " << k1_V0 << std::endl;
-//            for (int n = 0; n < m_n_nodes; ++n)
-//                for (int iv = 0; iv < m_n_voi; ++iv) {
-//                    double dot = 0.0;
-//                    for (unsigned i = 0; i < m_stock.size(); ++i)
-//                        dot += m_stock[i](n, iv) * hrf(i, 0);
-//                    bold.col(iv)[n] = (dot - 1.0) * k1_V0;
-//                }
-//        } else {
-//            for (int n = 0; n < m_n_nodes; ++n)
-//                for (int v = 0; v < m_n_voi; ++v) {
-//                    double dot = 0.0;
-//                    for (unsigned i = 0; i < m_stock.size(); ++i)
-//                        dot += m_stock[i].col(v)[n] * hrf(i, 0);
-//                    bold.col(v)[n] = dot;
-//                }
-//
-//        }
-//        return MSample(time, bold);
-//    }
-//
-//    return MSample(-1.0, state);
-//}
+void BoldTVB::sample(int step, const State &state) {
+    // Update the interim-stock at every step
+    int n_voi = m_vars_of_interest.size();
+    this->m_interim_stock[index_circ(step, m_interim_istep, -1)] = state(Eigen::all, this->m_vars_of_interest);
+    // At stock's period update it with the temporal average of interim-stock
+    if (step % m_interim_istep == 0) {
+        TArray2d avg_state(m_n_nodes, n_voi);
+        avg_state.setZero();
+        for (unsigned i = 0; i < m_interim_stock.size(); ++i)
+            avg_state += m_interim_stock[i];
+        TArray2d avg_intermin_stock = avg_state / m_interim_stock.size();
+        m_stock[index_circ(step / m_interim_istep, m_stock_steps, -1)] = avg_intermin_stock;
+    }
+
+    if (step % m_istep == 0) {
+        double time = step * m_dt;
+        int shift = (int(step / m_interim_istep) % m_stock_steps) - 1;
+        TArray2d hrf = circshift(m_hemodynamic_response_function, shift);
+        FirstOrderVolterra *fov = dynamic_cast<FirstOrderVolterra *>(m_hrf_kernel.get());
+        State bold(m_n_nodes, n_voi);
+        bold.setZero();
+        if (fov != NULL) {
+            double k1_V0 = m_hrf_kernel->getVariableValue("k_1") * m_hrf_kernel->getVariableValue("V_0");
+//            std::cout << "k_1 " << m_hrf_kernel->getVariableValue("k_1") << ", V_0 "
+//                      << m_hrf_kernel->getVariableValue("V_0") << ", k1_V0 " << k1_V0 << std::endl;
+            for (int n = 0; n < m_n_nodes; ++n)
+                for (int iv = 0; iv < n_voi; ++iv) {
+                    double dot = 0.0;
+                    for (unsigned i = 0; i < m_stock.size(); ++i)
+                        dot += m_stock[i](n, iv) * hrf(i, 0);
+                    bold.col(iv)[n] = (dot - 1.0) * k1_V0;
+                }
+        } else {
+            for (int n = 0; n < m_n_nodes; ++n)
+                for (int v = 0; v < n_voi; ++v) {
+                    double dot = 0.0;
+                    for (unsigned i = 0; i < m_stock.size(); ++i)
+                        dot += m_stock[i].col(v)[n] * hrf(i, 0);
+                    bold.col(v)[n] = dot;
+                }
+
+        }
+        m_records.emplace_back(Monitor::Record{step*m_dt, bold});
+    }
+
+}
