@@ -25,6 +25,7 @@
 #include "simulator/integrators/euler_deterministic.h"
 #include "simulator/models/zerlaut.h"
 #include "simulator/simulator.h"
+#include "simulator/monitors/bold_tvb.h"
 
 #include <matplotlibcpp.h>
 #include <chrono>
@@ -52,7 +53,9 @@ struct Parameter {
 };
 
 struct RunParams {
-    tvb::RawSubSample* monitor = nullptr;
+    float dt = 0.1;
+    float sim_time = 10000.0;
+    tvb::Monitor* monitor = nullptr;
     std::vector<Parameter> params;
     string file_out;
     string file_prefix;
@@ -61,7 +64,7 @@ struct RunParams {
     float speed = 1e6;
 
     RunParams() = default;
-    RunParams(std::vector<Parameter> params, tvb::RawSubSample* monitor): params(std::move(params)), monitor(monitor) {}
+    RunParams(std::vector<Parameter> params, tvb::Monitor* monitor): params(std::move(params)), monitor(monitor) {}
 };
 
 
@@ -81,25 +84,37 @@ RunParams run(RunParams rp) {
         return rp;
     }
 
-    tvb::TArray2d C = tvb::csv_load(rp.file_weights);
+    tvb::TArray2d C;
+    if (rp.file_weights.ends_with(".csv"))
+        C = tvb::csv_load(rp.file_weights);
+    else if (rp.file_weights.ends_with(".npz"))
+        C = tvb::npz2Matrixd(rp.file_weights, "SC");
+    else
+        throw std::runtime_error(string_format("Unknown file extension for: %s", rp.file_weights.c_str()));
+
     int N = C.rows();
 
     C = C / C.rowwise().sum().maxCoeff() * 2.0;
 
-    tvb::TArray2d tl = tvb::csv_load(rp.file_lengths);
+    tvb::TArray2d tl;
+    if (!rp.file_lengths.empty())
+        tl = tvb::csv_load(rp.file_lengths);
+    else
+        tl = tvb::TArray2d::Zero(C.rows(), C.cols());
     tvb::Connectivity con(C, tl, rp.speed);
 
     milliseconds total_time(0);
     std::cout << string_format("Starting computation for: %s", filename.c_str()) << std::endl;
 
 
-    // auto *ho = new tvb::ReducedWongWangExcInh(N);
-    // ho->G.fill(1.0);
-    auto *ho = new tvb::ZerlautAdptationSecondOrder(N);
+    auto *model = new tvb::ReducedWongWangExcInh(N);
+    // auto *model = new tvb::ZerlautAdptationSecondOrder(N);
     for (auto const &p: rp.params)
-        ho->set_param(p.name, p.value);
+        model->set_param(p.name, p.value);
 
-        // auto *ho = new tvb:std:ZerlautAdaptationFirstOrder(N);
+    rp.monitor = new tvb::BoldTVB(N, 2000.0, rp.dt, {3});
+
+    // auto *model = new tvb:std:ZerlautAdaptationFirstOrder(N);
     // tvb::TArray1d sigmas(4);
     // sigmas << 3e-5, 3e-5, 0.0, 0.0;
     // auto *integrator = new tvb::EulerStochastic(new Additive(sigmas, 0.1));
@@ -107,13 +122,13 @@ RunParams run(RunParams rp) {
 
     tvb::SimConfig sim_config;
 
-    sim_config.setModel(ho);
+    sim_config.setModel(model);
     sim_config.setIntegrator(integrator);
     sim_config.setMonitor(rp.monitor);
     sim_config.setConnectivity(&con);
-    auto coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), ho->cvars());
+    auto coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
     sim_config.setCoupling(coupling);
-    // sim_config.setCoupling(new tvb::CouplingLinearDense(con.weights(), con.delays(), ho->cvars()));
+    // sim_config.setCoupling(new tvb::CouplingLinearDense(con.weights(), con.delays(), model->cvars()));
     sim_config.setIntegrationInterval(0.0, 10000.0);
     sim_config.setTimeDelta(0.1);
 
@@ -136,7 +151,7 @@ RunParams run(RunParams rp) {
 
     total_time += duration;
 
-    delete ho;
+    delete model;
     delete coupling;
     delete stateTrack;
 
@@ -148,18 +163,21 @@ RunParams run(RunParams rp) {
 void save_fig(RunParams &rp) {
     if (rp.monitor == nullptr) return;
 
-    size_t t_max = rp.monitor->getRecords().size();
-    int N = rp.monitor->getRecords()[0].rows();
-    std::vector<std::vector<Float>> y_plot(N, std::vector<Float>(t_max));
-    for (unsigned t = 0; t < t_max; ++t)
+    int n_records = rp.monitor->getRecords().size();
+    int N = rp.monitor->getRecords()[0].record.rows();
+    std::vector<std::vector<Float>> y_plot(N, std::vector<Float>(n_records));
+    for (unsigned t = 0; t < n_records; ++t) {
+        y_plot.emplace_back();
+        const Monitor::Record& r = rp.monitor->getRecords()[t];
         for (unsigned n = 0; n < N; ++n)
-            y_plot[n][t] = rp.monitor->getRecords()[t](n, 0);
+            y_plot[n][t] = r.record(n, 0);
+    }
 
     // tvb::csv_save("./test_simulationRWW_TVB_CPP.csv", y_plot);
 
     // Plot line from given x and y data. Color is selected automatically.
-    std::vector<Float> ls(rp.monitor->getRecords().size());
-    std::iota(ls.begin(), ls.end(), 1.0);
+    std::vector<Float> ls(n_records);
+    std::transform(rp.monitor->getRecords().begin(), rp.monitor->getRecords().end(), ls.begin(), [](const Monitor::Record& r) { return r.time; });
     for (unsigned n = 0; n < N; ++n) {
         plt::plot(ls, y_plot[n]);
     }
@@ -196,7 +214,7 @@ int main(int argc, char **argv) {
                 ("help,h", "Help screen")
                 ("params", value<std::vector<std::string>>()->multitoken()->required(), "Parameters to sweep")
                 ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
-                ("length-matrix", value<std::string>()->required(), "Connection lengths matrix matrix")
+                ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
                 ("speed", value<float>()->default_value(1e6), "Signal speed")
                 ("out-file-prefix", value<std::string>()->required(), "Output file prefix");
 
@@ -247,9 +265,10 @@ int main(int argc, char **argv) {
         tvb::ThreadPool<RunParams> tp(6);
         tp.start();
         for (auto &pc: param_combs) {
-            pc.monitor = new tvb::RawSubSample(10);
+            // pc.monitor = new tvb::RawSubSample(10, {0});
             pc.file_weights = vm["sc-matrix"].as<std::string>();
-            pc.file_lengths = vm["length-matrix"].as<std::string>();
+            if (vm.count("length-matrix"))
+                pc.file_lengths = vm["length-matrix"].as<std::string>();
             pc.file_prefix = vm["out-file-prefix"].as<std::string>();
             pc.speed = vm["speed"].as<float>();
             tp.queue_job([pc] { return run(pc); });
