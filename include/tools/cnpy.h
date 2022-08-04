@@ -69,8 +69,8 @@ namespace cnpy {
     void parse_npy_header(unsigned char* buffer,size_t& word_size, std::vector<size_t>& shape, bool& fortran_order);
     void parse_zip_footer(FILE* fp, uint16_t& nrecs, size_t& global_header_size, size_t& global_header_offset);
     npz_t npz_load(std::string fname);
-    NpyArray npz_load(std::string fname, std::string varname);
-    NpyArray npy_load(std::string fname);
+    NpyArray npz_load(const std::string& fname, const std::string& varname);
+    NpyArray npy_load(const std::string& fname);
 
     template<typename T> std::vector<char>& operator+=(std::vector<char>& lhs, const T rhs) {
         //write in little endian
@@ -81,12 +81,12 @@ namespace cnpy {
         return lhs;
     }
 
-    template<> std::vector<char>& operator+=(std::vector<char>& lhs, const std::string rhs);
+    template<> std::vector<char>& operator+=(std::vector<char>& lhs, std::string rhs);
     template<> std::vector<char>& operator+=(std::vector<char>& lhs, const char* rhs);
 
 
-    template<typename T> void npy_save(std::string fname, const T* data, const std::vector<size_t> shape, std::string mode = "w") {
-        FILE* fp = NULL;
+    template<typename T> void npy_save(const std::string& fname, const T* data, const std::vector<size_t>& shape, const std::string& mode = "w") {
+        FILE* fp = nullptr;
         std::vector<size_t> true_data_shape; //if appending, the shape of existing + new data
 
         if(mode == "a") fp = fopen(fname.c_str(),"r+b");
@@ -130,7 +130,7 @@ namespace cnpy {
         fclose(fp);
     }
 
-    template<typename T> void npz_save(std::string zipname, std::string fname, const T* data, const std::vector<size_t>& shape, std::string mode = "w")
+    template<typename T> void npz_save(const std::string& zipname, std::string fname, const T* data, const std::vector<size_t>& shape, std::string mode = "w")
     {
         //first, append a .npy to the fname
         fname += ".npy";

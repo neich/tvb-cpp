@@ -276,12 +276,12 @@ cnpy::npz_t cnpy::npz_load(std::string fname) {
     return arrays;
 }
 
-cnpy::NpyArray cnpy::npz_load(std::string fname, std::string varname) {
+cnpy::NpyArray cnpy::npz_load(const std::string& fname, const std::string& varname) {
     FILE* fp = fopen(fname.c_str(),"rb");
 
     if(!fp) throw std::runtime_error("npz_load: Unable to open file "+fname);
 
-    while(1) {
+    while(true) {
         std::vector<char> local_header(30);
         size_t header_res = fread(&local_header[0],sizeof(char),30,fp);
         if(header_res != 30)
@@ -324,7 +324,7 @@ cnpy::NpyArray cnpy::npz_load(std::string fname, std::string varname) {
     throw std::runtime_error("npz_load: Variable name "+varname+" not found in "+fname);
 }
 
-cnpy::NpyArray cnpy::npy_load(std::string fname) {
+cnpy::NpyArray cnpy::npy_load(const std::string& fname) {
 
     FILE* fp = fopen(fname.c_str(), "rb");
 
