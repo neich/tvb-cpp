@@ -18,7 +18,7 @@ using namespace tvb;
 
 State ReducedWongWangExcInh::operator()(const State &x,
                                         const TArray2d &coupling,
-                                        const TArray1d &local_coupling) const {
+                                        const TArray1d &local_coupling) {
 
     State derivative(m_n_nodes, m_n_vars);
 
@@ -56,7 +56,7 @@ State ReducedWongWangExcInh::operator()(const State &x,
     derivative.col(2) = H_e - x.col(2);
     derivative.col(3) = I_e - x.col(3);
 
-    if (Eigen::isnan(derivative).size() < m_n_nodes*m_n_vars)
+    if (tvb::isnan(derivative))
         std::cout << "Ein" << std::endl; // TODO: debug!
 
     return derivative;
