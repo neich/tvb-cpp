@@ -175,10 +175,11 @@ namespace tvb {
 //        )
 
     public:
-        ReducedWongWangExcInh(int n_nodes) : Model(n_nodes, 4) {
+        ReducedWongWangExcInh(int n_nodes) : Model(n_nodes) {
             this->configure(n_nodes);
             m_cvars = { 0 };
             m_state_vars = { "S_e", "S_i", "H_e", "I_e" };
+            m_n_vars = m_state_vars.size();
         }
 
         void set_param(const std::string& param, Float value) {
@@ -247,7 +248,7 @@ namespace tvb {
 
         State operator()(const State &x,
                 const TArray2d &coupling,
-                const TArray1d &local_coupling) const override;
+                const TArray1d &local_coupling) override;
 
     };
 
