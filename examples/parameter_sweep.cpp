@@ -19,6 +19,7 @@
 #include <simulator/simulate.h>
 #include <simulator/monitor.h>
 #include <simulator/models/reduced_ww_ext.h>
+#include <simulator/models/montbrio.h>
 #include <simulator/integrators/euler_stochastic.h>
 #include <tools/threadpool.h>
 #include "tools/csv_tools.h"
@@ -26,6 +27,7 @@
 #include "simulator/models/zerlaut.h"
 #include "simulator/simulator.h"
 #include "simulator/monitors/bold_tvb.h"
+#include "simulator/monitors/bold_BalloonWindkessel.h"
 
 #include <matplotlibcpp.h>
 #include <chrono>
@@ -49,13 +51,15 @@ struct Parameter {
     string name;
     float value;
 
-    Parameter(string name, float value): name(std::move(name)), value(value) {}
+    Parameter(string name, float value) : name(std::move(name)), value(value) {}
 };
 
 struct RunParams {
     float dt = 0.1;
-    float sim_time = 10000.0;
-    tvb::Monitor* monitor = nullptr;
+    float t_start = 0.0;
+    float t_end = 10000.0;
+    bool force_output = false;
+    tvb::Monitor *monitor = nullptr;
     std::vector<Parameter> params;
     string file_out;
     string file_prefix;
@@ -64,20 +68,22 @@ struct RunParams {
     float speed = 1e6;
 
     RunParams() = default;
-    RunParams(std::vector<Parameter> params, tvb::Monitor* monitor): params(std::move(params)), monitor(monitor) {}
+
+    RunParams(std::vector<Parameter> params, tvb::Monitor *monitor) : params(std::move(params)), monitor(monitor) {}
 };
 
 
 void save_fig(RunParams &rp);
 
 RunParams run(RunParams rp) {
+
     string filename = rp.file_prefix;
     for (auto const &p: rp.params) {
         filename += string_format("_%s_%.2f", p.name.c_str(), p.value);
     }
     filename += ".png";
 
-    if (std::filesystem::exists(filename)) {
+    if (!rp.force_output && std::filesystem::exists(filename)) {
         std::cout << string_format("File %s already exists", filename.c_str()) << std::endl;
         delete rp.monitor;
         rp.monitor = nullptr;
@@ -94,7 +100,8 @@ RunParams run(RunParams rp) {
 
     int N = C.rows();
 
-    C = C / C.rowwise().sum().maxCoeff() * 2.0;
+    // C = C / C.rowwise().sum().maxCoeff() * 2.0;
+    // tvb::csv_save("sc_d_norm.csv", C);
 
     tvb::TArray2d tl;
     if (!rp.file_lengths.empty())
@@ -106,42 +113,33 @@ RunParams run(RunParams rp) {
     milliseconds total_time(0);
     std::cout << string_format("Starting computation for: %s", filename.c_str()) << std::endl;
 
-
-    auto *model = new tvb::ReducedWongWangExcInh(N);
+    auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, rp.dt);
+    // auto *model = new tvb::ReducedWongWangExcInh(N);
     // auto *model = new tvb::ZerlautAdptationSecondOrder(N);
     for (auto const &p: rp.params)
         model->set_param(p.name, p.value);
 
-    rp.monitor = new tvb::BoldTVB(N, 2000.0, rp.dt, {3});
+    // rp.monitor = new tvb::BoldTVB(N, 720.0, rp.dt, {0});
+    // rp.monitor = new tvb::BoldBalloonWindkessel(N, 1.0, 720.0, rp.dt, {0});
+    rp.monitor = new tvb::RawSubSample(1.0, rp.dt, {0});
 
     // auto *model = new tvb:std:ZerlautAdaptationFirstOrder(N);
     // tvb::TArray1d sigmas(4);
     // sigmas << 3e-5, 3e-5, 0.0, 0.0;
     // auto *integrator = new tvb::EulerStochastic(new Additive(sigmas, 0.1));
     auto *integrator = new tvb::EulerDeterministic();
-
-    tvb::SimConfig sim_config;
-
-    sim_config.setModel(model);
-    sim_config.setIntegrator(integrator);
-    sim_config.setMonitor(rp.monitor);
-    sim_config.setConnectivity(&con);
     auto coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
-    sim_config.setCoupling(coupling);
-    // sim_config.setCoupling(new tvb::CouplingLinearDense(con.weights(), con.delays(), model->cvars()));
-    sim_config.setIntegrationInterval(0.0, 10000.0);
-    sim_config.setTimeDelta(0.1);
+
 
     auto start = std::chrono::high_resolution_clock::now();
     tvb::Simulator simulator{};
-    tvb::StateTrack *stateTrack = simulator.run(sim_config.model(),
-                                                sim_config.connectivity(),
-                                                sim_config.integrator(),
-                                                sim_config.monitor(),
-                                                sim_config.coupling(),
-                                                sim_config.start_time(), sim_config.end_time(), sim_config.dt(),
-                                                nullptr,
-                                                sim_config.samplingRate());
+    simulator.run(model,
+                  &con,
+                  integrator,
+                  rp.monitor,
+                  coupling,
+                  rp.t_start, rp.t_end, rp.dt,
+                  nullptr);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -153,7 +151,6 @@ RunParams run(RunParams rp) {
 
     delete model;
     delete coupling;
-    delete stateTrack;
 
     rp.file_out = filename;
     return rp;
@@ -168,7 +165,7 @@ void save_fig(RunParams &rp) {
     std::vector<std::vector<Float>> y_plot(N, std::vector<Float>(n_records));
     for (unsigned t = 0; t < n_records; ++t) {
         y_plot.emplace_back();
-        const Monitor::Record& r = rp.monitor->getRecords()[t];
+        const Monitor::Record &r = rp.monitor->getRecords()[t];
         for (unsigned n = 0; n < N; ++n)
             y_plot[n][t] = r.record(n, 0);
     }
@@ -177,7 +174,8 @@ void save_fig(RunParams &rp) {
 
     // Plot line from given x and y data. Color is selected automatically.
     std::vector<Float> ls(n_records);
-    std::transform(rp.monitor->getRecords().begin(), rp.monitor->getRecords().end(), ls.begin(), [](const Monitor::Record& r) { return r.time; });
+    std::transform(rp.monitor->getRecords().begin(), rp.monitor->getRecords().end(), ls.begin(),
+                   [](const Monitor::Record &r) { return r.time/1000; });
     for (unsigned n = 0; n < N; ++n) {
         plt::plot(ls, y_plot[n]);
     }
@@ -185,14 +183,14 @@ void save_fig(RunParams &rp) {
     // plt::plot(x, w,"r--");
     // Plot a line whose name will show up as "log(x)" in the legend.
 
-    string title = "Zerlaut 2nd order: ";
+    string title = "Reduced Wong Wang: ";
     for (auto const &p: rp.params) {
         title += string_format(" %s_%.2f", p.name.c_str(), p.value);
     }
 
     plt::title(title);
-    plt::ylabel("State variable S_e");
-    plt::xlabel("Miliseconds");
+    plt::ylabel("Se");
+    plt::xlabel("Seconds");
     // Save the image (file format is determined by the extension)
     plt::save(rp.file_out, 300);
 
@@ -201,8 +199,7 @@ void save_fig(RunParams &rp) {
     delete rp.monitor;
 }
 
-void to_cout(const std::vector<std::string> &v)
-{
+void to_cout(const std::vector<std::string> &v) {
     std::copy(v.begin(), v.end(), std::ostream_iterator<std::string>{
             std::cout, "\n"});
 }
@@ -216,6 +213,10 @@ int main(int argc, char **argv) {
                 ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
                 ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
                 ("speed", value<float>()->default_value(1e6), "Signal speed")
+                ("time-start", value<float>()->default_value(0.0), "Start of simulation (ms)")
+                ("time-end", value<float>()->default_value(10000.0), "End of simulation (ms)")
+                ("dt", value<float>()->default_value(0.1), "Integration step (ms)")
+                ("force-output", bool_switch()->default_value(false), "Force overwrite output files")
                 ("out-file-prefix", value<std::string>()->required(), "Output file prefix");
 
         variables_map vm;
@@ -228,7 +229,7 @@ int main(int argc, char **argv) {
         else if (vm.count("params")) {
             for (auto &s: vm["params"].as<std::vector<std::string>>()) {
                 if (std::isalpha(s[0])) {
-                    if (!params.empty() && !(params.back().values.size() == 1 ||  params.back().values.size() == 3))
+                    if (!params.empty() && !(params.back().values.size() == 1 || params.back().values.size() == 3))
                         throw std::runtime_error(string_format("Malformed parameter <%s>\n", s.c_str()));
                     params.emplace_back();
                     params.back().name = s;
@@ -265,12 +266,15 @@ int main(int argc, char **argv) {
         tvb::ThreadPool<RunParams> tp(6);
         tp.start();
         for (auto &pc: param_combs) {
-            // pc.monitor = new tvb::RawSubSample(10, {0});
             pc.file_weights = vm["sc-matrix"].as<std::string>();
+            pc.t_start = vm["time-start"].as<float>();
+            pc.t_end = vm["time-end"].as<float>();
+            pc.dt = vm["dt"].as<float>();
             if (vm.count("length-matrix"))
                 pc.file_lengths = vm["length-matrix"].as<std::string>();
             pc.file_prefix = vm["out-file-prefix"].as<std::string>();
             pc.speed = vm["speed"].as<float>();
+            pc.force_output = vm.count("force-output") > 0;
             tp.queue_job([pc] { return run(pc); });
         }
 
