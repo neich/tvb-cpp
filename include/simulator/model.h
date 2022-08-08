@@ -57,7 +57,7 @@ namespace tvb {
     class System {
     public:
 
-        virtual State operator()(const State &x, const TArray2d &coupling, const TArray1d &local_coupling) const = 0;
+        virtual State operator()(const State &x, const TArray2d &coupling, const TArray1d &local_coupling) = 0;
     };
 
 
@@ -73,7 +73,7 @@ namespace tvb {
         typedef typename std::unique_ptr<Model> UPtr;
 
 
-        Model(int n_nodes, int n_vars) : m_n_nodes(n_nodes), m_n_vars(n_vars) {
+        Model(int n_nodes) : m_n_nodes(n_nodes) {
         }
 
         virtual State initial() const {
@@ -83,6 +83,8 @@ namespace tvb {
         virtual void initial(State &) const {
             throw std::runtime_error("Model initial state not implemented!");
         }
+
+        virtual void init_dependant() {}
 
         virtual StateTrack *create_track() const {
             return new StateTrack();
@@ -94,9 +96,9 @@ namespace tvb {
 
         const std::vector<std::string> &state_vars() const { return m_state_vars; }
 
-        State operator()(const State &x,
+        virtual State operator()(const State &x,
                          const TArray2d &coupling,
-                         const TArray1d &local_coupling) const = 0;
+                         const TArray1d &local_coupling) = 0;
 
     };
 
@@ -135,7 +137,7 @@ namespace tvb {
 
     #define GET_MACRO(_0,_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,_30,NAME,...) NAME
     #define FOR_EACH(action,...) \
-      GET_MACRO(_0,__VA_ARGS__,FE_30,FE_29,FE_28,FE_27,FE_26,FE_25,FE_24,FE_23,FE_22,FE_21,FE_20,FE_19,FE_18,FE_17,FE_16,FE_15,FE_14,FE_13,FE_12,F_11,FE_10,FE_9,FE_8,FE_7,FE_6,FE_5,FE_4,FE_3,FE_2,FE_1,FE_0)(action,__VA_ARGS__)
+      GET_MACRO(_0,__VA_ARGS__,FE_30,FE_29,FE_28,FE_27,FE_26,FE_25,FE_24,FE_23,FE_22,FE_21,FE_20,FE_19,FE_18,FE_17,FE_16,FE_15,FE_14,FE_13,FE_12,FE_11,FE_10,FE_9,FE_8,FE_7,FE_6,FE_5,FE_4,FE_3,FE_2,FE_1,FE_0)(action,__VA_ARGS__)
 
     #define SETTER_FIRST(field) if (#field == param) this->field.fill(value); \
 
