@@ -23,10 +23,7 @@
 
 namespace tvb {
 
-    class BoldStephan2007 {
-        double m_T;
-        double m_dt;
-
+    class BoldStephan2007: public Monitor {
         double m_t_min = 20; // seconds
 
         double taus = 0.65; //  # 0.8;    # time unit (s)  --> kappa in the paper
@@ -47,6 +44,9 @@ namespace tvb {
 
         double k1, k2, k3;
 
+        int m_n_nodes;
+        std::vector<tvb::TArray2d> m_buffer;
+
         void init() {
             itaus = 1. / taus;
             itauf = 1. / tauf;
@@ -57,29 +57,22 @@ namespace tvb {
             k2 = r0*Eo*TE; //  # Shouldn't it be epsilon*r0*Eo*TE ???
             k3 = 1; //  # Shouldn't it be 1-epsilon ???
 
-
+            std::fill_n(m_buffer.begin(), m_vars_of_interest.size(), TArray2d::Zero(m_n_nodes, m_istep));
         }
 
     public:
-        BoldStephan2007(double T, int N, double dt, const std::vector<int> &voi) {
-            // m_period = 0.5;
-            this->config(T, N, dt, voi);
+        BoldStephan2007(int N, float period, float dt, const std::vector<int> &voi): Monitor(period, dt, voi) {
+            this->config(period, N, dt, voi);
         }
 
-        void config(double T, int N, double dt, const std::vector<int> &voi) {
-            m_T = T;
-            m_dt = dt;
+        void config(float period, int N, float dt, const std::vector<int> &voi) {
+            m_n_nodes = N;
+            Monitor::init(period, dt, voi);
             init();
         }
 
-        StateTrack apply(const std::vector<double>& times, const std::vector<State>& states)  {
-            throw("Not implemented!");
-        }
+        void sample(int step, const State &state) override;
 
-        TArray2d apply(const TArray2d& signal);
-
-
-//        virtual MSample sample(int step, const State &state) override;
     };
 }
 
