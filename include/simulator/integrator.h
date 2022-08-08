@@ -67,7 +67,7 @@ namespace tvb {
         double dt() const { return m_dt; }
 
         virtual State scheme(const State &state,
-                             const System &sys,
+                             System &sys,
                              const TArray2d &coupling,
                              const TArray1d &local_coupling,
                              const TArray1d &stimulus) = 0;

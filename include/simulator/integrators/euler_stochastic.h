@@ -26,7 +26,7 @@ namespace tvb {
         EulerStochastic(Noise* noise): m_noise(noise) {}
 
         State scheme(const State &state,
-                     const System &dfun,
+                     System &dfun,
                      const TArray2d &coupling,
                      const TArray1d &local_coupling,
                      const TArray1d &stimulus) override;

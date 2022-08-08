@@ -17,7 +17,7 @@
 using namespace tvb;
 
 State EulerStochastic::scheme(const State &state,
-                                 const System &dfun,
+                                 System &dfun,
                                  const TArray2d &coupling,
                                  const TArray1d &local_coupling,
                                  const TArray1d &stimulus) {
