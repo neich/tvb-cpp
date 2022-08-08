@@ -20,10 +20,12 @@
 using namespace tvb;
 
 TArray2d SimulateFCD::computeSubjectBold(const StateTrack& signal, double dt, const TArray1di& areasToSimulate) const {
-    BoldStephan2007 bold(signal.m_states.size()*dtt,signal.m_states[0].rows(), dtt, {2});
-    TArray2d result = bold.apply(stateTrackToMatrix(signal, 2));
-    int step = int(round(TR/dtt));
-    return result(Eigen::all, Eigen::seq(step-1, Eigen::last, step));
+    // TODO use monitor
+//    BoldStephan2007 bold(signal.m_states.size()*dtt,signal.m_states[0].rows(), dtt, {2});
+//    TArray2d result = bold.apply(stateTrackToMatrix(signal, 2));
+//    int step = int(round(TR/dtt));
+//    return result(Eigen::all, Eigen::seq(step-1, Eigen::last, step));
+    return TArray2d();
 }
 
 
