@@ -313,11 +313,11 @@ namespace tvb {
 
 
     public:
-        explicit ZerlautAdaptationFirstOrder(int n_nodes) : Model(n_nodes, 4) {
+        explicit ZerlautAdaptationFirstOrder(int n_nodes) : Model(n_nodes) {
             this->configure(n_nodes);
-            m_n_vars = 4;
             m_cvars = { 0 };
             m_state_vars = { "E", "I", "W_e", "W_i" };
+            m_n_vars = m_state_vars.size();
         }
 
         void set_param(const std::string& param, Float value) {
@@ -413,7 +413,7 @@ namespace tvb {
 
         State operator()(const State &x,
                 const TArray2d &coupling,
-                const TArray1d &local_coupling) const override;
+                const TArray1d &local_coupling) override;
 
         inline TArray1d TF_excitatory(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W) const;
 
@@ -441,7 +441,7 @@ namespace tvb {
 
         State operator()(const State &x,
                          const TArray2d &coupling,
-                         const TArray1d &local_coupling) const override;
+                         const TArray1d &local_coupling) override;
 
     protected:
         // Derivatives taken numerically : use a central difference formula with spacing `dx`
