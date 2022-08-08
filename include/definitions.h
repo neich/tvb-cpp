@@ -110,7 +110,7 @@ namespace tvb {
 
     inline
     bool isnan(const TArray1d& vector) {
-        for (auto v: vector)
+        for (auto const&v: vector)
             if (std::isnan(v))
                 return true;
         return false;
@@ -118,7 +118,7 @@ namespace tvb {
 
     inline
     bool isnan(const TArray2d& matrix) {
-        for (auto v: matrix.reshaped())
+        for (auto const& v: matrix.reshaped())
             if (std::isnan(v))
                 return true;
         return false;
@@ -144,8 +144,6 @@ namespace tvb {
         result[intervals] = finish;
         return result;
     }
-
-
 }
 
 
