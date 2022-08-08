@@ -14,6 +14,9 @@ TArray2d tvb::csv_load(const string& path) {
     // in this object we store the data from the matrix
     ifstream matrixDataFile(path);
 
+    if (!matrixDataFile.good())
+        throw std::runtime_error(string_format("Cannot open file: %s", path.c_str()));
+
     // this variable is used to store the row of the matrix that contains commas
     string matrixRowString;
 
@@ -42,6 +45,9 @@ TArray2d tvb::csv_load(const string& path) {
 
 void tvb::csv_save(const std::string &filename, const tvb::TArray2d& data) {
     std::ofstream myFile(filename);
+
+    if (!myFile.good())
+        throw std::runtime_error(string_format("Cannot open file: %s", filename.c_str()));
 
     // Send data to the stream
     for(int i = 0; i < data.rows(); ++i) {
