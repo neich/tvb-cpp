@@ -46,14 +46,13 @@ namespace tvb {
         }
 
 
-        StateTrack *run(const Model* model,
-                        const Connectivity* connectivity,
-                        Integrator* integrator,
-                        Monitor* monitor,
-                        Coupling* coupling,
-                        double start_time, double end_time, double dt,
-                        State *initial_state = NULL,
-                        int samplingRate = 1);
+        void run(Model *model,
+                 const Connectivity *connectivity,
+                 Integrator *integrator,
+                 Monitor *monitor,
+                 Coupling *coupling,
+                 double start_time, double end_time, double dt,
+                 State *initial_state = NULL);
     };
 }
 
