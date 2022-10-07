@@ -6,15 +6,12 @@
 
 using namespace tvb;
 
-TArray2d tvb::npz2Matrixd(const std::string& filename, const std::string& index) {
-    cnpy::NpyArray w_npy = cnpy::npz_load(filename, index);
-    assert(w_npy.shape.size() == 2);
-    assert(w_npy.word_size == sizeof(double));
-
+template<typename Numeric>
+TArray2d load_data(cnpy::NpyArray &w_npy) {
     unsigned rows = w_npy.shape[0];
     unsigned cols = w_npy.shape[1];
 
-    double* loaded_data = w_npy.data<double>();
+    auto* loaded_data = w_npy.data<Numeric>();
 
     TArray2d w(rows, cols);
 
@@ -25,18 +22,28 @@ TArray2d tvb::npz2Matrixd(const std::string& filename, const std::string& index)
     return w;
 }
 
+TArray2d tvb::npz2Matrixd(const std::string& filename, const std::string& index) {
+    cnpy::NpyArray w_npy = cnpy::npz_load(filename, index);
+    assert(w_npy.shape.size() == 2);
+    if (w_npy.word_size == sizeof(float)) return load_data<float>(w_npy);
+    else if (w_npy.word_size == sizeof(double )) return load_data<double>(w_npy);
+    else throw std::runtime_error(string_format("Unknown data format for file <%s>", filename.c_str()));
+}
+
+
+
 TArray2dMap tvb::npz2MatrixdMap(const std::string& filename) {
     cnpy::npz_t npy_map = cnpy::npz_load(filename);
 
     TArray2dMap result;
     for (auto& [key, w_npy]: npy_map) {
         assert(w_npy.shape.size() == 2);
-        assert(w_npy.word_size == sizeof(double));
+        assert(w_npy.word_size == sizeof(Float));
 
         unsigned rows = w_npy.shape[0];
         unsigned cols = w_npy.shape[1];
 
-        double *loaded_data = w_npy.data<double>();
+        Float *loaded_data = w_npy.data<Float>();
 
         TArray2d w(rows, cols);
 
@@ -87,6 +94,10 @@ std::vector<double> tvb::npz2VecDouble(const std::string& filename, const std::s
     return result;
 }
 
+void tvb::TArray1d2npz(const TArray1d& vec, const std::string& filename, const std::string& index) {
+    unsigned mat_size = vec.rows() * vec.cols();
+    cnpy::npz_save<Float>(filename, index, vec.data(), {(size_t)vec.rows(), (size_t)vec.cols()}, "a");
+}
 
 void tvb::vecMatrixd2npz(const std::vector<TArray2d>& data, const std::string& filename, const std::string& index) {
     unsigned mat_size = data[0].rows()*data[0].cols();
