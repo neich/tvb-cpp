@@ -41,6 +41,7 @@ namespace tvb {
         TArray2d m_hemodynamic_response_function;
 
         void compute_hrf();
+        void update(int step);
 
     public:
         BoldTVB(int N, float period, float dt, const std::vector<int> &voi): Monitor(period, dt, voi), m_hrf_kernel(new FirstOrderVolterra()) {
@@ -50,6 +51,8 @@ namespace tvb {
         void config(int N, float period, float dt, const std::vector<int> &voi);
 
         void sample(int step, const State &state) override;
+
+        void from_records(const std::vector<Record>& from, std::vector<Record>& to) override;
 
     };
 }

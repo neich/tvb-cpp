@@ -56,26 +56,31 @@ void BoldTVB::config(int N, float period, float dt, const std::vector<int> &voi)
 
 void BoldTVB::sample(int step, const State &state) {
     // Update the interim-stock at every step
-    int n_voi = m_vars_of_interest.size();
     this->m_interim_stock[index_circ(step, m_interim_istep, -1)] = state(Eigen::all, this->m_vars_of_interest);
     // At stock's period update it with the temporal average of interim-stock
+
+
+    update(step);
+
+}
+
+void BoldTVB::update(int step) {
     if (step % m_interim_istep == 0) {
-        TArray2d avg_state(m_n_nodes, n_voi);
+        TArray2d avg_state(m_n_nodes, m_vars_of_interest.size());
         avg_state.setZero();
-        for (unsigned i = 0; i < m_interim_stock.size(); ++i)
-            avg_state += m_interim_stock[i];
+        for(auto const& is: m_interim_stock)
+            avg_state += is;
         TArray2d avg_intermin_stock = avg_state / m_interim_stock.size();
         m_stock[index_circ(step / m_interim_istep, m_stock_steps, -1)] = avg_intermin_stock;
     }
-
     if (step % m_istep == 0) {
-        double time = step * m_dt;
+        int n_voi = m_vars_of_interest.size();
         int shift = (int(step / m_interim_istep) % m_stock_steps) - 1;
         TArray2d hrf = circshift(m_hemodynamic_response_function, shift);
-        FirstOrderVolterra *fov = dynamic_cast<FirstOrderVolterra *>(m_hrf_kernel.get());
+        auto *fov = dynamic_cast<FirstOrderVolterra *>(m_hrf_kernel.get());
         State bold(m_n_nodes, n_voi);
         bold.setZero();
-        if (fov != NULL) {
+        if (fov != nullptr) {
             double k1_V0 = m_hrf_kernel->getVariableValue("k_1") * m_hrf_kernel->getVariableValue("V_0");
 //            std::cout << "k_1 " << m_hrf_kernel->getVariableValue("k_1") << ", V_0 "
 //                      << m_hrf_kernel->getVariableValue("V_0") << ", k1_V0 " << k1_V0 << std::endl;
@@ -96,7 +101,14 @@ void BoldTVB::sample(int step, const State &state) {
                 }
 
         }
-        m_records.emplace_back(Monitor::Record{step*m_dt, bold});
+        m_records.emplace_back(Record{step * m_dt, bold});
     }
+}
 
+void BoldTVB::from_records(const std::vector<Record> &from, std::vector<Record> &to) {
+    int step = 1;
+    for (auto &r: from) {
+        m_interim_stock[index_circ(step, m_interim_istep, -1)] = r.record;
+        update(step);
+    }
 }
