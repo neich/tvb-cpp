@@ -18,18 +18,22 @@
 
 using namespace tvb;
 
-void Simulator::run(Model *model,
-                    const Connectivity *connectivity,
-                    Integrator *integrator,
-                    Monitor *monitor,
-                    Coupling *coupling,
-                    double start_time, double end_time, double dt,
-                    State *initial_state) {
+State Simulator::run(Model *model,
+                     const Connectivity *connectivity,
+                     Integrator *integrator,
+                     std::vector<Monitor*> monitors,
+                     Coupling *coupling,
+                     float start_time, float end_time,
+                     State *initial_state) {
 
     m_coupling = coupling;
+    float dt = integrator->dt();
 
     integrator->configure(start_time, end_time, dt);
     model->init_dependant();
+
+    for (auto mp: monitors)
+        mp->setStartTime(start_time);
 
     auto n_steps = int((end_time - start_time) / dt);
 
@@ -47,12 +51,17 @@ void Simulator::run(Model *model,
         TArray2d node_coupling = this->_loop_compute_node_coupling(step);
         this->_loop_update_stimulus(step, TArray1d()); // TODO: handle stimulus
         state = integrator->scheme(state, *model, node_coupling, local_coupling, stimulus);
+#ifndef NDEBUG
         if (tvb::isnan(state))
             throw std::runtime_error("NaN found in integration state!");
-        monitor->record(step, state);
+#endif
+        for (auto mp: monitors)
+            mp->record(step, state);
         t += integrator->dt();
         this->_loop_update_history(*coupling, step, state);
     }
+
+    return state;
 }
 
 
