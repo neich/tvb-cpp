@@ -90,48 +90,32 @@ set(TVB_TOOLS_SOURCES
         tools/fic/functions/simulate_fcd.h
         tools/fic/functions/simulate_fcd.cpp
         tools/load_or_compute.h
-)
+        include/tools/npy.h)
 
-add_executable(parameter_sweep examples/parameter_sweep.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
-add_executable(test_simulation examples/test_simulation.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
-add_executable(draft_cpp examples/Prepro_DecoEtAl2021_G_Optim.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
+add_library(tvb_cpp SHARED ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 
 find_package(MKL CONFIG)
 
 if (MKL_FOUND)
     add_definitions( -DEIGEN_USE_MKL_ALL )
-    target_compile_options(draft_cpp PUBLIC $<TARGET_PROPERTY:MKL::mkl_core,INTERFACE_COMPILE_OPTIONS>)
-    target_include_directories(draft_cpp INTERFACE $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
     include_directories(${MKL_H})
-endif()
-
-if (MSVC)
-    add_library(mkl_rt UNKNOWN IMPORTED)
-    set_property(TARGET mkl_rt PROPERTY IMPORTED_LOCATION "C:\\Program Files (x86)\\Intel\\oneAPI\\mkl\\2022.0.3\\lib\\intel64\\mkl_rt.lib")
-    target_link_libraries(parameter_sweep mkl_rt)
-    target_link_libraries(test_simulation mkl_rt)
-    target_link_libraries(draft_cpp mkl_rt)
 endif()
 
 find_package(BLAS)
 
 if (UNIX)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -ffast-math -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -ffast-math -DEIGEN_NO_DEBUG -DNDEBUG" CACHE STRING "" FORCE)
     # set(CMAKE_CXX_FLAGS_DEBUG  "-g -save-temps" CACHE STRING "" FORCE)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-    target_link_libraries(parameter_sweep Threads::Threads)
+    target_link_libraries(tvb_cpp Threads::Threads)
 
     if (MKL_FOUND)
-        target_link_libraries(parameter_sweep mkl_rt)
-        target_link_libraries(test_simulation mkl_rt)
-        target_link_libraries(draft_cpp mkl_rt)
+        target_link_libraries(tvb_cpp  mkl_rt)
     endif()
     if (BLAS_FOUND)
-        target_link_libraries(parameter_sweep mkl_rt)
-        target_link_libraries(test_simulation mkl_rt)
-        target_link_libraries(draft_cpp mkl_rt)
+        target_link_libraries(tvb_cpp mkl_rt)
     endif()
 
 endif()
@@ -140,23 +124,15 @@ endif()
 find_package(Eigen3 3.4 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR}/)
 
-find_package(Boost 1.67.0 COMPONENTS program_options )
+find_package(Boost 1.67.0 COMPONENTS program_options filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(parameter_sweep Boost::program_options)
-target_link_libraries(test_simulation Boost::program_options)
+target_link_libraries(tvb_cpp Boost::program_options Boost::filesystem)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/tools)
-
-find_package(Python3 3.8 COMPONENTS Development NumPy REQUIRED)
-include_directories(${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS})
-target_link_libraries(parameter_sweep Python3::Python Python3::NumPy)
-target_link_libraries(test_simulation Python3::Python Python3::NumPy)
-target_link_libraries(draft_cpp Python3::Python Python3::NumPy)
+include_directories(${CMAKE_SOURCE_DIR}/tools/optimlib)
 
 find_package( ZLIB REQUIRED )
 include_directories( ${ZLIB_INCLUDE_DIRS} )
-target_link_libraries( parameter_sweep  ${ZLIB_LIBRARIES} )
-target_link_libraries( test_simulation ${ZLIB_LIBRARIES} )
-target_link_libraries( draft_cpp  ${ZLIB_LIBRARIES} )
+target_link_libraries( tvb_cpp  ${ZLIB_LIBRARIES} )
