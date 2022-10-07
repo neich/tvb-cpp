@@ -32,6 +32,8 @@ namespace tvb {
     protected:
         float m_period;
         float m_dt;
+        float m_start_time = 0.0;
+
         int m_istep;
         std::vector<int> m_vars_of_interest;
         std::vector<Record> m_records;
@@ -61,6 +63,12 @@ namespace tvb {
 
         virtual ~Monitor() = default;
 
+        void setStartTime(float st) { m_start_time = st; }
+
+        virtual void from_records(const std::vector<Record>& from, std::vector<Record>& to) {
+            throw std::runtime_error("Method from_records() not implemented");
+        }
+
         void record(int step, const State &observed) {
             this->sample(step, observed);
         }
@@ -71,6 +79,14 @@ namespace tvb {
             return m_records;
         }
 
+        [[nodiscard]] TArray2d voi2Array(int index) const {
+            int N = getRecords()[0].record.rows();
+            TArray2d result(N, getRecords().size());
+            for (int i = 0; i < getRecords().size(); ++i)
+                result.col(i) = getRecords()[i].record.col(index);
+            return result;
+        }
+
     };
 
     class Raw : public Monitor {
@@ -79,7 +95,7 @@ namespace tvb {
         Raw(float dt, const std::vector<int>& voi): Monitor(dt, voi) {}
 
         void sample(int step, const State &state) override {
-            m_records.push_back(Record{step * m_dt, state(Eigen::all, m_vars_of_interest)});
+            m_records.push_back(Record{m_start_time + step * m_dt, state(Eigen::all, m_vars_of_interest)});
         }
     };
 
@@ -91,7 +107,29 @@ namespace tvb {
 
         void sample(int step, const State &state) override {
             if (step % m_istep == 0)
-                m_records.push_back(Record{step * m_dt, state(Eigen::all, m_vars_of_interest)});
+                m_records.push_back(Record{m_start_time + step * m_dt, state(Eigen::all, m_vars_of_interest)});
+        }
+
+    };
+
+    class AverageSubSample : public Monitor {
+        std::vector<State> m_buffer;
+
+    public:
+        explicit AverageSubSample(int n_nodes, float period, float dt, const std::vector<int>& voi): Monitor(period, dt, voi) {
+            m_buffer.resize(m_istep);
+            std::fill_n(m_buffer.begin(), m_istep, TArray2d::Zero(n_nodes, voi.size()));
+        }
+
+        void sample(int step, const State &state) override {
+            m_buffer[step % m_istep] = state(Eigen::all, m_vars_of_interest);
+            if (step % m_istep == 0) {
+                TArray2d result = TArray2d::Zero(state.rows(), m_vars_of_interest.size());
+                for (auto &s: m_buffer)
+                    result += s;
+                result /= m_istep;
+                m_records.push_back(Record{m_start_time + step * m_dt, result});
+            }
         }
 
     };
