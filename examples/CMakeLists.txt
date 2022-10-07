@@ -6,6 +6,8 @@ set(CMAKE_PROJECT_NAME "tvb-root-cpp-examples")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+add_definitions(${tvb-root-cpp_DEFINITIONS})
+
 if (MSVC)
 #    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/Od" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_RELINTODEB  "")
@@ -20,15 +22,6 @@ add_executable(parameter_sweep parameter_sweep.cpp)
 add_executable(test_simulation test_simulation.cpp)
 add_executable(stroke_explore stroke/stroke_explore.cpp)
 
-find_package(MKL CONFIG)
-
-if (MKL_FOUND)
-    add_definitions( -DEIGEN_USE_MKL_ALL )
-    include_directories(${MKL_H})
-endif()
-
-find_package(BLAS)
-
 if (UNIX)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -ffast-math -DEIGEN_NO_DEBUG -DNDEBUG" CACHE STRING "" FORCE)
@@ -40,6 +33,8 @@ if (UNIX)
     target_link_libraries(parameter_sweep Threads::Threads)
 
     if (MKL_FOUND)
+        add_definitions( -DEIGEN_USE_MKL_ALL )
+        include_directories(${MKL_H})
         target_link_libraries(fic_explore mkl_rt)
         target_link_libraries(parameter_sweep mkl_rt)
         target_link_libraries(test_simulation mkl_rt)
@@ -53,9 +48,6 @@ if (UNIX)
     endif()
 
 endif()
-
-
-
 
 find_package(Eigen3 3.4 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR}/)
@@ -85,3 +77,8 @@ target_link_libraries( fic_explore  ${ZLIB_LIBRARIES} )
 target_link_libraries( parameter_sweep  ${ZLIB_LIBRARIES} )
 target_link_libraries( test_simulation ${ZLIB_LIBRARIES} )
 target_link_libraries( stroke_explore  ${ZLIB_LIBRARIES} )
+
+target_link_libraries( fic_explore  tvb-root-cpp )
+target_link_libraries( parameter_sweep  tvb-root-cpp )
+target_link_libraries( test_simulation tvb-root-cpp )
+target_link_libraries( stroke_explore  tvb-root-cpp )
