@@ -47,7 +47,7 @@ namespace tvb {
     private:
         Model *m_model;
         Integrator *m_integrator;
-        Monitor *m_monitor;
+        std::vector<Monitor*> m_monitors;
         Connectivity *m_connectivity;
         Coupling *m_coupling;
         double m_start_time;
@@ -104,8 +104,8 @@ namespace tvb {
             return m_integrator;
         }
 
-        Monitor *monitor() {
-            return m_monitor;
+        const std::vector<Monitor*>& monitors() const {
+            return m_monitors;
         }
 
         Coupling *coupling() {
@@ -147,13 +147,20 @@ namespace tvb {
             m_dt = dt;
         }
 
-        void setMonitor(tvb::Monitor *pMonitor) {
-            m_monitor = pMonitor;
+        void setNumIterations(int n) { m_n_iterations = n; }
+        void setDeltaIntegration(float d) { m_delta_integration = d; }
+
+        void addMonitor(tvb::Monitor *pMonitor) {
+            m_monitors.push_back(pMonitor);
         }
+        void removeMonitor(tvb::Monitor *pMonitor) {
+            m_monitors.erase(std::remove(m_monitors.begin(), m_monitors.end(), pMonitor), m_monitors.end());
+        }
+
+
     };
 
-    StateTrack simulate(tvb::SimConfig& sim_config);
-
+    std::tuple<bool, Monitor*> simulate(tvb::SimConfig &sim_config, float sub_period, int voi);
 }
 
 
