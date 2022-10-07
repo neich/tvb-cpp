@@ -1,8 +1,9 @@
 *
-!/include**
-!/src**
-!/tools**
+!/src/tvb-root-cpp/include
+!/src/tvb-root-cpp/src
+!/src/tvb-root-cpp/tools/algo
 !/examples**
+/examples/cmake**
 !/Data_Raw**
 !.gitignore
 !CMakeLists.txt
