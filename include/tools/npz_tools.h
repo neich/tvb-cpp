@@ -35,6 +35,7 @@ namespace tvb {
     // Save to npz
 
     void vecMatrixd2npz(const std::vector<TArray2d>& data, const std::string& filename, const std::string& index);
+    void TArray1d2npz(const TArray1d& data, const std::string& filename, const std::string& index);
 
     void vecDouble2npz(const std::vector<double>& data, const std::string& filename, const std::string& index);
 
