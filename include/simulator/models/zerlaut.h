@@ -321,7 +321,7 @@ namespace tvb {
         }
 
         void set_param(const std::string& param, Float value) {
-            ADD_SETTER(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
+            ADD_SETTER_FILL(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
                        E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect, g, K_ext_e,\
                        K_ext_i, T, external_input_ex_ex, external_input_ex_in,\
                        external_input_in_ex, external_input_in_in)
