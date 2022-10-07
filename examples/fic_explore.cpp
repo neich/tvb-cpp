@@ -15,24 +15,24 @@
 #include <string>
 #include <chrono>
 
-#include <tools/npz_tools.h>
-#include <simulator/simulate.h>
-#include <simulator/monitor.h>
-#include <simulator/models/reduced_ww_ext.h>
-#include <simulator/models/montbrio.h>
-#include <simulator/integrators/euler_stochastic.h>
-#include <tools/threadpool.h>
-#include "tools/csv_tools.h"
-#include <tools/npy.h>
-#include "simulator/integrators/euler_deterministic.h"
-#include "simulator/models/zerlaut.h"
-#include "simulator/simulator.h"
-#include "simulator/monitors/bold_tvb.h"
-#include "simulator/monitors/bold_BalloonWindkessel.h"
-#include <fic/functions/balance_fic.h>
+#include <tvb-root-cpp/tools/npz_tools.h>
+#include <tvb-root-cpp/simulator/simulate.h>
+#include <tvb-root-cpp/simulator/monitor.h>
+#include <tvb-root-cpp/simulator/models/reduced_ww_ext.h>
+#include <tvb-root-cpp/simulator/models/montbrio.h>
+#include <tvb-root-cpp/simulator/integrators/euler_stochastic.h>
+#include <tvb-root-cpp/tools/threadpool.h>
+#include <tvb-root-cpp/tools/csv_tools.h>
+#include <tvb-root-cpp/tools/npy.h>
+#include <tvb-root-cpp/simulator/integrators/euler_deterministic.h>
+#include <tvb-root-cpp/simulator/models/zerlaut.h>
+#include <tvb-root-cpp/simulator/simulator.h>
+#include <tvb-root-cpp/simulator/monitors/bold_tvb.h>
+#include <tvb-root-cpp/simulator/monitors/bold_BalloonWindkessel.h>
+#include <tvb-root-cpp/tools/algo/fic/functions/balance_fic.h>
 
-#include <matplotlibcpp.h>
-#include <chrono>
+#include <tvb-root-cpp/matplotlibcpp.h>
+
 #include <filesystem>
 #include <thread>
 
