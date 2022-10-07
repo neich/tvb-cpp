@@ -16,25 +16,22 @@
 
 #include <external/numpy/numpy.h>
 #include <fic/functions/simulate_fcd.h>
+#include "simulator/monitors/bold_tvb.h"
 
 using namespace tvb;
 
-TArray2d SimulateFCD::computeSubjectBold(const StateTrack& signal, double dt, const TArray1di& areasToSimulate) const {
-    // TODO use monitor
-//    BoldStephan2007 bold(signal.m_states.size()*dtt,signal.m_states[0].rows(), dtt, {2});
-//    TArray2d result = bold.apply(stateTrackToMatrix(signal, 2));
-//    int step = int(round(TR/dtt));
-//    return result(Eigen::all, Eigen::seq(step-1, Eigen::last, step));
-    return TArray2d();
-}
 
-
-TArray2d SimulateFCD::simulateSingleSubject(SimConfig &simConfig) const{
+TArray2d SimulateFCD::simulateSingleSubject(SimConfig &simConfig, int voi) const{
     simConfig.setIntegrationInterval(0.0, Tmaxneuronal);
     simConfig.setTimeDelta(dt);
     simConfig.setSamplingRate(10);
-    StateTrack sresult = simulate(simConfig);
-    TArray2d bds = computeSubjectBold(sresult, simConfig.dt());
+    int  n_roi = simConfig.connectivity()->weights().rows();
+    auto *monitor = new BoldTVB(n_roi, TR, dt, {voi});
+    simulate(simConfig, 1.0, voi);
+    TArray2d bds(n_roi, monitor->getRecords().size());
+    int n = 0;
+    for (auto const& r: monitor->getRecords())
+        bds.col(n++) = r.record.col(0);
     return bds;
 }
 
