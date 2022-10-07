@@ -24,6 +24,7 @@
 #include <unordered_map>
 
 #include <Eigen/Dense>
+#include "tools/cnpy.h"
 
 namespace tvb {
 
@@ -110,10 +111,18 @@ namespace tvb {
 
     inline
     bool isnan(const TArray1d& vector) {
-        for (auto const&v: vector)
+        for (auto const &v: vector)
             if (std::isnan(v))
                 return true;
         return false;
+    }
+
+    inline
+    bool isfinite(const TArray1d& vector) {
+        for (auto const& v: vector)
+            if (!std::isfinite(v))
+                return false;
+        return true;
     }
 
     inline
@@ -123,6 +132,15 @@ namespace tvb {
                 return true;
         return false;
     }
+
+    inline
+    bool isfinite(const TArray2d& matrix) {
+        for (auto const& v: matrix.reshaped())
+            if (!std::isfinite(v))
+                return false;
+        return true;
+    }
+
 
     inline
     bool replace_nan(TArray1d& vector, Float value) {
@@ -144,6 +162,8 @@ namespace tvb {
         result[intervals] = finish;
         return result;
     }
+
+    TArray2d getArray(cnpy::NpyArray &w_npy);
 }
 
 
