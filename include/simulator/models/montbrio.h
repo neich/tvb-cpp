@@ -79,7 +79,7 @@ namespace tvb {
         }
 
         void set_param(const std::string &param, Float value) {
-            ADD_SETTER(tau_e, tau_i, G, delta_e, delta_i, eta_e, eta_i, I_e, I_i, I_ext, J_e, J_i)
+            ADD_SETTER_FILL(tau_e, tau_i, G, delta_e, delta_i, eta_e, eta_i, I_e, I_i, I_ext, J_e, J_i)
         }
 
         void configure(int n_nodes) {
