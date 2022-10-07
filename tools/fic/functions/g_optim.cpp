@@ -60,9 +60,9 @@ TArray2dMap distanceForOne_G(double we, const tvb::TArray1d& J_i,
                              const SimulateFCD &sim_fcd,
                              const DistanceSettings &distanceSettings) {
 
-    ReducedWongWangExcInh *model = dynamic_cast<ReducedWongWangExcInh*>(sim_config.model());
-    model->G.fill(we);
-    model->J_i = J_i;
+    auto *model = sim_config.model();
+    model->set_param_fill("G", we);
+    model->set_param_value("J_i", J_i);
 
     cout << string_format("   --- BEGIN TIME @ we=%f ---", we) << endl;
     auto start = std::chrono::high_resolution_clock::now();
@@ -70,7 +70,7 @@ TArray2dMap distanceForOne_G(double we, const tvb::TArray1d& J_i,
     vector<tvb::TArray2d> simulatedBOLDs;
     for (int nsub = 0; nsub < NumSimSubjects; ++nsub) { //  # trials. Originally it was 20.
         cout << string_format("   Simulating we=%f -> subject %d/%d!!!", we, nsub, NumSimSubjects) << endl;
-        TArray2d bold_signal = sim_fcd.simulateSingleSubject(sim_config);
+        TArray2d bold_signal = sim_fcd.simulateSingleSubject(sim_config, 3);
 //        tvb::Bold bold_monitor(simConfig, {3});
 //        StateTrack bold_result = bold_monitor.apply(result.m_times, result.m_states);
 //        TArray2d bold_signal = stateTrackToMatrix(bold_result);
