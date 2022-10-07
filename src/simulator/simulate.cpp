@@ -19,47 +19,55 @@
 
 using namespace tvb;
 
-StateTrack tvb::simulate(SimConfig &sim_config) {
+std::tuple<bool, Monitor*> tvb::simulate(SimConfig &sim_config, float sub_period, int voi) {
 
     // TODO: use monitor to track
-//    double max_diff = 1e6;
-//
-//    Simulator simulator;
-//
-//    for (unsigned i = 0; i < sim_config.num_iterations(); ++i) {
-//        simulator.run(sim_config.model(),
-//                       sim_config.connectivity(),
-//                       sim_config.integrator(),
-//                       sim_config.monitor(),
-//                       sim_config.coupling(),
-//                       sim_config.start_time(), sim_config.end_time(), sim_config.dt(),
-//                       NULL,
-//                       sim_config.samplingRate());
-//
-//        double v_max = -1e10;
-//        double v_min = 1e10;
-//        for (unsigned i = stateTrack->states().size() - 1000; i < stateTrack->states().size(); ++i) {
-//            double s_max = stateTrack->states()[i].col(sim_config.svar_index()).maxCoeff();
-//            double s_min = stateTrack->states()[i].col(sim_config.svar_index()).minCoeff();
-//            v_max = std::max(v_max, s_max);
-//            v_min = std::min(v_min, s_min);
-//        }
-//
-//        double v_diff = v_max - v_min;
-//        max_diff = std::max(max_diff, v_diff);
-//
-//        full_track.append(*stateTrack);
-//
-//        if (max_diff < sim_config.delta_integration())
-//            break;
-//
-//    }
-//
-//    StateTrack result;
-//    result.m_states = full_track.states();
-//    result.m_times = full_track.times();
-//    // result.m_max_diff = max_diff;
-//
-//    return result;
-    return StateTrack();
+    float max_diff = -1e6;
+
+    Simulator simulator;
+    int N = sim_config.connectivity()->weights().rows();
+
+    TArray2d last_state;
+    Monitor *monitor = new AverageSubSample(N, sub_period, sim_config.integrator()->dt(), {voi});
+    sim_config.addMonitor(monitor);
+    bool converged = false;
+    float t_start = sim_config.start_time();
+    float t_end = sim_config.end_time();
+    float t_interval = t_end - t_start;
+    for (unsigned i = 0; i < sim_config.num_iterations(); ++i) {
+        last_state = simulator.run(sim_config.model(),
+                       sim_config.connectivity(),
+                       sim_config.integrator(),
+                       sim_config.monitors(),
+                       sim_config.coupling(),
+                       t_start, t_end,
+                       i == 0 ? nullptr : &last_state);
+
+        TArray1d v_max = TArray1d::Constant(N, -1e6);
+        TArray1d v_min = TArray1d::Constant(N, 1e6);
+        auto const& records = monitor->getRecords();
+        auto n_records = records.size();
+        for (unsigned i = n_records - 4000; i < n_records; ++i) {
+            const TArray1d &r = records[i].record.col(0);
+            for (int n = 0; n < N; n++) {
+                v_max(n) = std::max(v_max(n), r(n));
+                v_min(n) = std::min(v_min(n), r(n));
+            }
+        }
+
+
+        TArray1d v_diff = v_max - v_min;
+        max_diff = std::max(max_diff, v_diff.maxCoeff());
+
+        if (max_diff < sim_config.delta_integration()) {
+            converged = true;
+            break;
+        }
+
+        t_start += t_interval;
+        t_end += t_interval;
+    }
+
+    sim_config.removeMonitor(monitor);
+    return {converged, monitor};
 }
