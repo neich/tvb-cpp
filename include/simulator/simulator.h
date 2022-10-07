@@ -46,13 +46,13 @@ namespace tvb {
         }
 
 
-        void run(Model *model,
-                 const Connectivity *connectivity,
-                 Integrator *integrator,
-                 Monitor *monitor,
-                 Coupling *coupling,
-                 double start_time, double end_time, double dt,
-                 State *initial_state = NULL);
+        State run(Model *model,
+                  const Connectivity *connectivity,
+                  Integrator *integrator,
+                  std::vector<Monitor*> monitors,
+                  Coupling *coupling,
+                  float start_time, float end_time,
+                  State *initial_state = NULL);
     };
 }
 
