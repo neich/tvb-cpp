@@ -55,7 +55,7 @@ void CouplingLinearSparse::init(double dt, const State &init_state) {
     for (int n = 0; n < m_nnodes; ++n) {
         int nsize = 0;
         for (int nn = 0; nn < m_nnodes; ++nn) {
-            if (m_weights(nn, n) > 0.0) {
+            if (m_weights(n, nn) > 0.0) {
                 indices.push_back(nn);
                 nsize++;
             }
@@ -69,12 +69,13 @@ void CouplingLinearSparse::init(double dt, const State &init_state) {
         m_wsparse[n] = TArray1d(nsize);
         m_dsparse[n] = TArray1di(nsize);
         for (int in = 0; in < nsize; ++in) {
-            m_wsparse[n][in] = m_weights(indices[i], n);
-            m_dsparse[n][in] = m_idelays(indices[i], n);
+            m_wsparse[n][in] = m_weights(n, indices[i]);
+            m_dsparse[n][in] = m_idelays(n, indices[i]);
             i++;
         }
     }
 
+    m_pbuffer.clear();
     for (int cv = 0; cv < m_nvars; ++cv) {
         m_pbuffer.emplace_back();
         int index = 0;
