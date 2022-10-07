@@ -48,7 +48,7 @@ int main(int argc, char ** argv) {
         options_description desc{"Options"};
         desc.add_options()
                 ("help,h", "Help screen")
-                ("params", value<std::vector<std::string>>()->multitoken()->required(), "Parameters to sweep")
+                ("params", value<std::vector<std::string>>()->multitoken(), "Model parameters")
                 ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
                 ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
                 ("speed", value<float>()->default_value(1e6), "Signal speed")
@@ -56,6 +56,7 @@ int main(int argc, char ** argv) {
                 ("time-end", value<float>()->default_value(10000.0), "End of simulation (ms)")
                 ("dt", value<float>()->default_value(0.1), "Integration step (ms)")
                 ("force-output", bool_switch()->default_value(false), "Force overwrite output files")
+                ("params-file", value<std::string>(), "NPZ file with simulation parameters")
                 ("out-file-prefix", value<std::string>()->required(), "Output file prefix");
 
         store(parse_command_line(argc, argv, desc), vm);
@@ -105,7 +106,7 @@ int main(int argc, char ** argv) {
     }
 
     tvb::TArray2d C;
-    string file_weights = vm["file-weights"].as<string>();
+    string file_weights = vm["sc-matrix"].as<string>();
     if (file_weights.ends_with(".csv"))
         C = tvb::csv_load(file_weights);
     else if (file_weights.ends_with(".npz"))
@@ -119,9 +120,8 @@ int main(int argc, char ** argv) {
     // tvb::csv_save("sc_d_norm.csv", C);
 
     tvb::TArray2d tl;
-    string file_lengths = vm["file_lengths"].as<string>();
-    if (!file_lengths.empty())
-        tl = tvb::csv_load(file_lengths);
+    if (vm.count("length-matrix") > 0)
+        tl = tvb::csv_load(vm["length-matrix"].as<string>());
     else
         tl = tvb::TArray2d::Zero(C.rows(), C.cols());
     tvb::Connectivity con(C, tl, vm["speed"].as<float>());
@@ -131,15 +131,18 @@ int main(int argc, char ** argv) {
 
     //auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, rp.dt);
     auto *model = new tvb::ReducedWongWangExcInh(N);
-    // auto *model = new tvb::ZerlautAdptationSecondOrder(N);
     for (auto const &p: params)
-        model->set_param(p.first, p.second);
+        model->set_param_fill(p.first, p.second);
+
+    if (vm.count("params-file") > 0) {
+        TArray2dMap pmap = npz2MatrixdMap(vm["params-file"].as<string>());
+        if (pmap.contains("G"))
+            model->set_param_fill("G", pmap["G"](0, 0));
+        if (pmap.contains("J_i"))
+            model->set_param_value("J_i", pmap["J_i"].col(0));
+    }
 
     float dt = vm["dt"].as<float>();
-
-    auto *monitor = new tvb::BoldTVB(N, 720.0, dt, {0});
-    // rp.monitor = new tvb::BoldBalloonWindkessel(N, 1.0, 720.0, rp.dt, {0});
-    // rp.monitor = new tvb::RawSubSample(1.0, rp.dt, {0});
 
     // auto *model = new tvb:std:ZerlautAdaptationFirstOrder(N);
     // tvb::TArray1d sigmas(4);
@@ -149,21 +152,23 @@ int main(int argc, char ** argv) {
     auto *coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
 
     auto start = std::chrono::high_resolution_clock::now();
-    tvb::Simulator simulator{};
-    simulator.run(model,
-                  &con,
-                  integrator,
-                  monitor,
-                  coupling,
-                  vm["time-start"].as<float>(), vm["time-end"].as<float>(), dt,
-                  nullptr);
+    SimConfig sim_config;
+
+    sim_config.setModel(model);
+    sim_config.setConnectivity(&con);
+    sim_config.setIntegrator(integrator);
+    sim_config.setCoupling(coupling);
+    sim_config.setIntegrationInterval(vm["time-start"].as<float>(), vm["time-end"].as<float>());
+    sim_config.setNumIterations(1);
+    sim_config.setDeltaIntegration(0.00001);
+
+    Monitor *monitor = tvb::simulate(sim_config, 1.0, 3);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - start);
 
     std::cout << string_format("Simulation time (%s): %d msecs", filename.c_str(), duration.count()) << std::endl;
-
 
     size_t n_records = monitor->getRecords().size();
     std::vector<std::vector<Float>> y_plot(N, std::vector<Float>(n_records));
@@ -184,9 +189,10 @@ int main(int argc, char ** argv) {
     // plt::plot(x, w,"r--");
     // Plot a line whose name will show up as "log(x)" in the legend.
 
-    plt::title("Montbrio");
-    plt::ylabel("r_e");
+    plt::title("RWW");
+    plt::ylabel("Ie");
+    plt::ylim(0.35, 0.4);
     plt::xlabel("Seconds");
     // Save the image (file format is determined by the extension)
-    plt::save("./test_M.png", 300);
+    plt::save("./test_stroke.png", 300);
 }
