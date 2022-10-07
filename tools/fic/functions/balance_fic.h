@@ -25,6 +25,8 @@ struct OptResult {
     tvb::TArray1d m_Jis;
 };
 
-OptResult optimize_fic(double G, tvb::SimConfig& sim_config);
+
+std::tuple<int, double, tvb::TArray1d>  optimize_fic(tvb::SimConfig& sim_config, int voi, float value_base);
+std::tuple<bool, float, float, double, tvb::TArray1d>  optimize_fic_Herzog(tvb::SimConfig& sim_config, int voi, float value_base, float a = 1.0, float b = 0.5);
 
 #endif //TVB_CPP_BALANCE_FIC_H
