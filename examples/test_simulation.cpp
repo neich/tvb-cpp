@@ -15,20 +15,20 @@
 #include <string>
 #include <chrono>
 
-#include <tools/npz_tools.h>
-#include <simulator/simulate.h>
-#include <simulator/monitor.h>
-#include <simulator/models/reduced_ww_ext.h>
-#include <simulator/models/montbrio.h>
-#include <simulator/integrators/euler_stochastic.h>
-#include "tools/csv_tools.h"
-#include "simulator/integrators/euler_deterministic.h"
-#include "simulator/models/zerlaut.h"
-#include "simulator/simulator.h"
-#include "simulator/monitors/bold_tvb.h"
-#include "simulator/monitors/bold_BalloonWindkessel.h"
+#include <tvb-root-cpp/tools/npz_tools.h>
+#include <tvb-root-cpp/simulator/simulate.h>
+#include <tvb-root-cpp/simulator/monitor.h>
+#include <tvb-root-cpp/simulator/models/reduced_ww_ext.h>
+#include <tvb-root-cpp/simulator/models/montbrio.h>
+#include <tvb-root-cpp/simulator/integrators/euler_stochastic.h>
+#include <tvb-root-cpp/tools/csv_tools.h>
+#include <tvb-root-cpp/simulator/integrators/euler_deterministic.h>
+#include <tvb-root-cpp/simulator/models/zerlaut.h>
+#include <tvb-root-cpp/simulator/simulator.h>
+#include <tvb-root-cpp/simulator/monitors/bold_tvb.h>
+#include <tvb-root-cpp/simulator/monitors/bold_BalloonWindkessel.h>
 
-#include <matplotlibcpp.h>
+#include <tvb-root-cpp/matplotlibcpp.h>
 #include <chrono>
 #include <boost/program_options.hpp>
 #include <utility>
@@ -162,7 +162,7 @@ int main(int argc, char ** argv) {
     sim_config.setNumIterations(1);
     sim_config.setDeltaIntegration(0.00001);
 
-    Monitor *monitor = tvb::simulate(sim_config, 1.0, 3);
+    auto [converged, monitor] = tvb::simulate(sim_config, 1.0, 3);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
