@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15...3.22)
 
-project(tvb-root-cpp-python VERSION "0.0.1")
+project(tvb_root_cpp_python VERSION "0.0.1")
+set(CMAKE_CXX_STANDARD 20)
 
 if(SKBUILD)
   # Scikit-Build does not add your site-packages to the search path
@@ -15,10 +16,104 @@ if(SKBUILD)
 endif()
 
 # Now we can find pybind11
-find_package(pybind11 CONFIG REQUIRED)
+add_subdirectory(pybind11)
 
-pybind11_add_module(_core MODULE src/main.cpp)
+if (MSVC)
+  #    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/Od" CACHE STRING "" FORCE)
+  set(CMAKE_CXX_FLAGS_RELINTODEB  "")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} /Ox")
+endif()
+
+set(CMAKE_CXX_FLAGS_RELINTODEB  "")
+
+set(TVB_SOURCES
+        ../src/tvb-root-cpp/simulator/simulator.h
+        ../src/tvb-root-cpp/simulator/simulator.cpp
+        ../src/tvb-root-cpp/simulator/integrator.h
+        ../src/tvb-root-cpp/simulator/model.h
+        ../src/tvb-root-cpp/datatypes/connectivity.h
+        ../src/tvb-root-cpp/definitions.h
+        ../src/tvb-root-cpp/simulator/coupling.h
+        ../src/tvb-root-cpp/simulator/coupling.cpp
+        ../src/tvb-root-cpp/simulator/models/reduced_ww_ext.h
+        ../src/tvb-root-cpp/simulator/models/reduced_ww_ext.cpp
+        ../src/tvb-root-cpp/simulator/models/zerlaut.h
+        ../src/tvb-root-cpp/simulator/models/zerlaut.cpp
+        ../src/tvb-root-cpp/simulator/models/montbrio.h
+        ../src/tvb-root-cpp/simulator/models/montbrio.cpp
+        ../src/tvb-root-cpp/simulator/integrators/euler_deterministic.h
+        ../src/tvb-root-cpp/simulator/integrators/euler_deterministic.cpp
+        ../src/tvb-root-cpp/simulator/integrators/euler_stochastic.h
+        ../src/tvb-root-cpp/simulator/integrators/euler_stochastic.cpp
+        ../src/tvb-root-cpp/tools/algo/fic/functions/balance_fic.h
+        ../src/tvb-root-cpp/simulator/simulate.h
+        ../src/tvb-root-cpp/simulator/simulate.cpp
+        ../src/tvb-root-cpp/simulator/monitor.h
+        ../src/tvb-root-cpp/simulator/monitors/bold_tvb.h
+        ../src/tvb-root-cpp/simulator/monitors/bold_tvb.cpp
+        ../src/tvb-root-cpp/simulator/monitors/bold_Stephan2007.h
+        ../src/tvb-root-cpp/simulator/monitors/bold_Stephan2007.cpp
+        ../src/tvb-root-cpp/simulator/monitors/bold_BalloonWindkessel.h
+        ../src/tvb-root-cpp/simulator/monitors/bold_BallonWindkessel.cpp
+        ../src/tvb-root-cpp/datatypes/equation.h
+        ../src/tvb-root-cpp/eigen/circshift.h
+        )
+
+set(TVB_TOOLS_SOURCES
+        ../src/tvb-root-cpp/tools/algo/fic/functions/balance_fic.cpp
+        ../src/tvb-root-cpp/tools/algo/fic/functions/observers/fc.h
+        ../src/tvb-root-cpp/tools/algo/fic/functions/observers/sw_fcd.h
+        ../src/tvb-root-cpp/tools/algo/fic/functions/observers/gbc.h
+        ../src/tvb-root-cpp/tools/algo/fic/functions/observers/sw_fcd.cpp
+        ../src/tvb-root-cpp/tools/algo/fic/functions/balance_fic.cpp
+        ../src/tvb-root-cpp/tools/algo/fic/functions/bold_filters.h
+        ../src/tvb-root-cpp/tools/algo/fic/functions/bold_filters.cpp
+        ../src/tvb-root-cpp/tools/algo/external/scipy/stats/stats.h
+        ../src/tvb-root-cpp/tools/algo/external/scipy/stats/stats.cpp
+        ../src/tvb-root-cpp/tools/algo/external/numpy/core/numeric.h
+        ../src/tvb-root-cpp/tools/algo/external/numpy/core/numeric.cpp
+        ../src/tvb-root-cpp/tools/algo/external/numpy/numpy.h
+        ../src/tvb-root-cpp/tools/algo/external/numpy/numpy.cpp
+        ../src/tvb-root-cpp/tools/algo/external/scipy/special/cephes/dd_real.cpp
+        ../src/tvb-root-cpp/tools/algo/external/scipy/special/cephes/kolmogorov.cpp
+        ../src/tvb-root-cpp/tools/algo/external/scipy/special/cephes/kolmogorov.h
+        ../src/tvb-root-cpp/tools/algo/external/scipy/stats/ksstats.h
+        ../src/tvb-root-cpp/tools/algo/external/scipy/stats/ksstats.cpp
+        ../src/tvb-root-cpp/tools/algo/external/scipy/signal/filter_design.h
+        ../src/tvb-root-cpp/tools/algo/external/scipy/signal/filter_design.cpp
+        ../src/tvb-root-cpp/tools/algo/external/scipy/signal/signaltools.h
+        ../src/tvb-root-cpp/tools/algo/external/scipy/signal/signaltools.cpp
+        ../src/tvb-root-cpp/tools/algo/external/scipy/linalg.h
+        ../src/tvb-root-cpp/tools/algo/external/scipy/linalg.cpp
+        ../src/tvb-root-cpp/tools/algo/external/eigen/eigen.h
+        ../src/tvb-root-cpp/tools/algo/fic/functions/observers/fc.h
+        ../src/tvb-root-cpp/tools/algo/fic/functions/g_optim.h
+        ../src/tvb-root-cpp/tools/algo/fic/functions/g_optim.cpp
+        ../src/tvb-root-cpp/tools/algo/fic/functions/simulate_fcd.h
+        ../src/tvb-root-cpp/tools/algo/fic/functions/simulate_fcd.cpp
+        ../src/tvb-root-cpp/tools/algo/load_or_compute.h)
+
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -ffast-math -DEIGEN_NO_DEBUG -DNDEBUG" CACHE STRING "" FORCE)
+# set(CMAKE_CXX_FLAGS_DEBUG  "-g -save-temps" CACHE STRING "" FORCE)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+find_package(Eigen3 3.4 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR}/)
+
+find_package(Boost 1.67.0 COMPONENTS program_options filesystem)
+include_directories(${Boost_INCLUDE_DIRS})
+
+include_directories(${PROJECT_SOURCE_DIR})
+
+include_directories(${PROJECT_SOURCE_DIR}/../src)
+
+pybind11_add_module(_core MODULE src/main.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
+target_link_libraries(_core PRIVATE Boost::program_options Boost::filesystem)
+target_link_libraries(_core PRIVATE Threads::Threads)
 
 install(TARGETS _core DESTINATION .)
