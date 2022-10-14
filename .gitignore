@@ -1,7 +1,5 @@
 *
-!/src/tvb-root-cpp/include
-!/src/tvb-root-cpp/src
-!/src/tvb-root-cpp/tools/algo
+!/src/tvb-root-cpp/**
 !/examples**
 /examples/cmake**
 !/Data_Raw**
@@ -9,3 +7,5 @@
 !CMakeLists.txt
 !README.md
 !/python**
+/python/.idea/
+**/cmake-build**
