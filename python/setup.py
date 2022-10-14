@@ -13,14 +13,14 @@ except ImportError:
 from setuptools import find_packages
 
 setup(
-    name="tvb-root-cpp-python",
-    version="0.0.1",
+    name="tvbcpp",
+    version="0.0.2",
     description="a minimal example package (with pybind11)",
     author="Ignacio Martín",
     license="MIT",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    cmake_install_dir="src/tvb-root-cpp-python",
+    cmake_install_dir="src/tvbcpp",
     include_package_data=True,
     extras_require={"test": ["pytest"]},
     python_requires=">=3.6",
