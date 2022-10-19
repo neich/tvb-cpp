@@ -76,9 +76,11 @@ namespace tvb {
         Model(int n_nodes) : m_n_nodes(n_nodes) {
         }
 
-        virtual void set_param_fill(const std::string& param, Float value) = 0;
+        virtual void configure() = 0;
 
-        virtual void set_param_value(const std::string& param, const TArray1d& value) = 0;
+        virtual void set_param(const std::string& param, const TArray1d& value) = 0;
+
+        virtual void set_param(const std::string& param, Float value) = 0;
 
         virtual const TArray1d& get_param(const std::string& param) const = 0;
 

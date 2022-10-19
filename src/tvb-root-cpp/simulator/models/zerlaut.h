@@ -314,48 +314,62 @@ namespace tvb {
 
     public:
         explicit ZerlautAdaptationFirstOrder(int n_nodes) : Model(n_nodes) {
-            this->configure(n_nodes);
             m_cvars = { 0 };
             m_state_vars = { "E", "I", "W_e", "W_i" };
             m_n_vars = m_state_vars.size();
+            this->configure();
         }
 
-        void set_param(const std::string& param, Float value) {
+        void set_param(const std::string& param, Float value) override {
             ADD_SETTER_FILL(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
                        E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect, g, K_ext_e,\
                        K_ext_i, T, external_input_ex_ex, external_input_ex_in,\
                        external_input_in_ex, external_input_in_in)
         }
 
-        void configure(int n_nodes) {
-            g_L.resize(n_nodes);
-            E_L_e.resize(n_nodes);
-            E_L_i.resize(n_nodes);
-            C_m.resize(n_nodes);
-            b_e.resize(n_nodes);
-            a_e.resize(n_nodes);
-            b_i.resize(n_nodes);
-            a_i.resize(n_nodes);
-            tau_w_e.resize(n_nodes);
-            tau_w_i.resize(n_nodes);
-            E_e.resize(n_nodes);
-            E_i.resize(n_nodes);
-            Q_e.resize(n_nodes);
-            Q_i.resize(n_nodes);
-            tau_e.resize(n_nodes);
-            tau_i.resize(n_nodes);
-            N_tot.resize(n_nodes);
-            p_connect.resize(n_nodes);
-            g.resize(n_nodes);
-            K_ext_e.resize(n_nodes);
-            K_ext_i.resize(n_nodes);
-            T.resize(n_nodes);
+        void set_param(const std::string& param, const TArray1d& value) override {
+            ADD_SETTER_VALUE(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
+                       E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect, g, K_ext_e,\
+                       K_ext_i, T, external_input_ex_ex, external_input_ex_in,\
+                       external_input_in_ex, external_input_in_in)
+        }
+
+        const TArray1d& get_param(const std::string& param) const override {
+            ADD_GETTER(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
+                       E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect, g, K_ext_e,\
+                       K_ext_i, T, external_input_ex_ex, external_input_ex_in,\
+                       external_input_in_ex, external_input_in_in)
+        }
+
+        void configure() {
+            g_L.resize(m_n_nodes);
+            E_L_e.resize(m_n_nodes);
+            E_L_i.resize(m_n_nodes);
+            C_m.resize(m_n_nodes);
+            b_e.resize(m_n_nodes);
+            a_e.resize(m_n_nodes);
+            b_i.resize(m_n_nodes);
+            a_i.resize(m_n_nodes);
+            tau_w_e.resize(m_n_nodes);
+            tau_w_i.resize(m_n_nodes);
+            E_e.resize(m_n_nodes);
+            E_i.resize(m_n_nodes);
+            Q_e.resize(m_n_nodes);
+            Q_i.resize(m_n_nodes);
+            tau_e.resize(m_n_nodes);
+            tau_i.resize(m_n_nodes);
+            N_tot.resize(m_n_nodes);
+            p_connect.resize(m_n_nodes);
+            g.resize(m_n_nodes);
+            K_ext_e.resize(m_n_nodes);
+            K_ext_i.resize(m_n_nodes);
+            T.resize(m_n_nodes);
             P_e.resize(10);
             P_i.resize(10);
-            external_input_ex_ex.resize(n_nodes);
-            external_input_ex_in.resize(n_nodes);
-            external_input_in_ex.resize(n_nodes);
-            external_input_in_in.resize(n_nodes);
+            external_input_ex_ex.resize(m_n_nodes);
+            external_input_ex_in.resize(m_n_nodes);
+            external_input_in_ex.resize(m_n_nodes);
+            external_input_in_in.resize(m_n_nodes);
 
 
             g_L.fill(10.0);
@@ -425,10 +439,10 @@ namespace tvb {
     class ZerlautAdptationSecondOrder: public ZerlautAdaptationFirstOrder {
     public:
         ZerlautAdptationSecondOrder(int n_nodes) : ZerlautAdaptationFirstOrder(n_nodes) {
-            this->configure(n_nodes);
             m_n_vars = 7;
             m_cvars = { 0 };
             m_state_vars = { "E", "I", "C_ee", "C_ei", "C_ii", "W_e", "W_i" };
+            this->configure();
         }
 
         void initial(State& state) const override {

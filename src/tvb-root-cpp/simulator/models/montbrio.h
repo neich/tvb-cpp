@@ -64,37 +64,46 @@ namespace tvb {
         TArray1d J_e;
         TArray1d J_i;
 
+        Float t_start;
+        Float t_end;
+        Float dt;
+        
     protected:
-        Float m_dt;
         int m_num_steps;
 
     public:
-        Montbrio(int n_nodes, Float t_start, Float t_end, Float dt) : Model(n_nodes) {
-            m_dt = dt;
-            m_num_steps = floor((t_end - t_start) / m_dt);
-            this->configure(n_nodes);
+        Montbrio(int m_n_nodes) : Model(m_n_nodes) {
             m_cvars = {4}; // coupling variable S_ee
             m_state_vars = {"r_e", "r_i", "u_e", "u_i", "S_ee", "S_ei", "S_ie", "S_ii"};
             m_n_vars = m_state_vars.size();
         }
-
-        void set_param(const std::string &param, Float value) {
-            ADD_SETTER_FILL(tau_e, tau_i, G, delta_e, delta_i, eta_e, eta_i, I_e, I_i, I_ext, J_e, J_i)
+        
+        void set_param(const std::string& param, const TArray1d& value) override {
+            ADD_SETTER_VALUE(delta_e, delta_i, eta_e, eta_i, I_e, I_i, I_ext, J_e, J_i)
         }
 
-        void configure(int n_nodes) {
-            tau_e.resize(n_nodes);
-            tau_i.resize(n_nodes);
-            G.resize(n_nodes);
-            delta_e.resize(n_nodes);
-            delta_i.resize(n_nodes);
-            eta_e.resize(n_nodes);
-            eta_i.resize(n_nodes);
-            I_e.resize(n_nodes);
-            I_i.resize(n_nodes);
-            I_ext.resize(n_nodes);
-            J_e.resize(n_nodes);
-            J_i.resize(n_nodes);
+        void set_param(const std::string& param, float value) override {
+            ADD_SETTER_FILL(delta_e, delta_i, eta_e, eta_i, I_e, I_i, I_ext, J_e, J_i)
+            ADD_SETTER_VALUE(t_start, t_end, dt)
+        }
+
+        const TArray1d& get_param(const std::string& param) const override {
+            ADD_GETTER(delta_e, delta_i, eta_e, eta_i, I_e, I_i, I_ext, J_e, J_i)
+        }
+
+        void configure() {
+            tau_e.resize(m_n_nodes);
+            tau_i.resize(m_n_nodes);
+            G.resize(m_n_nodes);
+            delta_e.resize(m_n_nodes);
+            delta_i.resize(m_n_nodes);
+            eta_e.resize(m_n_nodes);
+            eta_i.resize(m_n_nodes);
+            I_e.resize(m_n_nodes);
+            I_i.resize(m_n_nodes);
+            I_ext.resize(m_n_nodes);
+            J_e.resize(m_n_nodes);
+            J_i.resize(m_n_nodes);
 
 
             tau_e.fill(10.0);
@@ -114,15 +123,17 @@ namespace tvb {
             J_ei = 0.0;
             J_ie = 0.0;
             J_ii = 0.0;
-
-            init_dependant();
+            t_start = 0.0;
+            t_end = 10000.0;
+            dt = 0.1;
         }
 
         void init_dependant() override {
             // TODO tau_av = floor(Float(1e-3) * tau / m_dt + Float(1e-6));
-//            m_I = TArray1d::Zero(m_num_steps);
 //            m_utrace = TArray2d::Zero(m_n_nodes, m_num_steps+1);
 //            m_r = TArray2d::Zero(m_n_nodes, m_num_steps+1);
+            m_num_steps = floor((t_end - t_start) / dt);
+
         }
 
 
