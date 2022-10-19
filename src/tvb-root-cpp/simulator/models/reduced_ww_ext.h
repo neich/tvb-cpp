@@ -175,46 +175,44 @@ namespace tvb {
 //        )
 
     public:
-        ReducedWongWangExcInh(int n_nodes) : Model(n_nodes) {
-            this->configure(n_nodes);
+        ReducedWongWangExcInh(int n_nodes) : Model(m_n_nodes) {
             m_cvars = { 0 };
             m_state_vars = { "S_e", "S_i", "H_e", "I_e" };
             m_n_vars = m_state_vars.size();
+            this->configure();
         }
 
-        void set_param_fill(const std::string& param, Float value) override {
-            ADD_SETTER_FILL(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
-        }
-
-        void set_param_value(const std::string& param, const TArray1d& value) override {
+        void set_param(const std::string& param, const TArray1d& value) override {
             ADD_SETTER_VALUE(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
+        }
+
+        void set_param(const std::string& param, Float value) override {
+            ADD_SETTER_FILL(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
         }
 
         const TArray1d& get_param(const std::string& param) const override {
             ADD_GETTER(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
         }
 
-
-
-        void configure(int n_nodes) {
-            d_i.resize(n_nodes);
-            a_e.resize(n_nodes);
-            b_e.resize(n_nodes);
-            d_e.resize(n_nodes);
-            gamma_e.resize(n_nodes);
-            tau_e.resize(n_nodes);
-            w_p.resize(n_nodes);
-            J_N.resize(n_nodes);
-            W_e.resize(n_nodes);
-            a_i.resize(n_nodes);
-            b_i.resize(n_nodes);
-            gamma_i.resize(n_nodes);
-            tau_i.resize(n_nodes);
-            J_i.resize(n_nodes);
-            W_i.resize(n_nodes);
-            I_o.resize(n_nodes);
-            G.resize(n_nodes);
-            lambda.resize(n_nodes);
+        void configure() override {
+            d_i.resize(m_n_nodes);
+            a_e.resize(m_n_nodes);
+            b_e.resize(m_n_nodes);
+            d_e.resize(m_n_nodes);
+            gamma_e.resize(m_n_nodes);
+            tau_e.resize(m_n_nodes);
+            w_p.resize(m_n_nodes);
+            J_N.resize(m_n_nodes);
+            W_e.resize(m_n_nodes);
+            a_i.resize(m_n_nodes);
+            b_i.resize(m_n_nodes);
+            gamma_i.resize(m_n_nodes);
+            tau_i.resize(m_n_nodes);
+            J_i.resize(m_n_nodes);
+            W_i.resize(m_n_nodes);
+            I_o.resize(m_n_nodes);
+            G.resize(m_n_nodes);
+            lambda.resize(m_n_nodes);
 
 
             d_i.fill(0.087);
