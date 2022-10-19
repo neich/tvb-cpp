@@ -132,14 +132,14 @@ int main(int argc, char ** argv) {
     //auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, rp.dt);
     auto *model = new tvb::ReducedWongWangExcInh(N);
     for (auto const &p: params)
-        model->set_param_fill(p.first, p.second);
+        model->set_param(p.first, p.second);
 
     if (vm.count("params-file") > 0) {
         TArray2dMap pmap = npz2MatrixdMap(vm["params-file"].as<string>());
         if (pmap.contains("G"))
-            model->set_param_fill("G", pmap["G"](0, 0));
+            model->set_param("G", pmap["G"](0, 0));
         if (pmap.contains("J_i"))
-            model->set_param_value("J_i", pmap["J_i"].col(0));
+            model->set_param("J_i", pmap["J_i"].col(0));
     }
 
     float dt = vm["dt"].as<float>();

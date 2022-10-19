@@ -15,21 +15,21 @@
 #include <string>
 #include <chrono>
 
-#include <tools/npz_tools.h>
-#include <simulator/simulate.h>
-#include <simulator/monitor.h>
-#include <simulator/models/reduced_ww_ext.h>
-#include <simulator/models/montbrio.h>
-#include <simulator/integrators/euler_stochastic.h>
-#include <tools/threadpool.h>
-#include "tools/csv_tools.h"
-#include "simulator/integrators/euler_deterministic.h"
-#include "simulator/models/zerlaut.h"
-#include "simulator/simulator.h"
-#include "simulator/monitors/bold_tvb.h"
-#include "simulator/monitors/bold_BalloonWindkessel.h"
+#include <tvb-root-cpp/tools/npz_tools.h>
+#include <tvb-root-cpp/simulator/simulate.h>
+#include <tvb-root-cpp/simulator/monitor.h>
+#include <tvb-root-cpp/simulator/models/reduced_ww_ext.h>
+#include <tvb-root-cpp/simulator/models/montbrio.h>
+#include <tvb-root-cpp/simulator/integrators/euler_stochastic.h>
+#include <tvb-root-cpp/tools/threadpool.h>
+#include <tvb-root-cpp/tools/csv_tools.h>
+#include <tvb-root-cpp/simulator/integrators/euler_deterministic.h>
+#include <tvb-root-cpp/simulator/models/zerlaut.h>
+#include <tvb-root-cpp/simulator/simulator.h>
+#include <tvb-root-cpp/simulator/monitors/bold_tvb.h>
+#include <tvb-root-cpp/simulator/monitors/bold_BalloonWindkessel.h>
 
-#include <matplotlibcpp.h>
+#include <tvb-root-cpp/matplotlibcpp.h>
 #include <chrono>
 #include <filesystem>
 #include <thread>
@@ -113,7 +113,11 @@ RunParams run(RunParams rp) {
     milliseconds total_time(0);
     std::cout << string_format("Starting computation for: %s", filename.c_str()) << std::endl;
 
-    auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, rp.dt);
+    auto *model = new tvb::Montbrio(N);
+    model->set_param("t_start", rp.t_start);
+    model->set_param("t_end", rp.t_end);
+    model->set_param("dt", rp.dt);
+    model->init_dependant();
     // auto *model = new tvb::ReducedWongWangExcInh(N);
     // auto *model = new tvb::ZerlautAdptationSecondOrder(N);
     for (auto const &p: rp.params)
@@ -136,9 +140,9 @@ RunParams run(RunParams rp) {
     simulator.run(model,
                   &con,
                   integrator,
-                  rp.monitor,
+                  {rp.monitor},
                   coupling,
-                  rp.t_start, rp.t_end, rp.dt,
+                  rp.t_start, rp.t_end,
                   nullptr);
 
     auto stop = std::chrono::high_resolution_clock::now();

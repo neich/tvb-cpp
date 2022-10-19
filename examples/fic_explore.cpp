@@ -172,7 +172,7 @@ RunParams run(RunParams rp) {
     auto *model = new tvb::ReducedWongWangExcInh(N);
     // auto *model = new tvb::ZerlautAdptationSecondOrder(N);
     for (auto const &p: rp.params)
-        if (std::isalpha(p.name[0])) model->set_param_fill(p.name, p.value);
+        if (std::isalpha(p.name[0])) model->set_param(p.name, p.value);
 
     // rp.monitor = new tvb::BoldTVB(N, 720.0, rp.dt, {0});
     // rp.monitor = new tvb::BoldBalloonWindkessel(N, 1.0, 720.0, rp.dt, {0});
@@ -226,7 +226,7 @@ RunParams run(RunParams rp) {
         TArray1d2npz(TArray1d::Constant(1, 1, model->get_param("G")[0]), f_prefix + ".npz", "G");
         TArray1d2npz(sigmas, f_prefix + ".npz", "s");
 
-        model->set_param_value("J_i", J_i);
+        model->set_param("J_i", J_i);
         auto [converged, sim_result] = tvb::simulate(sim_config, 1.0, rp.voi);
 
         save_fig(sim_result, f_prefix);
@@ -293,8 +293,8 @@ void run_seq(RunParams rp) {
 
         std::cout << string_format("Starting computation for: %s", filename.c_str()) << std::endl;
 
-        model->set_param_fill("G", G);
-        model->set_param_value("Ji", last_Ji);
+        model->set_param("G", G);
+        model->set_param("Ji", last_Ji);
 
         // rp.monitor = new tvb::BoldTVB(N, 720.0, rp.dt, {0});
         // rp.monitor = new tvb::BoldBalloonWindkessel(N, 1.0, 720.0, rp.dt, {0});
@@ -342,7 +342,7 @@ void run_seq(RunParams rp) {
         ab << a, b;
         TArray1d2npz(ab, f_prefix + ".npz", "ab");
 
-        model->set_param_value("J_i", J_i);
+        model->set_param("J_i", J_i);
         auto [converged, sim_result] = tvb::simulate(sim_config, 1.0, rp.voi);
 
         save_fig(sim_result, f_prefix);
