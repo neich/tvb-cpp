@@ -52,8 +52,8 @@ State Simulator::run(Model *model,
         this->_loop_update_stimulus(step, TArray1d()); // TODO: handle stimulus
         state = integrator->scheme(state, *model, node_coupling, local_coupling, stimulus);
 #ifndef NDEBUG
-        if (tvb::isnan(state))
-            throw std::runtime_error("NaN found in integration state!");
+        if (!state.allFinite())
+            throw std::runtime_error(string_format("NaN found in integration state, step = %d", step));
 #endif
         for (auto mp: monitors)
             mp->record(step, state);
