@@ -39,18 +39,18 @@ State ReducedWongWangExcInh::operator()(const State &x,
     TArray1d I_e = this->W_e * this->I_o + this->w_p * J_N_S_e + total_coupling - inh; //  + I_ext;
 
     TArray1d x_e = this->a_e * I_e - this->b_e;
+    std::replace_if(x_e.begin(), x_e.end(), [](Float v) { return v == 0.0; }, 1e-6);
     TArray1d tmp_x_e_d = 1.0 - (-this->d_e * x_e).exp();
     TArray1d H_e = x_e / tmp_x_e_d;
-    tvb::replace_nan(H_e, Float(0.0));
 
     derivative.col(0) = -(S_e / this->tau_e) + (1.0 - S_e) * H_e * this->gamma_e;
 
     TArray1d I_i = this->W_i * this->I_o + J_N_S_e - S_i + this->lambda * total_coupling;
 
     TArray1d x_i = this->a_i * I_i - this->b_i;
+    std::replace_if(x_i.begin(), x_i.end(), [](Float v) { return v == 0.0; }, 1e-6);
     TArray1d tmp_x_i_d = 1.0 - (-this->d_i * x_i).exp();
     TArray1d H_i = x_i / tmp_x_i_d;
-    replace_nan(H_i, 0.0);
 
     derivative.col(1) = -(S_i / this->tau_i) + H_i * this->gamma_i;
 
@@ -58,7 +58,7 @@ State ReducedWongWangExcInh::operator()(const State &x,
     derivative.col(3) = I_e - x.col(3);
 
 #ifndef NDEBUG
-    if (!tvb::isfinite(derivative))
+    if (!derivative.allFinite())
         throw std::runtime_error("Non finite value found while computing ReducedWongWangExcInh derivative");
 #endif
 
