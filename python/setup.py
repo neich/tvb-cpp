@@ -14,7 +14,7 @@ from setuptools import find_packages
 
 setup(
     name="tvbcpp",
-    version="0.0.2",
+    version="0.0.3",
     description="a minimal example package (with pybind11)",
     author="Ignacio Martín",
     license="MIT",
