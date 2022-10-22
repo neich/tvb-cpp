@@ -175,7 +175,7 @@ namespace tvb {
 //        )
 
     public:
-        ReducedWongWangExcInh(int n_nodes) : Model(m_n_nodes) {
+        ReducedWongWangExcInh(int n_nodes) : Model(n_nodes) {
             m_cvars = { 0 };
             m_state_vars = { "S_e", "S_i", "H_e", "I_e" };
             m_n_vars = m_state_vars.size();
