@@ -1,1 +1,1 @@
-from ._core import __doc__, __version__, add, subtract, model
+from ._core import __doc__, __version__, set_weights, set_lenghts, set_integrator_es, set_model, set_model_parameter, set_raw_monitor, run_sim
