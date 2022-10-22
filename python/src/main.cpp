@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
 
-#include <tvb-root-cpp/simulator/models/reduced_ww_ext.h>
+#include "api.h"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -8,12 +8,6 @@
 int add(int i, int j) {
     return i + j;
 }
-
-void model(int N, float value) {
-    auto *model = new tvb::ReducedWongWangExcInh(N);
-    model->set_param_fill("G", value);
-}
-
 
 namespace py = pybind11;
 
@@ -32,24 +26,30 @@ PYBIND11_MODULE(_core, m) {
            model
     )pbdoc";
 
-    m.def("add", &add, R"pbdoc(
-        Add two numbers
-
-        Some other explanation about the add function.
+    m.def("set_weights", &setWeights, R"pbdoc(
     )pbdoc");
 
-    m.def("subtract", [](int i, int j) { return i - j; }, R"pbdoc(
-        Subtract two numbers
-
-        Some other explanation about the subtract function.
+    m.def("set_lenghts", &setLengths, R"pbdoc(
     )pbdoc");
 
-
-    m.def("model", &model, R"pbdoc(
-        Add two numbers
-
-        Some other explanation about the add function.
+    m.def("set_integrator_es", &setIntegratorES, R"pbdoc(
     )pbdoc");
+
+    m.def("set_model", &setModel, R"pbdoc(
+    )pbdoc");
+
+    m.def("set_model_parameter", static_cast<void (*)(std::string, tvb::Float)>(&setModelParameter), R"pbdoc(
+    )pbdoc");
+
+    m.def("set_model_parameter", static_cast<void (*)(std::string, py::EigenDRef<tvb::TArray1d>)>(&setModelParameter), R"pbdoc(
+    )pbdoc");
+
+    m.def("set_raw_monitor", &setRawMonitor, R"pbdoc(
+    )pbdoc");
+
+    m.def("run_sim", &run_sim, R"pbdoc(
+    )pbdoc");
+
 
 
 #ifdef VERSION_INFO
