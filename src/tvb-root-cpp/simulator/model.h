@@ -142,10 +142,14 @@ namespace tvb {
 #define FE_28(WHAT, X, ...) WHAT(X)FE_27(WHAT, __VA_ARGS__)
 #define FE_29(WHAT, X, ...) WHAT(X)FE_28(WHAT, __VA_ARGS__)
 #define FE_30(WHAT, X, ...) WHAT(X)FE_29(WHAT, __VA_ARGS__)
+#define FE_31(WHAT, X, ...) WHAT(X)FE_30(WHAT, __VA_ARGS__)
+#define FE_32(WHAT, X, ...) WHAT(X)FE_31(WHAT, __VA_ARGS__)
+#define FE_33(WHAT, X, ...) WHAT(X)FE_32(WHAT, __VA_ARGS__)
+#define FE_34(WHAT, X, ...) WHAT(X)FE_33(WHAT, __VA_ARGS__)
 
-#define GET_MACRO(_0,_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,_30,NAME,...) NAME
+#define GET_MACRO(_0,_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,_30,_31,_32,_33,_34,NAME,...) NAME
 #define FOR_EACH(action,...) \
-      GET_MACRO(_0,__VA_ARGS__,FE_30,FE_29,FE_28,FE_27,FE_26,FE_25,FE_24,FE_23,FE_22,FE_21,FE_20,FE_19,FE_18,FE_17,FE_16,FE_15,FE_14,FE_13,FE_12,FE_11,FE_10,FE_9,FE_8,FE_7,FE_6,FE_5,FE_4,FE_3,FE_2,FE_1,FE_0)(action,__VA_ARGS__)
+      GET_MACRO(_0,__VA_ARGS__,FE_34,FE_33,FE_32,FE_31,FE_30,FE_29,FE_28,FE_27,FE_26,FE_25,FE_24,FE_23,FE_22,FE_21,FE_20,FE_19,FE_18,FE_17,FE_16,FE_15,FE_14,FE_13,FE_12,FE_11,FE_10,FE_9,FE_8,FE_7,FE_6,FE_5,FE_4,FE_3,FE_2,FE_1,FE_0)(action,__VA_ARGS__)
 
 #define SETTER_FILL(field) if (#field == param) { this->field.fill(value); return; }
 #define SETTER_VALUE(field) if (#field == param) { this->field=value; return; }
