@@ -20,17 +20,10 @@ State EulerStochastic::scheme(const State &state,
                                  System &dfun,
                                  const TArray2d &coupling,
                                  const TArray1d &local_coupling,
-                                 const TArray1d &stimulus) {
+                                 const TArray2d &stimulus) {
     State d_state = dfun(state, coupling, local_coupling);
-    // TArray2d gfun = m_noise->gfun(state).transpose();
-    // TArray2d noise_gen = m_noise->generate(state.rows(), state.cols());
-    // TArray2d noise2 = noise_gen.rowwise() * gfun;
     TArray2d noise = m_noise->generate(state.rows(), state.cols()).rowwise() * m_noise->gfun(state).transpose();
-    State state_next = state + this->dt() * (d_state + 0.0) + noise; // 0.0 should be stimulus
-//    State state_next = state + this->dt() * (d_state + 0.0) ; // 0.0 should be stimulus
-//        if self.state_variable_boundaries is not None:
-//        self.bound_state(state_next)
-//        if self.clamped_state_variable_values is not None:
-//        self.clamp_state(state_next)
+    State state_next = state + this->dt() * (d_state + stimulus) + noise;
+
     return state_next;
 }

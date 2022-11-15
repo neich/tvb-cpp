@@ -12,7 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include <tvb-root-cpp/simulator/integrators/euler_deterministic.h>
+#include "euler_deterministic.h"
 
 using namespace tvb;
 
@@ -20,10 +20,10 @@ State EulerDeterministic::scheme(const State &state,
                                  System &dfun,
                                  const TArray2d &coupling,
                                  const TArray1d &local_coupling,
-                                 const TArray1d &stimulus) {
+                                 const TArray2d &stimulus) {
     State d_state = dfun(state, coupling, local_coupling);
     // TVB applies stimulus to the first state variable
-    d_state.col(0) += stimulus;
+    d_state += stimulus;
     State t2 = this->dt() * d_state;
     State state_next = state + t2; // 0.0 should be stimulus
 //        if self.state_variable_boundaries is not None:

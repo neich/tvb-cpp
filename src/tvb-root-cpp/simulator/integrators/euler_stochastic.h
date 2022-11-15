@@ -29,7 +29,7 @@ namespace tvb {
                      System &dfun,
                      const TArray2d &coupling,
                      const TArray1d &local_coupling,
-                     const TArray1d &stimulus) override;
+                     const TArray2d &stimulus) override;
 
     };
 

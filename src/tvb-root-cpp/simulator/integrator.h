@@ -70,7 +70,7 @@ namespace tvb {
                              System &sys,
                              const TArray2d &coupling,
                              const TArray1d &local_coupling,
-                             const TArray1d &stimulus) = 0;
+                             const TArray2d &stimulus) = 0;
     };
 }
 
