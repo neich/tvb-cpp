@@ -33,7 +33,8 @@ std::tuple<TArray1d, TArray1d, TArray1d> get_fluct_regime_vars(const TArray1d &F
                                                                const TArray1d &C_m,
                                                                const TArray1d &E_L,
                                                                const TArray1d &N_tot,
-                                                               const TArray1d &p_connect,
+                                                               const TArray1d &p_connect_e,
+                                                               const TArray1d &p_connect_i,
                                                                const TArray1d &g,
                                                                const TArray1d &K_ext_e,
                                                                const TArray1d &K_ext_i);
@@ -58,14 +59,17 @@ State ZerlautAdaptationFirstOrder::operator()(const State &x,
     const TArray1d &I = x.col(1);
     const TArray1d &W_e = x.col(2);
     const TArray1d &W_i = x.col(3);
+    const TArray1d &ou_drift = x.col(4);
 
     const TArray1d &c_0 = coupling.col(0);
 
     TArray1d lc_E = local_coupling * E;
     TArray1d lc_I = local_coupling * I;
 
-    TArray1d Fe_ext = c_0 + lc_E;
-    TArray1d Fi_ext = lc_I;
+    TArray1d Fe_ext = c_0 + lc_E * this->weight_noise * ou_drift;
+    std::for_each(Fe_ext.begin(), Fe_ext.end(), [](Float& v) { return v >= 0 ? v : 0.0; });
+
+    const TArray1d& Fi_ext = lc_I;
 
     // Excitatory firing rate derivation
     TArray1d tmp = (
@@ -82,8 +86,8 @@ State ZerlautAdaptationFirstOrder::operator()(const State &x,
             Fi_ext + this->external_input_ex_in,
             W_e, this->Q_e, this->tau_e, this->E_e,
             this->Q_i, this->tau_i, this->E_i,
-            this->g_L, this->C_m, this->E_L_e, this->N_tot,
-            this->p_connect, this->g, this->K_ext_e, this->K_ext_i);
+            this->g_L, this->C_m, this->E_L_e, this->N_tot, this->p_connect_e,
+            this->p_connect_i, this->g, this->K_ext_e, this->K_ext_i);
     derivative.col(2) = -W_e / this->tau_w_e + this->b_e * E + this->a_e * (mu_V - this->E_L_e) / this->tau_w_e;
     // Adaptation inhibitory
     auto [mu_V_i, sigma_V_i, T_V_i] = get_fluct_regime_vars(
@@ -91,10 +95,10 @@ State ZerlautAdaptationFirstOrder::operator()(const State &x,
             Fi_ext + this->external_input_in_in,
             W_i, this->Q_e, this->tau_e, this->E_e,
             this->Q_i, this->tau_i, this->E_i,
-            this->g_L, this->C_m, this->E_L_i, this->N_tot,
-            this->p_connect, this->g, this->K_ext_e, this->K_ext_i);
+            this->g_L, this->C_m, this->E_L_i, this->N_tot, this->p_connect_e,
+            this->p_connect_i, this->g, this->K_ext_e, this->K_ext_i);
     derivative.col(3) = -W_i / this->tau_w_i + this->b_i * I + this->a_i * (mu_V_i - this->E_L_i) / this->tau_w_i;
-
+    derivative.col(4) = -ou_drift / this->tau_OU;
 
     return derivative;
 
@@ -132,7 +136,7 @@ ZerlautAdaptationFirstOrder::TF(const TArray1d &fe, const TArray1d &fi, const TA
             get_fluct_regime_vars(fe, fi, fe_ext, fi_ext, W, this->Q_e, this->tau_e, this->E_e,
                                   this->Q_i, this->tau_i, this->E_i,
                                   this->g_L, this->C_m, E_L, this->N_tot,
-                                  this->p_connect, this->g, this->K_ext_e, this->K_ext_i);
+                                  this->p_connect_e, this->p_connect_i, this->g, this->K_ext_e, this->K_ext_i);
     TArray1d V_thre = threshold_func(mu_V, sigma_V, (T_V * this->g_L) / this->C_m,
                                      P[0], P[1], P[2], P[3], P[4], P[5], P[6], P[7], P[8], P[9]);
     V_thre *= 1e3;  // the threshold need to be in mv and not in Volt
@@ -155,7 +159,8 @@ std::tuple<TArray1d, TArray1d, TArray1d> get_fluct_regime_vars(const TArray1d &F
                                                                const TArray1d &C_m,
                                                                const TArray1d &E_L,
                                                                const TArray1d &N_tot,
-                                                               const TArray1d &p_connect,
+                                                               const TArray1d &p_connect_e,
+                                                               const TArray1d &p_connect_i,
                                                                const TArray1d &g,
                                                                const TArray1d &K_ext_e,
                                                                const TArray1d &K_ext_i) {
@@ -183,8 +188,8 @@ std::tuple<TArray1d, TArray1d, TArray1d> get_fluct_regime_vars(const TArray1d &F
     //"""
     // firing rate
     // 1e-6 represent spontaneous release of synaptic neurotransmitter or some intrinsic currents of neurons
-    TArray1d fe = (Fe + 1e-6) * (1. - g) * p_connect * N_tot + Fe_ext * K_ext_e;
-    TArray1d fi = (Fi + 1e-6) * g * p_connect * N_tot + Fi_ext * K_ext_i;
+    TArray1d fe = (Fe + 1e-6) * (1. - g) * p_connect_e * N_tot + Fe_ext * K_ext_e;
+    TArray1d fi = (Fi + 1e-6) * g * p_connect_i * N_tot + Fi_ext * K_ext_i;
 
     // conductance fluctuation and effective membrane time constant
     TArray1d mu_Ge = Q_e * tau_e * fe;
@@ -201,7 +206,7 @@ std::tuple<TArray1d, TArray1d, TArray1d> get_fluct_regime_vars(const TArray1d &F
     // Eqns 8 from [MV_2018]
     TArray1d sigma_V =
             fe * (U_e * tau_e).pow(2.0) / (2. * (tau_e + T_m)) + fi * (U_i * tau_i).pow(2.0) / (2. * (tau_i + T_m));
-    sigma_V = sigma_V.sqrt();
+    std::for_each(sigma_V.begin(), sigma_V.end(), [](Float& v) { return v > 0 ? v : 0.0; });
     // Autocorrelation-time of the fluctuations Eqns 9 from [MV_2018]
     TArray1d T_V_numerator = (fe * (U_e * tau_e).pow(2.0) + fi * (U_i * tau_i).pow(2.0));
     TArray1d T_V_denominator = (fe * (U_e * tau_e).pow(2.0) / (tau_e + T_m) +
@@ -358,7 +363,7 @@ State ZerlautAdptationSecondOrder::operator()(const State &x, const TArray2d &co
             W_e, this->Q_e, this->tau_e, this->E_e,
             this->Q_i, this->tau_i, this->E_i,
             this->g_L, this->C_m, this->E_L_e, this->N_tot,
-            this->p_connect, this->g, this->K_ext_e, this->K_ext_i);
+            this->p_connect_e, this->p_connect_i, this->g, this->K_ext_e, this->K_ext_i);
     derivative.col(5) = -W_e / this->tau_w_e + this->b_e * E + this->a_e * (mu_V - this->E_L_e) / this->tau_w_e;
 
     //// Adaptation inhibitory
@@ -369,7 +374,7 @@ State ZerlautAdptationSecondOrder::operator()(const State &x, const TArray2d &co
             W_i, this->Q_e, this->tau_e, this->E_e,
             this->Q_i, this->tau_i, this->E_i,
             this->g_L, this->C_m, this->E_L_i, this->N_tot,
-            this->p_connect, this->g, this->K_ext_e, this->K_ext_i);
+            this->p_connect_e, this->p_connect_i, this->g, this->K_ext_e, this->K_ext_i);
     derivative.col(6) = -W_i / this->tau_w_i + this->b_i * I + this->a_i * (mu_V_i - this->E_L_i) / this->tau_w_i;
 
     return derivative;

@@ -237,7 +237,14 @@ namespace tvb {
 //        domain=Range(lo=1000, hi=50000, step=1000),
 //                doc="""cell number""")
 
-        TArray1d p_connect;
+        TArray1d p_connect_e;
+//        = NArray(
+//                label=":math:`\epsilon`",
+//        default=numpy.array([0.05]),
+//        domain=Range(lo=0.001, hi=0.2, step=0.001),  # valid only for relatively sparse connectivities
+//                doc="""connectivity probability""")
+
+        TArray1d p_connect_i;
 //        = NArray(
 //                label=":math:`\epsilon`",
 //        default=numpy.array([0.05]),
@@ -310,35 +317,56 @@ namespace tvb {
 //        domain=Range(lo=0.00, hi=0.1, step=0.001),
 //                doc="""external drive""")
 
+        TArray1d tau_OU;
+//                label=":math:`\ntau noise`",
+//        default=numpy.array([5.0]),
+//        domain=Range(lo=0.10, hi=10.0, step=0.01),
+//                doc="""time constant noise""")
+//
 
+        TArray1d weight_noise;
+//                label=":math:`\nweight noise`",
+//        default=numpy.array([10.5]),
+//        domain=Range(lo=0., hi=50.0, step=1.0),
+//                doc="""weight noise""")
+
+        TArray1d S_i;
+//                label="",
+//        default=numpy.array([1.]),
+//        domain=Range(lo=0., hi=2., step=0.01),
+//                doc="""Scaling of the remote input for the inhibitory population with
+//        respect to the excitatory population.""")
 
     public:
         explicit ZerlautAdaptationFirstOrder(int n_nodes) : Model(n_nodes) {
             m_cvars = { 0 };
-            m_state_vars = { "E", "I", "W_e", "W_i" };
+            m_state_vars = { "E", "I", "W_e", "W_i", "ou_drift" };
             m_n_vars = m_state_vars.size();
             this->configure();
         }
 
         void set_param(const std::string& param, Float value) override {
             ADD_SETTER_FILL(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
-                       E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect, g, K_ext_e,\
+                       E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect_e, p_connect_i, g, K_ext_e,\
                        K_ext_i, T, external_input_ex_ex, external_input_ex_in,\
-                       external_input_in_ex, external_input_in_in)
+                       external_input_in_ex, external_input_in_in, tau_OU, weight_noise, S_i)
+            throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
 
         void set_param(const std::string& param, const TArray1d& value) override {
             ADD_SETTER_VALUE(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
-                       E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect, g, K_ext_e,\
+                       E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect_e, p_connect_i, g, K_ext_e,\
                        K_ext_i, T, external_input_ex_ex, external_input_ex_in,\
-                       external_input_in_ex, external_input_in_in)
+                       external_input_in_ex, external_input_in_in, tau_OU, weight_noise, S_i)
+            throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
 
         const TArray1d& get_param(const std::string& param) const override {
             ADD_GETTER(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
-                       E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect, g, K_ext_e,\
+                       E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect_e, p_connect_i, g, K_ext_e,\
                        K_ext_i, T, external_input_ex_ex, external_input_ex_in,\
-                       external_input_in_ex, external_input_in_in)
+                       external_input_in_ex, external_input_in_in, tau_OU, weight_noise, S_i)
+            throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
 
         void configure() {
@@ -359,7 +387,8 @@ namespace tvb {
             tau_e.resize(m_n_nodes);
             tau_i.resize(m_n_nodes);
             N_tot.resize(m_n_nodes);
-            p_connect.resize(m_n_nodes);
+            p_connect_e.resize(m_n_nodes);
+            p_connect_i.resize(m_n_nodes);
             g.resize(m_n_nodes);
             K_ext_e.resize(m_n_nodes);
             K_ext_i.resize(m_n_nodes);
@@ -370,6 +399,9 @@ namespace tvb {
             external_input_ex_in.resize(m_n_nodes);
             external_input_in_ex.resize(m_n_nodes);
             external_input_in_in.resize(m_n_nodes);
+            tau_OU.resize(m_n_nodes);
+            weight_noise.resize(m_n_nodes);
+            S_i.resize(m_n_nodes);
 
 
             g_L.fill(10.0);
@@ -389,7 +421,8 @@ namespace tvb {
             tau_e.fill(5.0);
             tau_i.fill(5.0);
             N_tot.fill(10000);
-            p_connect.fill(0.05);
+            p_connect_e.fill(0.05);
+            p_connect_i.fill(0.05);
             g.fill(0.2);
             K_ext_e.fill(400);
             K_ext_i.fill(0);
@@ -407,6 +440,10 @@ namespace tvb {
             external_input_ex_in.fill(0.0);
             external_input_in_ex.fill(0.0);
             external_input_in_in.fill(0.0);
+            tau_OU.fill(5.0);
+            weight_noise.fill(10.5);
+            S_i.fill(1.0);
+
         }
 
         [[nodiscard]] State initial() const override {
@@ -418,7 +455,7 @@ namespace tvb {
         void initial(State& state) const override {
             state.resize(m_n_nodes, m_n_vars);
             TArray1d init_state(m_n_vars);
-            init_state << 0.1, 0.1, 100.0, 0.0;
+            init_state << 0.0025, 0.0, 0.0, 0.0;
             for (int i = 0; i < m_n_nodes; ++i)
                 state.row(i) = init_state;
         }
