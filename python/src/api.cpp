@@ -134,7 +134,6 @@ py::array_t<tvb::Float> run_sim(float t_start, float t_end) {
     py::capsule free_when_done(data, [](void *f) {
         auto *d = reinterpret_cast<tvb::Float *>(f);
         delete[] d;
-        std::cerr << "Results data freed!" << std::endl;
     });
 
     return py::array_t<tvb::Float>(
