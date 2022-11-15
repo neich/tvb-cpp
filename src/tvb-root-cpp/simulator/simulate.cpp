@@ -41,6 +41,7 @@ std::tuple<bool, Monitor*> tvb::simulate(SimConfig &sim_config, float sub_period
                        sim_config.monitors(),
                        sim_config.coupling(),
                        t_start, t_end,
+                       nullptr,
                        i == 0 ? nullptr : &last_state);
 
         TArray1d v_max = TArray1d::Constant(N, -1e6);

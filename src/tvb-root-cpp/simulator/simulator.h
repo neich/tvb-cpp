@@ -19,6 +19,7 @@
 
 #include <tvb-root-cpp/simulator/integrator.h>
 #include <tvb-root-cpp/simulator/coupling.h>
+#include <tvb-root-cpp/simulator/stimulus.h>
 #include <tvb-root-cpp/simulator/monitor.h>
 #include <tvb-root-cpp/datatypes/connectivity.h>
 
@@ -52,7 +53,8 @@ namespace tvb {
                   std::vector<Monitor*> monitors,
                   Coupling *coupling,
                   float start_time, float end_time,
-                  State *initial_state = NULL);
+                  Stimulus* stimulus = nullptr,
+                  State *initial_state = nullptr);
     };
 }
 

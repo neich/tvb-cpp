@@ -14,7 +14,7 @@
 
 #include <algorithm>
 
-#include <tvb-root-cpp/simulator/simulator.h>
+#include "simulator.h"
 
 using namespace tvb;
 
@@ -24,20 +24,21 @@ State Simulator::run(Model *model,
                      std::vector<Monitor*> monitors,
                      Coupling *coupling,
                      float start_time, float end_time,
+                     Stimulus* stimulus,
                      State *initial_state) {
 
     m_coupling = coupling;
     float dt = integrator->dt();
 
     integrator->configure(start_time, end_time, dt);
-    model->init_dependant();
+    if (stimulus) stimulus->configure(start_time, end_time, dt);
 
     for (auto mp: monitors)
         mp->setStartTime(start_time);
 
     auto n_steps = int((end_time - start_time) / dt);
 
-    State state = initial_state != NULL ? *initial_state : model->initial();
+    State state = initial_state != nullptr ? *initial_state : model->initial();
     double t = start_time;
 
     coupling->init(dt, state);
@@ -45,12 +46,13 @@ State Simulator::run(Model *model,
     auto n_reg = connectivity->weights().rows();
 
     TArray1d local_coupling = TArray1d::Zero(n_reg);
-    TArray1d stimulus = TArray1d::Zero(n_reg);
+    TArray2d current_st = stimulus != nullptr ? stimulus->initial(state) : TArray2d::Zero(state.rows(), state.cols());
 
     for (int step = 1; step <= n_steps; ++step) {
         TArray2d node_coupling = this->_loop_compute_node_coupling(step);
-        this->_loop_update_stimulus(step, TArray1d()); // TODO: handle stimulus
-        state = integrator->scheme(state, *model, node_coupling, local_coupling, stimulus);
+        if (stimulus)
+            current_st = stimulus->update(step, current_st);
+        state = integrator->scheme(state, *model, node_coupling, local_coupling, current_st);
 #ifndef NDEBUG
         if (!state.allFinite())
             throw std::runtime_error(string_format("NaN found in integration state, step = %d", step));
@@ -63,5 +65,3 @@ State Simulator::run(Model *model,
 
     return state;
 }
-
-
