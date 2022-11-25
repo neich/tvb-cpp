@@ -30,7 +30,6 @@ State Simulator::run(Model *model,
     m_coupling = coupling;
     float dt = integrator->dt();
 
-    integrator->configure(start_time, end_time, dt);
     if (stimulus) stimulus->configure(start_time, end_time, dt);
 
     for (auto mp: monitors)
