@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <cassert>
+#include <algorithm>
 
 #include <tvb-root-cpp/simulator/integrators/euler_stochastic.h>
 #include <tvb-root-cpp/simulator/noise.h>
@@ -39,7 +40,7 @@ void setLengths(py::EigenDRef<tvb::TArray2d> vref, float s) {
 }
 
 void setIntegratorES(float d, py::EigenDRef<tvb::TArray1d> sigmas) {
-    integrator = new tvb::EulerStochastic(new tvb::Additive(sigmas, d));
+    integrator = new tvb::EulerStochastic(d, new tvb::Additive(sigmas, d));
     dt = d;
 }
 
@@ -52,7 +53,7 @@ void setModel(std::string name) {
     else if (name == "ZerlautAdaptationFirstOrder")
         model = new tvb::ZerlautAdaptationFirstOrder(weights.rows());
     else if (name == "ZerlautAdptationSecondOrder")
-        model = new tvb::ZerlautAdptationSecondOrder(weights.rows());
+        model = new tvb::ZerlautAdaptationSecondOrder(weights.rows());
     else throw std::runtime_error(string_format("Model wit name <%s> does not exist", name.c_str()));
 }
 
@@ -64,8 +65,12 @@ void setModelParameter(std::string name, py::EigenDRef<tvb::TArray1d> value) {
     model->set_param(name, value);
 }
 
-void setRawMonitor(float period, std::vector<int> voi) {
-    monitor = new tvb::RawSubSample(period, dt, voi);
+void addRawMonitor(float period, std::vector<int> voi) {
+    monitors.push_back(new tvb::RawSubSample(period, dt, voi));
+}
+
+void addAverageMonitor(float period, std::vector<int> voi) {
+    monitors.push_back(new tvb::AverageSubSample(weights.cols(), period, dt, voi));
 }
 
 py::array_t<tvb::Float> run_sim(float t_start, float t_end) {
@@ -84,12 +89,8 @@ py::array_t<tvb::Float> run_sim(float t_start, float t_end) {
     if (model == nullptr)
         throw std::runtime_error("Model not initialized");
 
-    if (monitor == nullptr)
-        throw std::runtime_error("Monitor not initialized");
-
     if (integrator == nullptr)
         throw std::runtime_error("Integrator not initialized");
-
 
     tvb::Connectivity con(weights, lengths, speed);
 
@@ -97,6 +98,10 @@ py::array_t<tvb::Float> run_sim(float t_start, float t_end) {
 
     tvb::Simulator simulator;
 
+    int index = 0;
+    std::vector<int> vois(model->state_vars().size());
+    std::generate_n(vois.begin(), model->state_vars().size(), [&index]() { return index++;});
+    monitor = new tvb::Raw(dt, vois);
     monitors.push_back(monitor);
 
     py::print("Starting simulation, t_start = ", t_start, ", t_end = ", t_end);
