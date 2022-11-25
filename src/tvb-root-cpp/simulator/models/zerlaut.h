@@ -357,7 +357,7 @@ namespace tvb {
             ADD_SETTER_VALUE(g_L, E_L_e, E_L_i, C_m, b_e, a_e, b_i, a_i, tau_w_e, tau_w_i,\
                        E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect_e, p_connect_i, g, K_ext_e,\
                        K_ext_i, T, external_input_ex_ex, external_input_ex_in,\
-                       external_input_in_ex, external_input_in_in, tau_OU, weight_noise, S_i)
+                       external_input_in_ex, external_input_in_in, tau_OU, weight_noise, S_i, P_e, P_i)
             throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
 
@@ -473,19 +473,19 @@ namespace tvb {
         [[nodiscard]] TArray1d TF(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d &P, const TArray1d &E_L) const;
     };
 
-    class ZerlautAdptationSecondOrder: public ZerlautAdaptationFirstOrder {
+    class ZerlautAdaptationSecondOrder: public ZerlautAdaptationFirstOrder {
     public:
-        ZerlautAdptationSecondOrder(int n_nodes) : ZerlautAdaptationFirstOrder(n_nodes) {
-            m_n_vars = 7;
+        ZerlautAdaptationSecondOrder(int n_nodes) : ZerlautAdaptationFirstOrder(n_nodes) {
             m_cvars = { 0 };
-            m_state_vars = { "E", "I", "C_ee", "C_ei", "C_ii", "W_e", "W_i" };
+            m_state_vars = { "E", "I", "C_ee", "C_ei", "C_ii", "W_e", "W_i", "ou_drift" };
+            m_n_vars = m_state_vars.size();
             this->configure();
         }
 
         void initial(State& state) const override {
             state.resize(m_n_nodes, m_n_vars);
             TArray1d init_state(m_n_vars);
-            init_state << 0.05, 0.05, 0.0, 0.0, 0.0, 100.0, 0.0;
+            init_state << 0.05, 0.05, 0.0, 0.0, 0.0, 100.0, 0.0, 0.0;
             for (int i = 0; i < m_n_nodes; ++i)
                 state.row(i) = init_state;
         }
@@ -510,13 +510,13 @@ namespace tvb {
             return (this->TF_inhibitory(fe, fi + df, fe_ext, fi_ext, W) - this->TF_inhibitory(fe, fi - df, fe_ext, fi_ext, W)) / (2 * df * 1e3);
         }
 
-        inline TArray1d _diff2_fe_fe_e(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d& _TF, double df=1e-7) const {
-            return (this->TF_excitatory(fe + df, fi, fe_ext, fi_ext, W) - 2 * _TF + this->TF_excitatory(fe - df, fi, fe_ext, fi_ext, W)) /
+        inline TArray1d _diff2_fe_fe_e(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d& TF, double df=1e-7) const {
+            return (this->TF_excitatory(fe + df, fi, fe_ext, fi_ext, W) - 2 * TF + this->TF_excitatory(fe - df, fi, fe_ext, fi_ext, W)) /
                    ((df * 1e3) * (df * 1e3));
         }
 
-        inline TArray1d _diff2_fe_fe_i(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d& _TF, double df=1e-7) const {
-            return (this->TF_inhibitory(fe + df, fi, fe_ext, fi_ext, W) - 2 * _TF + this->TF_inhibitory(fe - df, fi, fe_ext, fi_ext, W)) /
+        inline TArray1d _diff2_fe_fe_i(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d& TF, double df=1e-7) const {
+            return (this->TF_inhibitory(fe + df, fi, fe_ext, fi_ext, W) - 2 * TF + this->TF_inhibitory(fe - df, fi, fe_ext, fi_ext, W)) /
                    ((df * 1e3) * (df * 1e3));
         }
 
@@ -534,13 +534,13 @@ namespace tvb {
             return (_diff_fe_I(fe, fi+df, fe_ext, fi_ext, W)-_diff_fe_I(fe, fi-df, fe_ext, fi_ext, W))/(2*df*1e3);
         }
 
-        inline TArray1d _diff2_fi_fi_e(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d& _TF, double df=1e-7) const {
-            return (this->TF_excitatory(fe, fi + df, fe_ext, fi_ext, W) - 2 * _TF + this->TF_excitatory(fe, fi - df, fe_ext, fi_ext, W)) /
+        inline TArray1d _diff2_fi_fi_e(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d& TF, double df=1e-7) const {
+            return (this->TF_excitatory(fe, fi + df, fe_ext, fi_ext, W) - 2 * TF + this->TF_excitatory(fe, fi - df, fe_ext, fi_ext, W)) /
                    ((df * 1e3) * (df * 1e3));
         }
 
-        inline TArray1d _diff2_fi_fi_i(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d& _TF, double df=1e-7) const {
-            return (this->TF_inhibitory(fe, fi + df, fe_ext, fi_ext, W) - 2 * _TF + this->TF_inhibitory(fe, fi - df, fe_ext, fi_ext, W)) /
+        inline TArray1d _diff2_fi_fi_i(const TArray1d& fe, const TArray1d& fi, const TArray1d& fe_ext, const TArray1d& fi_ext, const TArray1d& W, const TArray1d& TF, double df=1e-7) const {
+            return (this->TF_inhibitory(fe, fi + df, fe_ext, fi_ext, W) - 2 * TF + this->TF_inhibitory(fe, fi - df, fe_ext, fi_ext, W)) /
                    ((df * 1e3) * (df * 1e3));
         }
     };

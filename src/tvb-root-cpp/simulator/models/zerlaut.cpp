@@ -67,7 +67,7 @@ State ZerlautAdaptationFirstOrder::operator()(const State &x,
     TArray1d lc_I = local_coupling * I;
 
     TArray1d Fe_ext = c_0 + lc_E * this->weight_noise * ou_drift;
-    std::for_each(Fe_ext.begin(), Fe_ext.end(), [](Float& v) { return v >= 0 ? v : 0.0; });
+    std::for_each(Fe_ext.begin(), Fe_ext.end(), [](Float& v) { v =  v >= 0 ? v : 0.0; });
 
     const TArray1d& Fi_ext = lc_I;
 
@@ -206,7 +206,7 @@ std::tuple<TArray1d, TArray1d, TArray1d> get_fluct_regime_vars(const TArray1d &F
     // Eqns 8 from [MV_2018]
     TArray1d sigma_V =
             fe * (U_e * tau_e).pow(2.0) / (2. * (tau_e + T_m)) + fi * (U_i * tau_i).pow(2.0) / (2. * (tau_i + T_m));
-    std::for_each(sigma_V.begin(), sigma_V.end(), [](Float& v) { return v > 0 ? v : 0.0; });
+    std::for_each(sigma_V.begin(), sigma_V.end(), [](Float& v) { v = v > 0 ? sqrt(v) : 0.0; });
     // Autocorrelation-time of the fluctuations Eqns 9 from [MV_2018]
     TArray1d T_V_numerator = (fe * (U_e * tau_e).pow(2.0) + fi * (U_i * tau_i).pow(2.0));
     TArray1d T_V_denominator = (fe * (U_e * tau_e).pow(2.0) / (tau_e + T_m) +
@@ -252,7 +252,7 @@ TArray1d estimate_firing_rate(const TArray1d &muV, const TArray1d &sigmaV,
     return e / (Tv * 2.0);
 }
 
-State ZerlautAdptationSecondOrder::operator()(const State &x, const TArray2d &coupling,
+State ZerlautAdaptationSecondOrder::operator()(const State &x, const TArray2d &coupling,
                                               const TArray1d &local_coupling) {
 //    .. math::
 //    \forall \mu,\lambda,\eta \in \{e,i\}^3\,
@@ -293,6 +293,7 @@ State ZerlautAdptationSecondOrder::operator()(const State &x, const TArray2d &co
     const TArray1d &C_ii = x.col(4);
     const TArray1d &W_e = x.col(5);
     const TArray1d &W_i = x.col(6);
+    const TArray1d &ou_drift = x.col(7);
 //
 //// long-range coupling
     const TArray1d &c_0 = coupling.col(0);
@@ -301,8 +302,12 @@ State ZerlautAdptationSecondOrder::operator()(const State &x, const TArray2d &co
     TArray1d lc_E = local_coupling * E;
     TArray1d lc_I = local_coupling * I;
 //
-    TArray1d E_input_excitatory = c_0 + lc_E + this->external_input_ex_ex;
-    TArray1d E_input_inhibitory = c_0 + lc_E + this->external_input_in_ex;
+    TArray1d E_input_excitatory = c_0 + lc_E + this->external_input_ex_ex + this->weight_noise * ou_drift;
+    std::for_each(E_input_excitatory.begin(), E_input_excitatory.end(), [](Float& v) { v = v >= 0 ? v : 0.0; });
+
+    TArray1d E_input_inhibitory = this->S_i * c_0 + lc_E + this->external_input_in_ex + this->weight_noise * ou_drift;
+    std::for_each(E_input_inhibitory.begin(), E_input_inhibitory.end(), [](Float& v) { v = v >= 0 ? v : 0.0; });
+
     TArray1d I_input_excitatory = lc_I + this->external_input_ex_in;
     TArray1d I_input_inhibitory = lc_I + this->external_input_in_in;
 //
@@ -337,26 +342,26 @@ State ZerlautAdptationSecondOrder::operator()(const State &x, const TArray2d &co
     derivative.col(2) = (TF_e * (1. / this->T - TF_e) / N_e
                          + (TF_e - E).pow(2.0)
                          + 2. * C_ee * _diff_fe_TF_e
-                         + 2. * C_ei * _diff_fi_TF_i
+                         + 2. * C_ei * _diff_fi_TF_e
                          - 2. * C_ee
                         ) / this->T;
 //// Covariance excitatory-inhibitory or inhibitory-excitatory derivation
     derivative.col(3) = ((TF_e - E) * (TF_i - I)
-                         + C_ee * _diff_fe_TF_e
-                         + C_ei * _diff_fe_TF_i
-                         + C_ei * _diff_fi_TF_e
-                         + C_ii * _diff_fi_TF_i
+                         + C_ee * _diff_fe_TF_i
+                         + C_ei * _diff_fi_TF_i
+                         + C_ei * _diff_fe_TF_e
+                         + C_ii * _diff_fi_TF_e
                          - 2. * C_ei
                         ) / this->T;
 //// Covariance inhibitory-inhibitory derivation
     derivative.col(4) = (TF_i * (1. / this->T - TF_i) / N_i
                          + (TF_i - I).pow(2.0)
                          + 2. * C_ii * _diff_fi_TF_i
-                         + 2. * C_ei * _diff_fe_TF_e
+                         + 2. * C_ei * _diff_fe_TF_i
                          - 2. * C_ii
                         ) / this->T;
 //// Adaptation excitatory
-    auto [mu_V, sigma_V, T_V] = get_fluct_regime_vars(
+    auto [mu_V_e, sigma_V_e, T_V_e] = get_fluct_regime_vars(
             E, I,
             E_input_excitatory,
             E_input_inhibitory,
@@ -364,7 +369,7 @@ State ZerlautAdptationSecondOrder::operator()(const State &x, const TArray2d &co
             this->Q_i, this->tau_i, this->E_i,
             this->g_L, this->C_m, this->E_L_e, this->N_tot,
             this->p_connect_e, this->p_connect_i, this->g, this->K_ext_e, this->K_ext_i);
-    derivative.col(5) = -W_e / this->tau_w_e + this->b_e * E + this->a_e * (mu_V - this->E_L_e) / this->tau_w_e;
+    derivative.col(5) = -W_e/this->tau_w_e  + this->b_e * E + this->a_e * (mu_V_e - this->E_L_e) / this->tau_w_e;
 
     //// Adaptation inhibitory
     auto [mu_V_i, sigma_V_i, T_V_i] = get_fluct_regime_vars(
@@ -375,7 +380,9 @@ State ZerlautAdptationSecondOrder::operator()(const State &x, const TArray2d &co
             this->Q_i, this->tau_i, this->E_i,
             this->g_L, this->C_m, this->E_L_i, this->N_tot,
             this->p_connect_e, this->p_connect_i, this->g, this->K_ext_e, this->K_ext_i);
-    derivative.col(6) = -W_i / this->tau_w_i + this->b_i * I + this->a_i * (mu_V_i - this->E_L_i) / this->tau_w_i;
+    derivative.col(6) = -W_i/this->tau_w_i + this->b_i * I + this->a_i * (mu_V_i - this->E_L_i) / this->tau_w_i;
+
+    derivative.col(7) = -ou_drift / this->tau_OU;
 
     return derivative;
 }
