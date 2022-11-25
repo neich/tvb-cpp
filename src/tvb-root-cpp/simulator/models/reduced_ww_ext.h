@@ -177,7 +177,7 @@ namespace tvb {
     public:
         ReducedWongWangExcInh(int n_nodes) : Model(n_nodes) {
             m_cvars = { 0 };
-            m_state_vars = { "S_e", "S_i", "H_e", "I_e" };
+            m_state_vars = { "S_e", "S_i" };
             m_n_vars = m_state_vars.size();
             this->configure();
         }
@@ -238,7 +238,7 @@ namespace tvb {
         [[nodiscard]] State initial() const override {
             State result(m_n_nodes, m_n_vars);
             TArray1d init_state(m_n_vars);
-            init_state << 0.0, 0.0, 0.0, 0.0;
+            init_state << 0.0, 0.0;
             for (int i = 0; i < m_n_nodes; ++i)
                 result.row(i) = init_state;
             return result;
@@ -247,12 +247,10 @@ namespace tvb {
         void initial(State& state) const override {
             state.resize(m_n_nodes, m_n_vars);
             TArray1d init_state(m_n_vars);
-            init_state << 0.001, 0.001, 0.0, 0.0;
+            init_state << 0.0, 0.0;
             for (int i = 0; i < m_n_nodes; ++i)
                 state.row(i) = init_state;
         }
-
-
 
         State operator()(const State &x,
                 const TArray2d &coupling,

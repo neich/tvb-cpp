@@ -54,9 +54,6 @@ State ReducedWongWangExcInh::operator()(const State &x,
 
     derivative.col(1) = -(S_i / this->tau_i) + H_i * this->gamma_i;
 
-    derivative.col(2) = H_e - x.col(2);
-    derivative.col(3) = I_e - x.col(3);
-
 #ifndef NDEBUG
     if (!derivative.allFinite())
         throw std::runtime_error("Non finite value found while computing ReducedWongWangExcInh derivative");
