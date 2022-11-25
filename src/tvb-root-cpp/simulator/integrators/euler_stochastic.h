@@ -23,7 +23,7 @@ namespace tvb {
     class EulerStochastic : public Integrator {
         Noise* m_noise;
     public:
-        EulerStochastic(Noise* noise): m_noise(noise) {}
+        EulerStochastic(float dt, Noise* noise): Integrator(dt), m_noise(noise) {}
 
         State scheme(const State &state,
                      System &dfun,

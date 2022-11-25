@@ -21,6 +21,7 @@ namespace tvb {
 
     class EulerDeterministic : public Integrator {
     public:
+        EulerDeterministic(float dt): Integrator(dt) {}
 
         State scheme(const State &state,
                      System &dfun,

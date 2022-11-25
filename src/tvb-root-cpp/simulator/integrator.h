@@ -43,24 +43,12 @@ namespace tvb {
 
     class Integrator {
     protected:
-        double m_start_time;
-        double m_end_time;
         double m_dt;
     public:
 
         typedef typename std::unique_ptr<Integrator> UPtr;
 
-        Integrator() {
-            this->configure(0.0, 1000.0, 0.1);
-        }
-
-        Integrator(double start_time, double end_time, double dt) {
-            this->configure(start_time, end_time, dt);
-        }
-
-        void configure(double start_time, double end_time, double dt) {
-            m_start_time = start_time;
-            m_end_time = end_time;
+        Integrator(double dt) {
             m_dt = dt;
         }
 
