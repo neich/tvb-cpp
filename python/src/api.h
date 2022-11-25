@@ -20,7 +20,8 @@ void setIntegratorES(float dt, py::EigenDRef<tvb::TArray1d> sigmas);
 void setModel(std::string name);
 void setModelParameter(std::string name, tvb::Float value);
 void setModelParameter(std::string name, py::EigenDRef<tvb::TArray1d> value);
-void setRawMonitor(float period, std::vector<int> voi);
+void addRawMonitor(float period, std::vector<int> voi);
+void addAverageMonitor(float period, std::vector<int> voi);
 py::array_t<tvb::Float> run_sim(float t_start, float t_end);
 
 #endif //TVB_ROOT_CPP_PYTHON_API_H
