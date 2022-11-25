@@ -28,7 +28,7 @@
 
 namespace tvb {
 
-    typedef float Float;
+    typedef double Float;
     // typedef double Float;
 
     typedef typename std::complex<Float> complexd;
