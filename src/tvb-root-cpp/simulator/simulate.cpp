@@ -22,7 +22,7 @@ using namespace tvb;
 std::tuple<bool, Monitor*> tvb::simulate(SimConfig &sim_config, float sub_period, int voi) {
 
     // TODO: use monitor to track
-    float max_diff = -1e6;
+    Float max_diff = -1e6;
 
     Simulator simulator;
     int N = sim_config.connectivity()->weights().rows();

@@ -87,7 +87,7 @@ namespace tvb {
 
         }
 
-        void set_param(const std::string& param, float value) override {
+        void set_param(const std::string& param, Float value) override {
             ADD_SETTER_FILL(tau_e, tau_i, tau_N, G, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
             throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
