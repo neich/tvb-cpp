@@ -57,10 +57,6 @@ namespace tvb {
             init(period, dt, voi);
         }
 
-        Monitor(float dt, const std::vector<int>& voi): m_dt(dt), m_vars_of_interest(voi) {
-            init(1.0, dt, voi);
-        }
-
         virtual ~Monitor() = default;
 
         void setStartTime(float st) { m_start_time = st; }
@@ -92,7 +88,7 @@ namespace tvb {
     class Raw : public Monitor {
 
     public:
-        Raw(float dt, const std::vector<int>& voi): Monitor(dt, voi) {}
+        Raw(float dt, const std::vector<int>& voi): Monitor(dt, dt, voi) {}
 
         void sample(int step, const State &state) override {
             m_records.push_back(Record{m_start_time + step * m_dt, state(Eigen::all, m_vars_of_interest)});
