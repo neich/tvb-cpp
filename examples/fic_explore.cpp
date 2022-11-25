@@ -188,7 +188,7 @@ RunParams run(RunParams rp) {
 
 
     // sigmas << 3e-5, 3e-5, 0.0, 0.0;
-    auto *integrator = new tvb::EulerStochastic(new Additive(sigmas, rp.dt));
+    auto *integrator = new tvb::EulerStochastic(rp.dt, new Additive(sigmas, rp.dt));
     // auto *integrator = new tvb::EulerDeterministic();
 
     auto coupling = new tvb::CouplingLinearSparse(con->weights(), con->delays(), model->cvars());
@@ -313,7 +313,7 @@ void run_seq(RunParams rp) {
         sigmas[2] = 0.0;
         sigmas[3] = 0.0;
 
-        auto *integrator = new tvb::EulerStochastic(new Additive(sigmas, rp.dt));
+        auto *integrator = new tvb::EulerStochastic(rp.dt, new Additive(sigmas, rp.dt));
         // auto *integrator = new tvb::EulerDeterministic();
 
         auto coupling = new tvb::CouplingLinearSparse(con->weights(), con->delays(), model->cvars());

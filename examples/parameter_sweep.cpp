@@ -131,7 +131,7 @@ RunParams run(RunParams rp) {
     // tvb::TArray1d sigmas(4);
     // sigmas << 3e-5, 3e-5, 0.0, 0.0;
     // auto *integrator = new tvb::EulerStochastic(new Additive(sigmas, 0.1));
-    auto *integrator = new tvb::EulerDeterministic();
+    auto *integrator = new tvb::EulerDeterministic(rp.dt);
     auto coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
 
 

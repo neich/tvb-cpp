@@ -148,7 +148,7 @@ int main(int argc, char ** argv) {
     // tvb::TArray1d sigmas(4);
     // sigmas << 3e-5, 3e-5, 0.0, 0.0;
     // auto *integrator = new tvb::EulerStochastic(new Additive(sigmas, 0.1));
-    auto *integrator = new tvb::EulerDeterministic();
+    auto *integrator = new tvb::EulerDeterministic(dt);
     auto *coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
 
     auto start = std::chrono::high_resolution_clock::now();
