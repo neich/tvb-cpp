@@ -13,7 +13,6 @@ if (MSVC)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} /Ox")
 endif()
 
-set(CMAKE_CXX_FLAGS_RELINTODEB  "")
 
 set(TVB_SOURCES
         tvb-root-cpp/simulator/simulator.h
@@ -91,6 +90,8 @@ set(TVB_TOOLS_SOURCES
 
 add_library(${CMAKE_PROJECT_NAME} SHARED ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 
+find_package(MKL CONFIG)
+
 if (UNIX)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -march=native -g -DEIGEN_NO_DEBUG")
     set(CMAKE_CXX_FLAGS_RELEASE  "-O2 -march=native -DEIGEN_NO_DEBUG -DNDEBUG")
@@ -101,13 +102,9 @@ if (UNIX)
 
     if (MKL_FOUND)
         add_definitions( -DEIGEN_USE_MKL_ALL )
-        include_directories(${MKL_H})
-        target_link_libraries(${CMAKE_PROJECT_NAME}  mkl_rt)
+        include_directories($<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>)
+        target_link_libraries(${CMAKE_PROJECT_NAME}  $<LINK_ONLY:MKL::MKL>)
     endif()
-    if (BLAS_FOUND)
-        target_link_libraries(${CMAKE_PROJECT_NAME} mkl_rt)
-    endif()
-
 endif()
 
 
@@ -124,11 +121,3 @@ find_package( ZLIB REQUIRED )
 include_directories( ${ZLIB_INCLUDE_DIRS} )
 target_link_libraries( ${CMAKE_PROJECT_NAME}  ${ZLIB_LIBRARIES} )
 
-set(${PROJECT_NAME}_DEFINITIONS ${C_DEFINITIONS}
-        CACHE INTERNAL "${PROJECT_NAME}: Definitions" FORCE)
-
-# Expose A's public includes (including the ones of A's dependencies
-# transitively) to other subprojects through cache variable.
-set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
-        ${C_INCLUDE_DIRS}
-        CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
