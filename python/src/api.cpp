@@ -65,6 +65,12 @@ void setModelParameter(std::string name, py::EigenDRef<tvb::TArray1d> value) {
     model->set_param(name, value);
 }
 
+void printModelParameters() {
+    std::cout << "Parameters:\n";
+    for (auto pname: model->get_param_list())
+        std::cout << pname << ": " << model->get_param_value(pname);
+}
+
 void addRawMonitor(float period, std::vector<int> voi) {
     monitors.push_back(new tvb::RawSubSample(period, dt, voi));
 }
