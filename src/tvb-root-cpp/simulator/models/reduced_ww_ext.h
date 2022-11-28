@@ -182,6 +182,10 @@ namespace tvb {
             this->configure();
         }
 
+        virtual std::vector<std::string> get_param_list() const {
+            return {"d_i", "a_e", "b_e", "d_e", "gamma_e", "tau_e", "w_p", "J_N", "W_e", "a_i", "b_i", "gamma_i", "tau_i", "J_i", "W_i", "I_o", "G", "lambda"};
+        }
+        
         void set_param(const std::string& param, const TArray1d& value) override {
             ADD_SETTER_VALUE(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
         }
@@ -190,7 +194,7 @@ namespace tvb {
             ADD_SETTER_FILL(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
         }
 
-        const TArray1d& get_param(const std::string& param) const override {
+        const TArray1d& get_param_value(const std::string& param) const override {
             ADD_GETTER(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
         }
 

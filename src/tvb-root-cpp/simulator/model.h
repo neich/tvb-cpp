@@ -78,11 +78,13 @@ namespace tvb {
 
         virtual void configure() = 0;
 
+        virtual std::vector<std::string> get_param_list() const = 0;
+
         virtual void set_param(const std::string& param, const TArray1d& value) = 0;
 
         virtual void set_param(const std::string& param, Float value) = 0;
 
-        virtual const TArray1d& get_param(const std::string& param) const = 0;
+        virtual const TArray1d& get_param_value(const std::string& param) const = 0;
 
         virtual State initial() const {
             throw std::runtime_error("Model initial state not implemented!");
@@ -152,7 +154,7 @@ namespace tvb {
       GET_MACRO(_0,__VA_ARGS__,FE_34,FE_33,FE_32,FE_31,FE_30,FE_29,FE_28,FE_27,FE_26,FE_25,FE_24,FE_23,FE_22,FE_21,FE_20,FE_19,FE_18,FE_17,FE_16,FE_15,FE_14,FE_13,FE_12,FE_11,FE_10,FE_9,FE_8,FE_7,FE_6,FE_5,FE_4,FE_3,FE_2,FE_1,FE_0)(action,__VA_ARGS__)
 
 #define SETTER_FILL(field) if (#field == param) { this->field.fill(value); return; }
-#define SETTER_VALUE(field) if (#field == param) { this->field=value; return; }
+#define SETTER_VALUE(field) if (#field == param) { if (value.size() == 1) { this->field.fill(value[0]); } else { this->field=value; } return; }
 #define GETTER(field) if (#field == param) { return this->field; }
 
 

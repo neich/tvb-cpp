@@ -80,6 +80,10 @@ namespace tvb {
             m_state_vars = {"r_e", "r_i", "u_e", "u_i", "S_e"};
             m_n_vars = m_state_vars.size();
         }
+
+        virtual std::vector<std::string> get_param_list() const {
+            return {"tau_e", "tau_i", "tau_N", "G", "delta_e", "delta_i", "eta_e", "eta_i", "a_e", "a_i", "g_e", "g_i", "I_e", "I_i", "I_e_ext", "I_i_ext", "J_e", "J_i", "J_A", "J_G", "J_N", "J"};
+        }
         
         void set_param(const std::string& param, const TArray1d& value) override {
             ADD_SETTER_VALUE(tau_e, tau_i, tau_N, G, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
@@ -92,7 +96,7 @@ namespace tvb {
             throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
 
-        const TArray1d& get_param(const std::string& param) const override {
+        const TArray1d& get_param_value(const std::string& param) const override {
             ADD_GETTER(tau_e, tau_i, tau_N, G, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
             throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
