@@ -94,6 +94,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 find_package(MKL CONFIG)
 
 if (UNIX)
+    set(CMAKE_CXX_FLAGS_RELDEBPROFILE  "-O2 -march=native -pg -DEIGEN_NO_DEBUG")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -march=native -g -DEIGEN_NO_DEBUG")
     set(CMAKE_CXX_FLAGS_RELEASE  "-O2 -march=native -DEIGEN_NO_DEBUG -DNDEBUG")
     # set(CMAKE_CXX_FLAGS_DEBUG  "-g -save-temps" CACHE STRING "" FORCE)
