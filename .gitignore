@@ -1,5 +1,5 @@
 *
-!/src/tvb-cpp/**
+!/src/**
 !/examples**
 /examples/cmake**
 !/Data_Raw**
