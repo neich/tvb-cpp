@@ -1,0 +1,46 @@
+//    Copyright 2020-2021 Ignacio Martín <ignacio.martin@udg.edu>
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//            http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+#ifndef TVB_CPP_G_OPTIM_H
+#define TVB_CPP_G_OPTIM_H
+
+#include <vector>
+#include <unordered_map>
+
+#include <tvb-cpp/definitions.h>
+
+#include <tvb-cpp/tools/algo/fic/functions/observers/fc.h>
+#include <tvb-cpp/simulator/simulate.h>
+#include "simulate_fcd.h"
+
+
+typedef std::unordered_map<std::string, FunctionalConnectivity&> DistanceSettings;
+
+TArray2dMap processBOLDSignals(const std::vector<tvb::TArray2d>& BOLDsignals,
+                               const DistanceSettings& distanceSettings,
+                               const Filter& filter=Filter());
+
+
+inline
+TArray2dMap processEmpiricalSubjects(const std::vector<tvb::TArray2d>& BOLDsignals,
+                                     DistanceSettings& distanceSettings) {
+    return processBOLDSignals(BOLDsignals, distanceSettings);
+}
+
+TArray2dMap distanceForOne_G(double we, const tvb::TArray1d& J_i,
+                             SimConfig &sim_config, int N, int NumSimSubjects,
+                             const SimulateFCD &sim_fcd,
+                             const DistanceSettings& distanceSettings);
+
+#endif //TVB_CPP_G_OPTIM_H
