@@ -37,7 +37,7 @@ public:
         m_buffer = tvb::TArray1d();
     }
 
-    void accumulate(const tvb::TArray2d& signal, int nsub)  override {
+    void accumulate(const tvb::TArray2d& signal, int nsub = 0)  override {
         tvb::TArray1d new_buffer = tvb::TArray1d(m_buffer.size() + signal.rows());
         new_buffer << m_buffer, signal.col(0);
         m_buffer = new_buffer;

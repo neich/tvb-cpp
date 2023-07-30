@@ -41,7 +41,7 @@ public:
 
     virtual void init(int numSubjects, int N) = 0;
 
-    virtual void accumulate(const tvb::TArray2d& signal, int nsub) = 0;
+    virtual void accumulate(const tvb::TArray2d& signal, int nsub = 0) = 0;
 
     [[nodiscard]] virtual double distance(const tvb::TArray2d& fcd1, const tvb::TArray2d& fcd2) const = 0;
 
