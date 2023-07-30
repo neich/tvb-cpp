@@ -66,8 +66,7 @@ void BoldTVB::sample(int step, const State &state) {
 
 void BoldTVB::update(int step) {
     if (step % m_interim_istep == 0) {
-        TArray2d avg_state(m_n_nodes, m_vars_of_interest.size());
-        avg_state.setZero();
+        TArray2d avg_state = TArray2d::Zero(m_n_nodes, m_vars_of_interest.size());
         for(auto const& is: m_interim_stock)
             avg_state += is;
         TArray2d avg_intermin_stock = avg_state / m_interim_stock.size();
