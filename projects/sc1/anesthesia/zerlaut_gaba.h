@@ -64,7 +64,7 @@ public:
 
     void configure() override {
         ZerlautAdaptationSecondOrder::configure();
-        this->set_param("g_L", 200);
+        this->set_param("g_L", 10);
         this->set_param("E_L_e", -63.0);
         this->set_param("E_L_i", -65.0);
         this->set_param("C_m", 200);
@@ -80,7 +80,10 @@ public:
         this->set_param("Q_i", 5.0);
         this->set_param("tau_e", 5.0);
         this->set_param("tau_i", 5.0);
-        this->set_param("g", 0.24);
+        this->set_param("N_tot", 10000);
+        this->set_param("p_connect_e", 0.05);
+        this->set_param("p_connect_i", 0.05);
+        this->set_param("g", 0.25);
         this->set_param("T", 40.0);
         this->set_param("weight_noise", 1e-4);
         this->set_param("tau_OU", 5.0);
@@ -147,8 +150,8 @@ public:
     }
 
     void init_dependant() override {
-        // this->tau_i = this->alpha_g * this->gaba_ratio * this->tau_i + this->beta_g;
-        // this->E_L_e = this->gamma_g * this->gaba_ratio * this->E_L_e + this->delta_g;
+        this->tau_i = this->alpha_g * this->gaba_ratio + this->beta_g;
+        this->E_L_e = this->gamma_g * this->gaba_ratio + this->delta_g;
     }
 
 };
