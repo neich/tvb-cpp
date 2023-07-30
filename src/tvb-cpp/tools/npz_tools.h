@@ -30,7 +30,7 @@ namespace tvb {
 
     TArray2dMap npz2MatrixdMap(const std::string &filename);
 
-    std::vector<TArray2d> npz2VecMatrixd(const std::string &filename, const std::string &index);
+    std::vector<TArray2d> np2VecMatrixd(const std::string &filename, const std::string &index = "");
 
     std::vector<double>  npz2VecDouble(const std::string &filename, const std::string &index);
 
@@ -43,7 +43,7 @@ namespace tvb {
 
     void MatrixdMap2npz(const std::string &filename, const TArray2dMap& mmap);
 
-    void Matrixd2npz(const TArray2d& data, const std::string& filename, const std::string& index);
+    void Matrixd2np(const TArray2d& data, const std::string& filename, const std::string& index = "");
 
 
 }

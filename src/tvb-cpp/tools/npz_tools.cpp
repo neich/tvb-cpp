@@ -89,8 +89,8 @@ TArray2dMap tvb::npz2MatrixdMap(const std::string& filename) {
 }
 
 
-std::vector<TArray2d> tvb::npz2VecMatrixd(const std::string& filename, const std::string& index) {
-    cnpy::NpyArray w_npy = cnpy::npz_load(filename, index);
+std::vector<TArray2d> tvb::np2VecMatrixd(const std::string& filename, const std::string& index) {
+    cnpy::NpyArray w_npy = index.size() == 0 ? cnpy::npy_load(filename) : cnpy::npz_load(filename, index);
     assert(w_npy.shape.size() == 3);
     assert(w_npy.word_size == sizeof(double));
 
@@ -102,9 +102,9 @@ std::vector<TArray2d> tvb::npz2VecMatrixd(const std::string& filename, const std
 
     std::vector<TArray2d> result(d0);
     std::fill(result.begin(), result.end(), tvb::TArray2d(d1, d2));
-    for (unsigned i2 = 0; i2 < d2; ++i2)
+    for (unsigned i0 = 0; i0 < d0; ++i0)
         for (unsigned i1 = 0; i1 < d1; ++i1)
-                for (unsigned i0 = 0; i0 < d0; ++i0)
+            for (unsigned i2 = 0; i2 < d2; ++i2)
                 result[i0](i1, i2) = *(loaded_data++);
 
     return result;
@@ -139,14 +139,17 @@ void tvb::vecMatrixd2npz(const std::vector<TArray2d>& data, const std::string& f
     delete[] raw_data;
 }
 
-void tvb::Matrixd2npz(const TArray2d& data, const std::string& filename, const std::string& index) {
+void tvb::Matrixd2np(const TArray2d& data, const std::string& filename, const std::string& index) {
     unsigned mat_size = data.rows()*data.cols();
     // TODO: it assumes default ColMajor
     double* raw_data = new double[mat_size];
     for (int col = 0; col < data.cols(); ++col)
         for (int row = 0; row < data.rows(); ++row)
         raw_data[col*data.rows() + row] = data(row, col);
-    cnpy::npz_save(filename, index, raw_data, { (size_t)data.rows(),  (size_t)data.cols()}, "a");
+    if (index.size() > 0)
+        cnpy::npz_save(filename, index, raw_data, { (size_t)data.rows(),  (size_t)data.cols()}, "a");
+    else
+        cnpy::npy_save(filename, raw_data, { (size_t)data.rows(),  (size_t)data.cols()}, "a");
     delete[] raw_data;
 }
 
