@@ -28,7 +28,7 @@ std::tuple<bool, Monitor*> tvb::simulate(SimConfig &sim_config, float sub_period
     int N = sim_config.connectivity()->weights().rows();
 
     TArray2d last_state;
-    Monitor *monitor = new AverageSubSample(N, sub_period, sim_config.integrator()->dt(), {voi});
+    Monitor *monitor = new TemporalAverage(N, sub_period, sim_config.integrator()->dt(), {voi});
     sim_config.addMonitor(monitor);
     bool converged = false;
     float t_start = sim_config.start_time();
