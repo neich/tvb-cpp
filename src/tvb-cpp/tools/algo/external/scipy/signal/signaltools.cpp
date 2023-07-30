@@ -15,10 +15,8 @@
 #include <unordered_set>
 
 #include <tvb-cpp/definitions.h>
-
 #include <tvb-cpp/tools/algo/external/numpy/numpy.h>
 #include <tvb-cpp/tools/algo/external/scipy/linalg.h>
-
 #include <tvb-cpp/tools/algo/external/scipy/signal/signaltools.h>
 
 using namespace tvb;
@@ -489,9 +487,8 @@ TArray1d lfilter_zi(const TArray1d& B, const TArray1d& A) {
     TMatrix IminusA = TMatrix::Identity(n - 1, n - 1) - companion(a).transpose();
     TVector bb = b(Eigen::seqN(1, Eigen::last)) - a(Eigen::seqN(1, Eigen::last)) * b[0];
     // # Solve zi = A*zi + B
-    // TArray1d zi = IminusA.colPivHouseholderQr().solve(bb).array();
-    TArray1d zi = IminusA.ldlt().solve(bb).array();
-    // zi = np.linalg.solve(IminusA, B)
+    // TArray1d zi3 = IminusA.colPivHouseholderQr().solve(bb).array();
+    TArray1d zi = IminusA.fullPivLu().solve(bb).array();
 
 //    # For future reference: we could also use the following
 //    # explicit formulas to solve the linear system:
@@ -512,8 +509,8 @@ TArray1d lfilter_zi(const TArray1d& B, const TArray1d& A) {
 TArray1d _linear_filter(const TArray1d &B, const TArray1d &A, const TArray1d &x, const TArray1d& zi={})
 {
     /* normalize the filter coefs only once. */
-    TArray1d b = B / A(0);
-    TArray1d a = A / A(0);
+    TArray1d b = B / A[0];
+    TArray1d a = A / A[0];
     TArray1d y(x.size());
     TArray1d z = zi;
 
