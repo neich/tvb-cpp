@@ -108,11 +108,11 @@ namespace tvb {
 
     };
 
-    class AverageSubSample : public Monitor {
+    class TemporalAverage : public Monitor {
         std::vector<State> m_buffer;
 
     public:
-        explicit AverageSubSample(int n_nodes, float period, float dt, const std::vector<int>& voi): Monitor(period, dt, voi) {
+        explicit TemporalAverage(int n_nodes, float period, float dt, const std::vector<int>& voi): Monitor(period, dt, voi) {
             m_buffer.resize(m_istep);
             std::fill_n(m_buffer.begin(), m_istep, TArray2d::Zero(n_nodes, voi.size()));
         }

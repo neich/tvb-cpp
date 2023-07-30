@@ -76,7 +76,7 @@ void addRawMonitor(float period, std::vector<int> voi) {
 }
 
 void addAverageMonitor(float period, std::vector<int> voi) {
-    monitors.push_back(new tvb::AverageSubSample(weights.cols(), period, dt, voi));
+    monitors.push_back(new tvb::TemporalAverage(weights.cols(), period, dt, voi));
 }
 
 py::array_t<tvb::Float> run_sim(float t_start, float t_end) {
