@@ -584,7 +584,7 @@ int main(int argc, char **argv) {
                 args += string_format(" --experiment-name %s", vm["experiment-name"].as<string>().c_str());
                 args += string_format(" --job-id %s", vm["job-id"].as<string>().c_str());
                 if (vm.count("norm")) {
-                    args += "--norm";
+                    args += " --norm";
                     for (auto &s: vm["norm"].as<vector<string>>())
                         args += " " + s;
                 }
