@@ -397,11 +397,13 @@ RunParams run(RunParams rp) {
             auto stop = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::high_resolution_clock::now() - start);
+            cout << string_format("Computed subject <%i> for <%s> (time: <%d>)\n", n, f_prefix.c_str(), duration.count());
 
             total_time += duration;
         }
         auto measureValues = measure.postprocess();
-        measure.distance(measureValues, processed_emp);
+        auto fitting = measure.distance(measureValues, processed_emp);
+        cout << string_format("Distance for <%s> : <%f>\n", f_prefix.c_str(), fitting);
     }
 
     return rp;
