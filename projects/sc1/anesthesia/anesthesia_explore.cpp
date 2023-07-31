@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
                 ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
                 ("speed", value<float>()->default_value(1e6), "Signal speed")
                 ("use-threads", bool_switch()->default_value(false), "Use threads")
-                ("srun", value<bool>()->default_value(false), "Use srun for parallelism")
+                ("srun", bool_switch()->default_value(false), "Use srun for parallelism")
                 ("time-start", value<float>()->default_value(0.0), "Start of simulation (ms)")
                 ("time-end", value<float>()->default_value(10000.0), "End of simulation (ms)")
                 ("dt", value<float>()->default_value(0.1), "Integration step (ms)")
@@ -470,14 +470,17 @@ int main(int argc, char **argv) {
 
         out_dir /= vm["experiment-name"].as<string>();
 
-        if (!exists(out_dir))
+        if (!exists(out_dir)) {
             create_directory(out_dir);
+            cout << string_format("Output directory created: %s\n", out_dir.c_str());
+        }
 
         std::vector<SweepParam> params;
         if (vm.count("help")) {
             std::cout << desc << '\n';
             return 0;
         }
+
         if (vm.count("param")) {
             for (auto &s: vm["param"].as<std::vector<std::string>>()) {
                 if (std::isalpha(s[0])) {
@@ -550,6 +553,7 @@ int main(int argc, char **argv) {
             pe_file /= "fNeuro_emp.npy";
             if (!exists(pe_file)) {
 
+                cout << "Preprocessing BOLD signals ..." << endl;
                 vector<TArray2d> ts = np2VecMatrixd(vm["time-series"].as<string>());
                 BandPassFilter bpf(0.008, 0.08, 2.4);
                 SW_FC measure(80, 18, true, bpf);
@@ -566,6 +570,7 @@ int main(int argc, char **argv) {
         }
 
         if (vm["srun"].as<bool>()) {
+            cout << "Running jobs using srun/slurm" << endl;
             std::vector<child> processes;
             processes.reserve(param_combs.size());
             auto srun = search_path("srun");
@@ -592,6 +597,7 @@ int main(int argc, char **argv) {
                 c.wait();
 
         } else {
+            cout << "Running jobs locally ... ";
             int num_cores = 8;
             if (vm.count("jube-cpu-pp"))
                 num_cores = vm["jube-cpu-pp"].as<int>();
@@ -599,11 +605,13 @@ int main(int argc, char **argv) {
             if (param_combs.size() < num_cores) num_cores = param_combs.size();
 
             if (!vm["use-threads"].as<bool>()) {
+                cout << "using threads" << endl;
                 for (auto &pc: param_combs) {
                     pc.init(vm);
                     run(pc);
                 }
             } else {
+                cout << "one at a time" << endl;
                 tvb::ThreadPool<RunParams> tp(num_cores);
                 tp.start();
                 for (auto &pc: param_combs) {
