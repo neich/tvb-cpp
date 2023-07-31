@@ -596,6 +596,7 @@ int main(int argc, char **argv) {
                 for (auto const &p: pc.params)
                     args += string_format(" --param %s %f", p.name.c_str(), p.value);
 
+                cout << string_format("Executing [%s, %s]\n", srun.c_str(), args.c_str());
                 processes.emplace_back(srun, args);
             }
 
