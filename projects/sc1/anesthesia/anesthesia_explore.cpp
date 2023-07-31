@@ -571,8 +571,7 @@ int main(int argc, char **argv) {
 
         if (vm["srun"].as<bool>()) {
             cout << "Running jobs using srun/slurm" << endl;
-            std::vector<child> processes;
-            processes.reserve(param_combs.size());
+            std::vector<child*> processes;
             auto srun = search_path("srun");
             for (auto &pc: param_combs) {
                 string args = "";
@@ -597,11 +596,12 @@ int main(int argc, char **argv) {
                     args += string_format(" --param %s %f", p.name.c_str(), p.value);
 
                 cout << string_format("Executing [%s, %s]\n", srun.c_str(), args.c_str());
-                processes.emplace_back(srun, args);
+                auto *c = new child(srun.string() + args);
+                processes.push_back(c);
             }
 
-            for (auto &c: processes)
-                c.wait();
+            for (auto c: processes)
+                c->wait();
 
         } else {
             cout << "Running jobs locally ... ";
@@ -612,13 +612,13 @@ int main(int argc, char **argv) {
             if (param_combs.size() < num_cores) num_cores = param_combs.size();
 
             if (!vm["use-threads"].as<bool>()) {
-                cout << "using threads" << endl;
+                cout << "one at a time" << endl;
                 for (auto &pc: param_combs) {
                     pc.init(vm);
                     run(pc);
                 }
             } else {
-                cout << "one at a time" << endl;
+                cout << "using threads" << endl;
                 tvb::ThreadPool<RunParams> tp(num_cores);
                 tp.start();
                 for (auto &pc: param_combs) {
