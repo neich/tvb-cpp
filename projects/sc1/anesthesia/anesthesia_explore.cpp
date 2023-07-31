@@ -583,9 +583,15 @@ int main(int argc, char **argv) {
                 args += string_format(" --algo %s", vm["algo"].as<string>().c_str());
                 args += string_format(" --experiment-name %s", vm["experiment-name"].as<string>().c_str());
                 args += string_format(" --job-id %s", vm["job-id"].as<string>().c_str());
-                args += string_format(" --norm %s", vm["norm"].as<string>().c_str());
+                if (vm.count("norm")) {
+                    args += "--norm";
+                    for (auto &s: vm["norm"].as<vector<string>>())
+                        args += " " + s;
+                }
                 if (vm.count("gaba-vector") > 0)
                     args += string_format(" --gaba-vector %s", vm["gaba-vector"].as<string>().c_str());
+                if (vm.count("time-series") > 0)
+                    args += string_format(" --time-series %s", vm["time-series"].as<string>().c_str());
 
                 for (auto const &p: pc.params)
                     args += string_format(" --param %s %f", p.name.c_str(), p.value);
