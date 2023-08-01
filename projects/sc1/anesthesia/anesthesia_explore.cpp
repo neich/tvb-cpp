@@ -183,7 +183,7 @@ void save_cvs(tvb::Monitor *monitor, const string &filename) {
 
     y_plot.insert(y_plot.begin(), ls);
 
-    tvb::csv_save(filename, y_plot, true);
+    tvb::csv_save(filename, y_plot, "", true);
 
 }
 
@@ -358,7 +358,7 @@ RunParams run(RunParams rp) {
         TArray2dMap data = npz2MatrixdMap(pe_file.c_str());
         TArray2d processed_emp = data["swFCD"];
 
-        BandPassFilter bpf(0.008, 0.08, 2.4);
+        BandPassFilter bpf(0.008, 0.08, 2.5);
         SW_FC measure(80, 18, true, bpf);
 
         int N = data["nsub"](0, 0);
@@ -372,7 +372,6 @@ RunParams run(RunParams rp) {
             sim_config.setConnectivity(con);
             sim_config.setIntegrator(integrator);
             sim_config.setCoupling(coupling);
-            sim_config.setIntegrationInterval(rp.t_start, rp.t_end);
             sim_config.setNumIterations(1);
             sim_config.setDeltaIntegration(0.00001);
 
@@ -385,7 +384,7 @@ RunParams run(RunParams rp) {
                           sim_config.integrator(),
                           {btvb},
                           sim_config.coupling(),
-                          0, 48000,
+                          0, 300000,
                           nullptr,
                           &initial_state);
 
@@ -397,13 +396,20 @@ RunParams run(RunParams rp) {
             auto stop = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::high_resolution_clock::now() - start);
-            cout << string_format("Computed subject <%i> for <%s> (time: <%d>)\n", n, f_prefix.c_str(), duration.count());
+            cout << string_format("Computed subject <%i> for <%s> (time: <%d>)\n", n, f_prefix.c_str(), duration.count()) << flush;
 
             total_time += duration;
         }
         auto measureValues = measure.postprocess();
         auto fitting = measure.distance(measureValues, processed_emp);
         cout << string_format("Distance for <%s> : <%f>\n", f_prefix.c_str(), fitting);
+
+        TArray2dMap npz_data;
+        npz_data["measure"] = measureValues;
+        npz_data["fit"] = {{(double)fitting}};
+        path npz_file = out_dir;
+        npz_file /= rp.job_id + f_prefix + ".npz";
+        MatrixdMap2npz(npz_file.c_str(), npz_data);
     }
 
     return rp;
