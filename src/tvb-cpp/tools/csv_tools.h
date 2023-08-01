@@ -13,8 +13,13 @@ namespace tvb {
     void csv_save(const std::string &path, const tvb::TArray2d &data);
 
     template<typename Numeric>
-    void csv_save(const std::string &filename, const std::vector<std::vector<Numeric>> &data, bool transposed = false) {
+    void csv_save(const std::string &filename, const std::vector<std::vector<Numeric>> &data,
+                  const std::string& header="",
+                  bool transposed = false) {
         std::ofstream myFile(filename);
+
+        if (!header.empty())
+            myFile << header << std::endl;
 
         // Send data to the stream
         if (transposed) {
