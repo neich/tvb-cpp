@@ -50,7 +50,10 @@ double corrcoef(const TArray1d &x, const TArray1d &y) {
         x2_s += xi*xi;
         y2_s += yi*yi;
     }
-    return (n*xy_s - x_s*y_s) / (sqrt(n*x2_s - x_s*x_s) * sqrt(n*y2_s - y_s*y_s));
+    double num = xy_s - (x_s * y_s/(double)n);
+    double den = pow((x2_s - x_s*x_s/(double)n) * (y2_s - y_s*y_s/(double)n), 0.5);
+    if (den == 0.0) return 0.0;
+    return num / den;
 }
 
 int gcd(int a, int b)
