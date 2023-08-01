@@ -565,8 +565,8 @@ int main(int argc, char **argv) {
                 TArray2d processed_emp = processBOLDSignals(transformed_ts, measure);
                 TArray2dMap data;
                 data["swFCD"] = processed_emp;
-                data["nsub"] = (TArray2d(1, 1) << ts.size()).finished();
-                data["nsamples"] = (TArray2d(1, 1) << ts[0].rows()).finished();
+                data["nsub"] = {{(double)ts.size()}};
+                data["nsamples"] = {{(double)ts[0].rows()}};
                 MatrixdMap2npz(pe_file.c_str(), data);
             }
         }
