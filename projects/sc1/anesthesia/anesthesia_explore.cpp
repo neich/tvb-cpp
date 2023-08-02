@@ -363,43 +363,39 @@ RunParams run(RunParams rp) {
 
         int N = data["nsub"](0, 0);
         measure.init(N, N);
-        for (int n = 0; n < N; ++n) {
-            auto start = std::chrono::high_resolution_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
 
-            SimConfig sim_config;
+        SimConfig sim_config;
 
-            sim_config.setModel(model);
-            sim_config.setConnectivity(con);
-            sim_config.setIntegrator(integrator);
-            sim_config.setCoupling(coupling);
-            sim_config.setNumIterations(1);
-            sim_config.setDeltaIntegration(0.00001);
+        sim_config.setModel(model);
+        sim_config.setConnectivity(con);
+        sim_config.setIntegrator(integrator);
+        sim_config.setCoupling(coupling);
+        sim_config.setNumIterations(1);
+        sim_config.setDeltaIntegration(0.00001);
 
-            Simulator simulator{};
-            BoldTVB *btvb = new BoldTVB(con->weights().cols(), 2500.0, 0.1, {0});
-            TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
+        Simulator simulator{};
+        BoldTVB *btvb = new BoldTVB(con->weights().cols(), 2500.0, 0.1, {0});
+        TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
 
-            simulator.run(sim_config.model(),
-                          sim_config.connectivity(),
-                          sim_config.integrator(),
-                          {btvb},
-                          sim_config.coupling(),
-                          0, 300000,
-                          nullptr,
-                          &initial_state);
+        simulator.run(sim_config.model(),
+                      sim_config.connectivity(),
+                      sim_config.integrator(),
+                      {btvb},
+                      sim_config.coupling(),
+                      0, 15000000,
+                      nullptr,
+                      &initial_state);
 
-            TArray2d bold_signal = btvb->voi2Array(0);
-            TArray2d proc_signal = measure.from_fMRI(bold_signal);
-            measure.accumulate(proc_signal);
+        TArray2d bold_signal = btvb->voi2Array(0);
+        TArray2d proc_signal = measure.from_fMRI(bold_signal);
+        measure.accumulate(proc_signal);
 
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::high_resolution_clock::now() - start);
+        cout << string_format("Computed time series for <%s> (time: <%d>)\n", n, f_prefix.c_str(), duration.count()) << flush;
 
-            auto stop = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::high_resolution_clock::now() - start);
-            cout << string_format("Computed subject <%i> for <%s> (time: <%d>)\n", n, f_prefix.c_str(), duration.count()) << flush;
-
-            total_time += duration;
-        }
         auto measureValues = measure.postprocess();
         auto fitting = measure.distance(measureValues, processed_emp);
         cout << string_format("Distance for <%s> : <%f>\n", f_prefix.c_str(), fitting);
