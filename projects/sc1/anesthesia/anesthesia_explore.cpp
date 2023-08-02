@@ -394,7 +394,7 @@ RunParams run(RunParams rp) {
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now() - start);
-        cout << string_format("Computed time series for <%s> (time: <%d>)\n", n, f_prefix.c_str(), duration.count()) << flush;
+        cout << string_format("Computed time series for <%s> (time: <%d>)\n", f_prefix.c_str(), duration.count()) << flush;
 
         auto measureValues = measure.postprocess();
         auto fitting = measure.distance(measureValues, processed_emp);
