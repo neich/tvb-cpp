@@ -51,8 +51,9 @@ double corrcoef(const TArray1d &x, const TArray1d &y) {
         y2_s += yi*yi;
     }
     double num = xy_s - (x_s * y_s/(double)n);
-    double den = pow((x2_s - x_s*x_s/(double)n) * (y2_s - y_s*y_s/(double)n), 0.5);
-    if (den == 0.0) return 0.0;
+    double d = (x2_s - x_s*x_s/(double)n) * (y2_s - y_s*y_s/(double)n);
+    if (d <= 0.0) return 0.0;
+    double den = pow(d, 0.5);
     return num / den;
 }
 
