@@ -383,7 +383,7 @@ RunParams run(RunParams rp) {
                       sim_config.integrator(),
                       {btvb},
                       sim_config.coupling(),
-                      0, 15000000,
+                      0, 500000,
                       nullptr,
                       &initial_state);
 
