@@ -43,15 +43,6 @@ namespace tvb {
 
         TArray1d tau_N;
 
-        TArray1d G;
-//        = NArray(
-//                label = ":external:`G`",
-//        default=numpy.array([2.0, ]),
-//        domain = Range(lo = 0.0, hi = 10.0, step = 0.01),
-//                doc = """Global coupling scaling"""
-//        )
-
-
         TArray1d delta_e;
         TArray1d delta_i;
         TArray1d eta_e;
@@ -82,22 +73,22 @@ namespace tvb {
         }
 
         virtual std::vector<std::string> get_param_list() const {
-            return {"tau_e", "tau_i", "tau_N", "G", "delta_e", "delta_i", "eta_e", "eta_i", "a_e", "a_i", "g_e", "g_i", "I_e", "I_i", "I_e_ext", "I_i_ext", "J_e", "J_i", "J_A", "J_G", "J_N", "J"};
+            return {"tau_e", "tau_i", "tau_N", "delta_e", "delta_i", "eta_e", "eta_i", "a_e", "a_i", "g_e", "g_i", "I_e", "I_i", "I_e_ext", "I_i_ext", "J_e", "J_i", "J_A", "J_G", "J_N", "J"};
         }
         
         void set_param(const std::string& param, const TArray1d& value) override {
-            ADD_SETTER_VALUE(tau_e, tau_i, tau_N, G, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
+            ADD_SETTER_VALUE(tau_e, tau_i, tau_N, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
             throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
 
         }
 
         void set_param(const std::string& param, Float value) override {
-            ADD_SETTER_FILL(tau_e, tau_i, tau_N, G, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
+            ADD_SETTER_FILL(tau_e, tau_i, tau_N, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
             throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
 
         const TArray1d& get_param_value(const std::string& param) const override {
-            ADD_GETTER(tau_e, tau_i, tau_N, G, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
+            ADD_GETTER(tau_e, tau_i, tau_N, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e, I_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
             throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
         }
 
@@ -105,7 +96,6 @@ namespace tvb {
             tau_e.resize(m_n_nodes);
             tau_i.resize(m_n_nodes);
             tau_N.resize(m_n_nodes);
-            G.resize(m_n_nodes);
             delta_e.resize(m_n_nodes);
             delta_i.resize(m_n_nodes);
             eta_e.resize(m_n_nodes);
@@ -128,7 +118,6 @@ namespace tvb {
             tau_e.fill(10.0);
             tau_i.fill(10.0);
             tau_N.fill(10.0);
-            G.fill(2.5);
             delta_e.fill(1.0);
             delta_i.fill(1.0);
             eta_e.fill(1.0);
