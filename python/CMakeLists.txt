@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15...3.22)
 
-project(tvb_root_cpp_python VERSION "0.0.3")
+project(tvb_root_cpp_python VERSION "0.0.4")
 set(CMAKE_CXX_STANDARD 20)
 
 #if(SKBUILD)
@@ -94,14 +94,6 @@ set(TVB_TOOLS_SOURCES
         ../src/tvb-cpp/tools/algo/fic/functions/simulate_fcd.cpp
         ../src/tvb-cpp/tools/algo/load_or_compute.h)
 
-if (UNIX)
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
-  set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -ffast-math -DEIGEN_NO_DEBUG -DNDEBUG" CACHE STRING "" FORCE)
-  # set(CMAKE_CXX_FLAGS_DEBUG  "-g -save-temps" CACHE STRING "" FORCE)
-  set(THREADS_PREFER_PTHREAD_FLAG ON)
-  find_package(Threads REQUIRED)
-  target_link_libraries(_core PRIVATE Threads::Threads)
-endif()
 
 
 find_package(Eigen3 3.4 REQUIRED)
@@ -126,6 +118,15 @@ include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/../src)
 
 pybind11_add_module(_core MODULE src/main.cpp src/api.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
+
+if (UNIX)
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
+  set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -ffast-math -DEIGEN_NO_DEBUG -DNDEBUG" CACHE STRING "" FORCE)
+  # set(CMAKE_CXX_FLAGS_DEBUG  "-g -save-temps" CACHE STRING "" FORCE)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+  target_link_libraries(_core PRIVATE Threads::Threads)
+endif()
 
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 target_link_libraries(_core PRIVATE Boost::program_options Boost::filesystem)
