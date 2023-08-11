@@ -1,6 +1,6 @@
 [project]
 name = "tvbcpp"
-version = "0.0.3"
+version = "0.0.4"
 description = "C++ backend for the The Virtuabl Brain framework"
 license = {text = "MIT License"}
 authors = [
