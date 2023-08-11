@@ -29,6 +29,9 @@ PYBIND11_MODULE(_core, m) {
     m.def("set_weights", &setWeights, R"pbdoc(
     )pbdoc");
 
+    m.def("set_global_coupling", &setGlobalCoupling, R"pbdoc(
+    )pbdoc");
+
     m.def("set_lenghts", &setLengths, R"pbdoc(
     )pbdoc");
 
@@ -39,6 +42,9 @@ PYBIND11_MODULE(_core, m) {
     )pbdoc");
 
     m.def("set_model_parameter", static_cast<void (*)(std::string, tvb::Float)>(&setModelParameter), R"pbdoc(
+    )pbdoc");
+
+    m.def("set_model_parameter", static_cast<void (*)(std::string, py::EigenDRef<tvb::TArray1d> value)>(&setModelParameter), R"pbdoc(
     )pbdoc");
 
     m.def("print_model_parameters", static_cast<void (*)()>(&printModelParameters), R"pbdoc(
