@@ -9,12 +9,13 @@
 
 #include <pybind11/stl.h>
 
-#include <tvb-root-cpp/simulator/simulate.h>
+#include <tvb-cpp/simulator/simulate.h>
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
 
 void setWeights(py::EigenDRef<tvb::TArray2d> vref);
+void setGlobalCoupling(float g);
 void setLengths(py::EigenDRef<tvb::TArray2d> vref, float s);
 void setIntegratorES(float dt, py::EigenDRef<tvb::TArray1d> sigmas);
 void setModel(std::string name);
