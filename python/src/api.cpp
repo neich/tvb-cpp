@@ -8,14 +8,14 @@
 #include <cassert>
 #include <algorithm>
 
-#include <tvb-root-cpp/simulator/integrators/euler_stochastic.h>
-#include <tvb-root-cpp/simulator/noise.h>
-#include <tvb-root-cpp/simulator/models/reduced_ww_ext.h>
-#include <tvb-root-cpp/simulator/models/montbrio.h>
-#include <tvb-root-cpp/simulator/models/zerlaut.h>
-#include <tvb-root-cpp/simulator/noise.h>
-#include <tvb-root-cpp/simulator/noise.h>
-#include <tvb-root-cpp/simulator/simulator.h>
+#include <tvb-cpp/simulator/integrators/euler_stochastic.h>
+#include <tvb-cpp/simulator/noise.h>
+#include <tvb-cpp/simulator/models/reduced_ww_ext.h>
+#include <tvb-cpp/simulator/models/montbrio.h>
+#include <tvb-cpp/simulator/models/zerlaut.h>
+#include <tvb-cpp/simulator/noise.h>
+#include <tvb-cpp/simulator/noise.h>
+#include <tvb-cpp/simulator/simulator.h>
 
 
 tvb::TArray2d weights;
@@ -27,11 +27,17 @@ tvb::Model *model;
 tvb::Monitor* monitor;
 float dt = 0.1;
 int N = 0;
+float G = 1.0;
 
 void setWeights(py::EigenDRef<tvb::TArray2d> vref) {
     weights = vref;
     N = weights.rows();
     assert(("Matrix must be square!", N == weights.cols()));
+}
+
+void setGlobalCoupling(float g) {
+    assert(("G has to be a positive number!", g >= 0.0));
+    G = g;
 }
 
 void setLengths(py::EigenDRef<tvb::TArray2d> vref, float s) {
@@ -49,12 +55,14 @@ void setModel(std::string name) {
     if (name == "ReducedWongWangExcInh")
         model = new tvb::ReducedWongWangExcInh(N);
     else if (name == "Montbrio")
-        model = new tvb::Montbrio(weights.rows());
+        model = new tvb::Montbrio(N);
     else if (name == "ZerlautAdaptationFirstOrder")
-        model = new tvb::ZerlautAdaptationFirstOrder(weights.rows());
+        model = new tvb::ZerlautAdaptationFirstOrder(N);
     else if (name == "ZerlautAdptationSecondOrder")
-        model = new tvb::ZerlautAdaptationSecondOrder(weights.rows());
+        model = new tvb::ZerlautAdaptationSecondOrder(N);
     else throw std::runtime_error(string_format("Model wit name <%s> does not exist", name.c_str()));
+
+    model->configure();
 }
 
 void setModelParameter(std::string name, tvb::Float value) {
@@ -87,7 +95,7 @@ py::array_t<tvb::Float> run_sim(float t_start, float t_end) {
         throw std::runtime_error("Weights matrix not square");
 
     if (lengths.rows() == 0)
-        throw std::runtime_error("Lengths matrix not initialized");
+        lengths = tvb::TArray2d::Zero(weights.rows(), weights.cols());
 
     if (lengths.rows() != lengths.cols())
         throw std::runtime_error("Lengths matrix not square");
@@ -98,11 +106,14 @@ py::array_t<tvb::Float> run_sim(float t_start, float t_end) {
     if (integrator == nullptr)
         throw std::runtime_error("Integrator not initialized");
 
+    model->init_dependant();
+
     tvb::Connectivity con(weights, lengths, speed);
 
     auto *coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
+    coupling->setScale(G);
 
-    tvb::Simulator simulator;
+    tvb::Simulator simulator{};
 
     int index = 0;
     std::vector<int> vois(model->state_vars().size());
@@ -123,15 +134,15 @@ py::array_t<tvb::Float> run_sim(float t_start, float t_end) {
     int n_voi = monitor->getRecords()[0].record.cols();
     int n_regions = monitor->getRecords()[0].record.rows();
 
-    for (int rec = 0; rec < n_records; ++rec)
-        if (!monitor->getRecords()[rec].record.allFinite()) {
-            std::cerr << "Error in record " << rec << "\n";
-            for (int voi = 0; voi < n_voi; ++voi)
-                for (int reg = 0; reg < n_regions; ++reg)
-                    std::cerr << monitor->getRecords()[rec].record(reg, voi) << ", ";
-            std::cerr << std::endl;
-            break;
-        }
+//    for (int rec = 0; rec < n_records; ++rec)
+//        if (!monitor->getRecords()[rec].record.allFinite()) {
+//            std::cerr << "Error in record " << rec << "\n";
+//            for (int voi = 0; voi < n_voi; ++voi)
+//                for (int reg = 0; reg < n_regions; ++reg)
+//                    std::cerr << monitor->getRecords()[rec].record(reg, voi) << ", ";
+//            std::cerr << std::endl;
+//            break;
+//        }
 
     size_t sizef = sizeof(tvb::Float);
     size_t size = n_records * n_voi * n_regions;
