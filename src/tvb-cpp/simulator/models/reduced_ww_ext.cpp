@@ -28,7 +28,7 @@ State ReducedWongWangExcInh::operator()(const State &x,
 
     TArray1d lc_0 = local_coupling * S_e;
 
-    TArray1d total_coupling = this->G * this->J_N * (coupling.col(0) + lc_0);
+    TArray1d total_coupling = this->J_N * (coupling.col(0) + lc_0);
 
     TArray1d J_N_S_e = this->J_N * S_e;
 

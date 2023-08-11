@@ -158,14 +158,6 @@ namespace tvb {
 //                doc = """[nA]. Effective external input"""
 //        )
 
-        TArray1d G;
-//        = NArray(
-//                label = ":external:`G`",
-//        default=numpy.array([2.0, ]),
-//        domain = Range(lo = 0.0, hi = 10.0, step = 0.01),
-//                doc = """Global coupling scaling"""
-//        )
-
         TArray1d lambda;
 //        = NArray(
 //                label = ":external:`\lambda`",
@@ -183,19 +175,19 @@ namespace tvb {
         }
 
         virtual std::vector<std::string> get_param_list() const {
-            return {"d_i", "a_e", "b_e", "d_e", "gamma_e", "tau_e", "w_p", "J_N", "W_e", "a_i", "b_i", "gamma_i", "tau_i", "J_i", "W_i", "I_o", "G", "lambda"};
+            return {"d_i", "a_e", "b_e", "d_e", "gamma_e", "tau_e", "w_p", "J_N", "W_e", "a_i", "b_i", "gamma_i", "tau_i", "J_i", "W_i", "I_o", "lambda"};
         }
         
         void set_param(const std::string& param, const TArray1d& value) override {
-            ADD_SETTER_VALUE(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
+            ADD_SETTER_VALUE(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, lambda)
         }
 
         void set_param(const std::string& param, Float value) override {
-            ADD_SETTER_FILL(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
+            ADD_SETTER_FILL(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, lambda)
         }
 
         const TArray1d& get_param_value(const std::string& param) const override {
-            ADD_GETTER(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, G, lambda)
+            ADD_GETTER(d_i, a_e, b_e, d_e, gamma_e, tau_e, w_p, J_N, W_e, a_i, b_i, gamma_i, tau_i, J_i, W_i, I_o, lambda)
         }
 
         void configure() override {
@@ -215,7 +207,6 @@ namespace tvb {
             J_i.resize(m_n_nodes);
             W_i.resize(m_n_nodes);
             I_o.resize(m_n_nodes);
-            G.resize(m_n_nodes);
             lambda.resize(m_n_nodes);
 
 
@@ -235,7 +226,6 @@ namespace tvb {
             J_i.fill(1.0);
             W_i.fill(0.7);
             I_o.fill(0.382);
-            G.fill(1.0);
             lambda.fill(0.0);
         }
 
