@@ -12,6 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <cassert>
 #include <algorithm>
 
 #include "simulator.h"
@@ -26,6 +27,12 @@ State Simulator::run(Model *model,
                      float start_time, float end_time,
                      Stimulus* stimulus,
                      State *initial_state) {
+
+    assert(("Model cannot be null!", model != nullptr));
+    assert(("Connectivity cannot be null!", connectivity != nullptr));
+    assert(("Integrator cannot be null!", integrator != nullptr));
+    assert(("There has to be at least a monitor!", monitors.size() > 0));
+    assert(("Coupling cannot be null!", coupling != nullptr));
 
     m_coupling = coupling;
     float dt = integrator->dt();
