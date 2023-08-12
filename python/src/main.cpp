@@ -47,13 +47,16 @@ PYBIND11_MODULE(_core, m) {
     m.def("set_model_parameter", static_cast<void (*)(std::string, py::EigenDRef<tvb::TArray1d> value)>(&setModelParameter), R"pbdoc(
     )pbdoc");
 
+    m.def("set_model_parameter_sweep", &setModelParameterSweep, R"pbdoc(
+    )pbdoc");
+
     m.def("print_model_parameters", static_cast<void (*)()>(&printModelParameters), R"pbdoc(
     )pbdoc");
 
     m.def("add_raw_monitor", &addRawMonitor, R"pbdoc(
     )pbdoc");
 
-    m.def("add_average_monitor", &addAverageMonitor, R"pbdoc(
+    m.def("add_temporal_average_monitor", &addTemporalAverageMonitor, R"pbdoc(
     )pbdoc");
 
     m.def("run_sim", &run_sim, R"pbdoc(
