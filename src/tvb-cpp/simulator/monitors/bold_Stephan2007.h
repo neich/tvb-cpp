@@ -61,11 +61,11 @@ namespace tvb {
         }
 
     public:
-        BoldStephan2007(int N, float period, float dt, const std::vector<int> &voi): Monitor(period, dt, voi) {
+        BoldStephan2007(int N, tvb::Float period, tvb::Float dt, const std::vector<int> &voi): Monitor(period, dt, voi) {
             this->config(period, N, dt, voi);
         }
 
-        void config(float period, int N, float dt, const std::vector<int> &voi) {
+        void config(tvb::Float period, int N, tvb::Float dt, const std::vector<int> &voi) {
             m_n_nodes = N;
             Monitor::init(period, dt, voi);
             init();

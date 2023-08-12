@@ -41,7 +41,7 @@ void BoldTVB::compute_hrf() {
     //   self.hemodynamic_response_function.shape, this->m_interim_period, this->m_interim_istep)
 }
 
-void BoldTVB::config(int N, float period, float dt, const std::vector<int> &voi)  {
+void BoldTVB::config(int N, tvb::Float period, tvb::Float dt, const std::vector<int> &voi)  {
     init(period, dt, voi);
     m_n_nodes = N;
     m_interim_stock.clear();

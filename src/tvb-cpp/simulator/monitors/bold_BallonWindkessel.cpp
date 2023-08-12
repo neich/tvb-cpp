@@ -16,7 +16,7 @@
 
 using namespace tvb;
 
-void BoldBalloonWindkessel::config(int N, float period, float dt, const std::vector<int> &voi) {
+void BoldBalloonWindkessel::config(int N, tvb::Float period, tvb::Float dt, const std::vector<int> &voi) {
     init(period, dt, voi);
     m_k1 = 7 * m_rho;
     m_k3 = 2 * m_rho - 0.2;

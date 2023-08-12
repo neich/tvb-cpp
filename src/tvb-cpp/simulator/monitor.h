@@ -25,14 +25,14 @@ namespace tvb {
     public:
 
         typedef struct {
-            float time;
+            tvb::Float time;
             TArray2d record;
         } Record;
 
     protected:
-        float m_period;
-        float m_dt;
-        float m_start_time = 0.0;
+        tvb::Float m_period;
+        tvb::Float m_dt;
+        tvb::Float m_start_time = 0.0;
 
         int m_istep;
         std::vector<int> m_vars_of_interest;
@@ -45,7 +45,7 @@ namespace tvb {
         //                     "V+W, and W is selected, and this monitor should record W, then the correct index is 0."),
         //                required=False)
 
-        void init(float period, float dt, const std::vector<int>& voi) {
+        void init(tvb::Float period, tvb::Float dt, const std::vector<int>& voi) {
             m_period = period;
             m_dt = dt;
             m_vars_of_interest = voi;
@@ -53,13 +53,13 @@ namespace tvb {
         }
 
     public:
-        Monitor(float period, float dt, const std::vector<int>& voi) {
+        Monitor(tvb::Float period, tvb::Float dt, const std::vector<int>& voi) {
             init(period, dt, voi);
         }
 
         virtual ~Monitor() = default;
 
-        void setStartTime(float st) { m_start_time = st; }
+        void setStartTime(tvb::Float st) { m_start_time = st; }
 
         virtual void from_records(const std::vector<Record>& from, std::vector<Record>& to) {
             throw std::runtime_error("Method from_records() not implemented");
@@ -88,7 +88,7 @@ namespace tvb {
     class Raw : public Monitor {
 
     public:
-        Raw(float dt, const std::vector<int>& voi): Monitor(dt, dt, voi) {}
+        Raw(tvb::Float dt, const std::vector<int>& voi): Monitor(dt, dt, voi) {}
 
         void sample(int step, const State &state) override {
             m_records.push_back(Record{m_start_time + step * m_dt, state(Eigen::all, m_vars_of_interest)});
@@ -99,7 +99,7 @@ namespace tvb {
         int m_every_n;
 
     public:
-        explicit RawSubSample(float period, float dt, const std::vector<int>& voi): Monitor(period, dt, voi) {}
+        explicit RawSubSample(tvb::Float period, tvb::Float dt, const std::vector<int>& voi): Monitor(period, dt, voi) {}
 
         void sample(int step, const State &state) override {
             if (step % m_istep == 0)
@@ -112,7 +112,7 @@ namespace tvb {
         std::vector<State> m_buffer;
 
     public:
-        explicit TemporalAverage(int n_nodes, float period, float dt, const std::vector<int>& voi): Monitor(period, dt, voi) {
+        explicit TemporalAverage(int n_nodes, tvb::Float period, tvb::Float dt, const std::vector<int>& voi): Monitor(period, dt, voi) {
             m_buffer.resize(m_istep);
             std::fill_n(m_buffer.begin(), m_istep, TArray2d::Zero(n_nodes, voi.size()));
         }

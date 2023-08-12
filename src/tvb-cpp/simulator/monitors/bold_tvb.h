@@ -44,11 +44,11 @@ namespace tvb {
         void update(int step);
 
     public:
-        BoldTVB(int N, float period, float dt, const std::vector<int> &voi): Monitor(period, dt, voi), m_hrf_kernel(new FirstOrderVolterra()) {
+        BoldTVB(int N, tvb::Float period, tvb::Float dt, const std::vector<int> &voi): Monitor(period, dt, voi), m_hrf_kernel(new FirstOrderVolterra()) {
             this->config(N, period, dt, voi);
         }
 
-        void config(int N, float period, float dt, const std::vector<int> &voi);
+        void config(int N, tvb::Float period, tvb::Float dt, const std::vector<int> &voi);
 
         void sample(int step, const State &state) override;
 

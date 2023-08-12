@@ -27,22 +27,22 @@ namespace tvb {
     class BoldBalloonWindkessel : public Monitor {
 
         int m_n_nodes;
-        float m_t_subs;
+        tvb::Float m_t_subs;
         int m_istep_subs;
-        float m_model_dt;
+        tvb::Float m_model_dt;
 
-        float m_rho = 0.34;
-        float m_alpha = 0.32;
-        float m_tau = 0.98;
-        float m_y = 1.0 / 0.41;
-        float m_kappa = 1.0 / 0.65;
-        float m_V_0 = 0.02;
-        float m_k1;
-        float m_k2 = 2.0;
-        float m_k3;
-        float m_ialpha;
-        float m_itau;
-        float m_oneminrho;
+        tvb::Float m_rho = 0.34;
+        tvb::Float m_alpha = 0.32;
+        tvb::Float m_tau = 0.98;
+        tvb::Float m_y = 1.0 / 0.41;
+        tvb::Float m_kappa = 1.0 / 0.65;
+        tvb::Float m_V_0 = 0.02;
+        tvb::Float m_k1;
+        tvb::Float m_k2 = 2.0;
+        tvb::Float m_k3;
+        tvb::Float m_ialpha;
+        tvb::Float m_itau;
+        tvb::Float m_oneminrho;
 
         TArray2d m_x0;
         TArray2d m_x1;
@@ -50,13 +50,13 @@ namespace tvb {
         TArray2d m_x3;
 
     public:
-        BoldBalloonWindkessel(int N, float t_subs, float period, float dt, const std::vector<int> &voi): Monitor(period, dt, voi) {
+        BoldBalloonWindkessel(int N, tvb::Float t_subs, tvb::Float period, tvb::Float dt, const std::vector<int> &voi): Monitor(period, dt, voi) {
             m_t_subs = t_subs;
 
             this->config(N, period, dt, voi);
         }
 
-        void config(int N, float period, float dt, const std::vector<int> &voi);
+        void config(int N, tvb::Float period, tvb::Float dt, const std::vector<int> &voi);
 
         void sample(int step, const State &state) override;
 
