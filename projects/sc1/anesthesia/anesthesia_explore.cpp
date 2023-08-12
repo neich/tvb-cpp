@@ -86,8 +86,10 @@ struct RunParams {
     string algo;
     vector<string> norm;
     string job_id;
+    string model;
     float speed = 1e6;
     float G = 1.0;
+    float tr;
 
     RunParams() = default;
 
@@ -95,6 +97,7 @@ struct RunParams {
 
     void init(const variables_map &vm) {
         this->algo = vm["algo"].as<string>();
+        this->model = vm["model"].as<string>();
         this->voi = vm["var-of-interest"].as<int>();
         this->value_base = vm["value-base"].as<float>();
         this->file_weights = vm["sc-matrix"].as<std::string>();
@@ -103,6 +106,7 @@ struct RunParams {
         if (vm.count("gaba-vector"))
             this->gaba_vector = vm["gaba-vector"].as<std::string>();
         this->t_start = vm["time-start"].as<float>();
+        this->tr = vm["tr"].as<float>();
         this->t_end = vm["time-end"].as<float>();
         this->dt = vm["dt"].as<float>();
         if (vm.count("length-matrix"))
@@ -256,12 +260,22 @@ RunParams run(RunParams rp) {
 
     // auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, rp.dt);
     // auto *model = new tvb::ReducedWongWangExcInh(N);
-    auto *model = new ZerlautGABA(N);
-    model->configure();
-    if (gaba_vector.size() > 0)
-        model->set_param("gaba_ratio", gaba_vector);
-    else
-        model->set_param("gaba_ratio", TArray1d::Ones(N));
+    tvb::Model *model;
+    TArray1d sigmas;
+    if (rp.model == "ZerlautGABA") {
+        model = new ZerlautGABA(N);
+        sigmas = TArray1d::Constant(model->n_vars(), 0.0);
+        sigmas[model->n_vars()-1] = 1.0;
+        model->configure();
+        if (gaba_vector.size() > 0)
+            model->set_param("gaba_ratio", gaba_vector);
+        else
+            model->set_param("gaba_ratio", TArray1d::Ones(N));
+    } else if (rp.model == "Montbrio") {
+        model = new Montbrio(N);
+        sigmas = TArray1d::Constant(model->n_vars(), 0.0);
+        model->configure();
+    }
 
     float G = 1.0;
     auto g_it = std::find(rp.params.begin(), rp.params.end(), "G");
@@ -278,8 +292,6 @@ RunParams run(RunParams rp) {
     // rp.monitor = new tvb::BoldBalloonWindkessel(N, 1.0, 720.0, rp.dt, {0});
     // rp.monitor = new tvb::RawSubSample(1.0, rp.dt, {3});
 
-    TArray1d sigmas = TArray1d::Constant(model->n_vars(), 0.0);
-    sigmas[model->n_vars()-1] = 1.0;
 /*
     for (auto const &p: rp.params)
         if (p.name[0] == '_') {
@@ -290,8 +302,8 @@ RunParams run(RunParams rp) {
 
 
     // sigmas << 3e-5, 3e-5, 0.0, 0.0;
-    auto *integrator = new tvb::EulerStochastic(rp.dt, new Additive(sigmas, rp.dt));
-    // auto *integrator = new tvb::EulerDeterministic(rp.dt);
+    // auto *integrator = new tvb::EulerStochastic(rp.dt, new Additive(sigmas, rp.dt));
+    auto *integrator = new tvb::EulerDeterministic(rp.dt);
 
     auto coupling = new tvb::CouplingLinearSparse(con->weights(), con->delays(), model->cvars());
     coupling->setScale(G);
@@ -322,14 +334,14 @@ RunParams run(RunParams rp) {
 
         Simulator simulator{};
         TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
-        auto *monitor = new TemporalAverage(con->weights().cols(), 1.0, 0.1, {0});
+        auto *monitor = new TemporalAverage(con->weights().cols(), 1.0, 0.1, {rp.voi});
 
         simulator.run(sim_config.model(),
                       sim_config.connectivity(),
                       sim_config.integrator(),
                       {monitor},
                       sim_config.coupling(),
-                      0, 10000,
+                      0, rp.t_end,
                       nullptr,
                       &initial_state);
 
@@ -375,7 +387,7 @@ RunParams run(RunParams rp) {
         sim_config.setDeltaIntegration(0.00001);
 
         Simulator simulator{};
-        BoldTVB *btvb = new BoldTVB(con->weights().cols(), 2500.0, 0.1, {0});
+        BoldTVB *btvb = new BoldTVB(con->weights().cols(), rp.tr, 0.1, {rp.voi});
         TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
 
         simulator.run(sim_config.model(),
@@ -383,11 +395,11 @@ RunParams run(RunParams rp) {
                       sim_config.integrator(),
                       {btvb},
                       sim_config.coupling(),
-                      0, 500000,
+                      0, rp.t_end,
                       nullptr,
                       &initial_state);
 
-        TArray2d bold_signal = btvb->voi2Array(0);
+        TArray2d bold_signal = btvb->voi2Array(rp.voi);
         TArray2d proc_signal = measure.from_fMRI(bold_signal);
         measure.accumulate(proc_signal);
 
@@ -445,12 +457,14 @@ int main(int argc, char **argv) {
                 ("gaba-vector", value<std::string>(), "Vector with neuroreceptor density")
                 ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
                 ("speed", value<float>()->default_value(1e6), "Signal speed")
+                ("tr", value<float>()->default_value(1e6), "Bold sampling rate (s)")
+                ("model", value<std::string>()->default_value("ZerlautGABA"), "Model to use in the simulations")
                 ("use-threads", bool_switch()->default_value(false), "Use threads")
                 ("srun", bool_switch()->default_value(false), "Use srun for parallelism")
+                ("force-output", bool_switch()->default_value(false), "Force overwriting of CSV files if they already exists")
                 ("time-start", value<float>()->default_value(0.0), "Start of simulation (ms)")
                 ("time-end", value<float>()->default_value(10000.0), "End of simulation (ms)")
                 ("dt", value<float>()->default_value(0.1), "Integration step (ms)")
-                ("force-output", bool_switch()->default_value(false), "Force overwrite output files")
                 ("sigmas", value<std::vector<std::string>>()->multitoken(), "Noise sigmas")
                 ("var-of-interest", value<int>()->default_value(0), "Variable of interest in the model to explore")
                 ("jube-cpu-pp", value<int>()->default_value(1), "Number of cores per execution")
@@ -593,6 +607,12 @@ int main(int argc, char **argv) {
                 }
                 if (vm.count("gaba-vector") > 0)
                     args += string_format(" --gaba-vector %s", vm["gaba-vector"].as<string>().c_str());
+                if (vm.count("force-output") > 0)
+                    args += " --force-output";
+                if (vm.count("tr") > 0)
+                    args += string_format(" --tr %f", vm["tr"].as<float>());
+                if (vm.count("model") > 0)
+                    args += string_format(" --model %s", vm["model"].as<string>().c_str());
                 if (vm.count("time-series") > 0)
                     args += string_format(" --time-series %s", vm["time-series"].as<string>().c_str());
 
