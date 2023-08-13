@@ -21,7 +21,7 @@ using namespace tvb;
 
 State Montbrio::operator()(const State &x,
                            const TArray2d &coupling,
-                           const TArray1d &local_coupling) {
+                           const TArray1d &local_coupling) const {
 
     State derivative(m_n_nodes, m_n_vars);
 
@@ -32,8 +32,8 @@ State Montbrio::operator()(const State &x,
     const TArray1d &S_e = x.col(4);
     const TArray1d &c_0 = coupling.col(0);
 
-    I_e = I_e_ext + tau_e*S_e - J * J_G * r_i + J_A * c_0;
-    I_i = I_i_ext + tau_e*S_e - tau_i*J_G*r_i;
+    TArray1d I_e = I_e_ext + tau_e*S_e - J * J_G * r_i + J_A * c_0;
+    TArray1d I_i = I_i_ext + tau_e*S_e - tau_i*J_G*r_i;
 
     derivative.col(0) = (delta_e / ((Float(M_PI)*tau_e)) + Float(2.0) * r_e * u_e - g_e*r_e) / tau_e;
     derivative.col(1) = (delta_i / (M_PI*tau_i) + Float(2.0) * r_i * u_i- g_i*r_i) / tau_i;

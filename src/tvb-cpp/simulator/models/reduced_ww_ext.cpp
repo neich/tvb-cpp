@@ -18,7 +18,7 @@ using namespace tvb;
 
 State ReducedWongWangExcInh::operator()(const State &x,
                                         const TArray2d &coupling,
-                                        const TArray1d &local_coupling) {
+                                        const TArray1d &local_coupling) const {
 
     State derivative(m_n_nodes, m_n_vars);
 

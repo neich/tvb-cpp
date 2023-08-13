@@ -57,7 +57,7 @@ namespace tvb {
     class System {
     public:
 
-        virtual State operator()(const State &x, const TArray2d &coupling, const TArray1d &local_coupling) = 0;
+        virtual State operator()(const State &x, const TArray2d &coupling, const TArray1d &local_coupling) const = 0;
     };
 
 
@@ -108,7 +108,7 @@ namespace tvb {
 
         virtual State operator()(const State &x,
                          const TArray2d &coupling,
-                         const TArray1d &local_coupling) = 0;
+                         const TArray1d &local_coupling) const = 0;
 
     };
 }

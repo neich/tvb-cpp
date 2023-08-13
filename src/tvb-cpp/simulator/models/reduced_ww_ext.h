@@ -248,7 +248,7 @@ namespace tvb {
 
         State operator()(const State &x,
                 const TArray2d &coupling,
-                const TArray1d &local_coupling) override;
+                const TArray1d &local_coupling) const override;
 
     };
 
