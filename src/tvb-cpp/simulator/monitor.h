@@ -83,16 +83,23 @@ namespace tvb {
             return result;
         }
 
+        virtual Monitor* clone() const {
+            throw std::runtime_error("Method clone() not defined for this monitor!");
+        }
     };
 
     class Raw : public Monitor {
 
     public:
-        Raw(tvb::Float dt, const std::vector<int>& voi): Monitor(dt, dt, voi) {}
+        Raw(tvb::Float dt, const std::vector<int> &voi) : Monitor(dt, dt, voi) {}
 
         void sample(int step, const State &state) override {
             m_records.push_back(Record{m_start_time + step * m_dt, state(Eigen::all, m_vars_of_interest)});
         }
+
+        Raw *clone() const override {
+            return new Raw(*this);
+        };
     };
 
     class RawSubSample : public Monitor {
@@ -127,6 +134,11 @@ namespace tvb {
                 m_records.push_back(Record{m_start_time + step * m_dt, result});
             }
         }
+
+        TemporalAverage* clone() const override {
+            return new TemporalAverage(*this);
+        };
+
 
     };
 }
