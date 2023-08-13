@@ -17,10 +17,10 @@
 using namespace tvb;
 
 State EulerDeterministic::scheme(const State &state,
-                                 System &dfun,
+                                 const System &dfun,
                                  const TArray2d &coupling,
                                  const TArray1d &local_coupling,
-                                 const TArray2d &stimulus) {
+                                 const TArray2d &stimulus) const {
     State d_state = dfun(state, coupling, local_coupling);
     // TVB applies stimulus to the first state variable
     d_state += stimulus;

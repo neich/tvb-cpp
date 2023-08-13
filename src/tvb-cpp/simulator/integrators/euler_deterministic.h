@@ -24,10 +24,10 @@ namespace tvb {
         EulerDeterministic(float dt): Integrator(dt) {}
 
         State scheme(const State &state,
-                     System &dfun,
+                     const System &dfun,
                      const TArray2d &coupling,
                      const TArray1d &local_coupling,
-                     const TArray2d &stimulus) override;
+                     const TArray2d &stimulus) const override;
 
     };
 

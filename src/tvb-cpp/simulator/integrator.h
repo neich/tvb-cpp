@@ -55,10 +55,10 @@ namespace tvb {
         double dt() const { return m_dt; }
 
         virtual State scheme(const State &state,
-                             System &sys,
+                             const System &sys,
                              const TArray2d &coupling,
                              const TArray1d &local_coupling,
-                             const TArray2d &stimulus) = 0;
+                             const TArray2d &stimulus) const = 0;
     };
 }
 
