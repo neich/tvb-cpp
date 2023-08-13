@@ -48,11 +48,19 @@ namespace tvb {
             this->config(N, period, dt, voi);
         }
 
+        BoldTVB(const BoldTVB& btvb): Monitor(btvb.m_period, btvb.m_dt, btvb.m_vars_of_interest), m_hrf_kernel(new FirstOrderVolterra()) {
+            this->config(btvb.m_n_nodes, btvb.m_period, btvb.m_dt, btvb.m_vars_of_interest);
+        }
+
         void config(int N, tvb::Float period, tvb::Float dt, const std::vector<int> &voi);
 
         void sample(int step, const State &state) override;
 
         void from_records(const std::vector<Record>& from, std::vector<Record>& to) override;
+
+        BoldTVB* clone() const override {
+            return new BoldTVB(*this);
+        };
 
     };
 }
