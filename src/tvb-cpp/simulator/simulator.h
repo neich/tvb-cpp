@@ -47,10 +47,10 @@ namespace tvb {
         }
 
 
-        State run(Model *model,
+        State run(const Model *model,
                   const Connectivity *connectivity,
-                  Integrator *integrator,
-                  std::vector<Monitor*> monitors,
+                  const Integrator *integrator,
+                  const std::vector<Monitor*>& monitors,
                   Coupling *coupling,
                   float start_time, float end_time,
                   Stimulus* stimulus = nullptr,

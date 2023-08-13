@@ -19,10 +19,10 @@
 
 using namespace tvb;
 
-State Simulator::run(Model *model,
+State Simulator::run(const Model *model,
                      const Connectivity *connectivity,
-                     Integrator *integrator,
-                     std::vector<Monitor*> monitors,
+                     const Integrator *integrator,
+                     const std::vector<Monitor*>& monitors,
                      Coupling *coupling,
                      float start_time, float end_time,
                      Stimulus* stimulus,
