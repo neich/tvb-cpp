@@ -40,7 +40,7 @@ namespace tvb {
 //        +---------------------------+------------+
 //        |                 Table 1                |
 //        +--------------+------------+------------+
-//        |Parameter     |  Value     | Unit       |
+//        |ParamScalar     |  Value     | Unit       |
 //        +==============+============+============+
 //        |             cellular property          |
 //        +--------------+------------+------------+
@@ -358,7 +358,7 @@ namespace tvb {
                        E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect_e, p_connect_i, g, K_ext_e,\
                        K_ext_i, T, P_e, P_i, external_input_ex_ex, external_input_ex_in,\
                        external_input_in_ex, external_input_in_in, tau_OU, weight_noise, S_i)
-            throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
+            throw std::runtime_error(string_format("ParamScalar %s does not exist in this model", param.c_str()));
         }
 
         void set_param(const std::string& param, const TArray1d& value) override {
@@ -366,7 +366,7 @@ namespace tvb {
                        E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect_e, p_connect_i, g, K_ext_e,\
                        K_ext_i, T, P_e, P_i, external_input_ex_ex, external_input_ex_in,\
                        external_input_in_ex, external_input_in_in, tau_OU, weight_noise, S_i, P_e, P_i)
-            throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
+            throw std::runtime_error(string_format("ParamScalar %s does not exist in this model", param.c_str()));
         }
 
         const TArray1d& get_param_value(const std::string& param) const override {
@@ -374,7 +374,7 @@ namespace tvb {
                        E_e, E_i, Q_e, Q_i, tau_e, tau_i, N_tot, p_connect_e, p_connect_i, g, K_ext_e,\
                        K_ext_i, T, P_e, P_i, external_input_ex_ex, external_input_ex_in,\
                        external_input_in_ex, external_input_in_in, tau_OU, weight_noise, S_i)
-            throw std::runtime_error(string_format("Parameter %s does not exist in this model", param.c_str()));
+            throw std::runtime_error(string_format("ParamScalar %s does not exist in this model", param.c_str()));
         }
 
         void configure() {
@@ -472,7 +472,7 @@ namespace tvb {
 
         State operator()(const State &x,
                 const TArray2d &coupling,
-                const TArray1d &local_coupling) override;
+                const TArray1d &local_coupling) const override;
 
         inline TArray1d TF_excitatory(const TArray1d& fe,
                                       const TArray1d& fi,
@@ -513,7 +513,7 @@ namespace tvb {
 
         State operator()(const State &x,
                          const TArray2d &coupling,
-                         const TArray1d &local_coupling) override;
+                         const TArray1d &local_coupling) const override;
 
     protected:
         // Derivatives taken numerically : use a central difference formula with spacing `dx`

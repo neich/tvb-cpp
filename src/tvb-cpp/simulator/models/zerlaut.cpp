@@ -33,7 +33,7 @@ TArray1d estimate_firing_rate(const TArray1d &muV, const TArray1d &sigmaV,
 
 State ZerlautAdaptationFirstOrder::operator()(const State &x,
                                               const TArray2d &coupling,
-                                              const TArray1d &local_coupling) {
+                                              const TArray1d &local_coupling) const {
 
     State derivative(m_n_nodes, m_n_vars);
 
@@ -223,7 +223,7 @@ TArray1d estimate_firing_rate(const TArray1d &muV, const TArray1d &sigmaV,
 }
 
 State ZerlautAdaptationSecondOrder::operator()(const State &x, const TArray2d &coupling,
-                                              const TArray1d &local_coupling) {
+                                              const TArray1d &local_coupling) const {
 //    .. math::
 //    \forall \mu,\lambda,\eta \in \{e,i\}^3\,
 //    \left\{
