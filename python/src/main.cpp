@@ -41,13 +41,16 @@ PYBIND11_MODULE(_core, m) {
     m.def("set_model", &setModel, R"pbdoc(
     )pbdoc");
 
-    m.def("set_model_parameter", static_cast<void (*)(std::string, tvb::Float)>(&setModelParameter), R"pbdoc(
+    m.def("set_model_parameter", static_cast<void (*)(const std::string&, tvb::Float)>(&setModelParameter), R"pbdoc(
     )pbdoc");
 
-    m.def("set_model_parameter", static_cast<void (*)(std::string, py::EigenDRef<tvb::TArray1d> value)>(&setModelParameter), R"pbdoc(
+    m.def("set_model_parameter", static_cast<void (*)(const std::string&, const py::EigenDRef<tvb::TArray1d>& value)>(&setModelParameter), R"pbdoc(
     )pbdoc");
 
     m.def("set_model_parameter_sweep", &setModelParameterSweep, R"pbdoc(
+    )pbdoc");
+
+    m.def("set_num_threads", &setNumThreads, R"pbdoc(
     )pbdoc");
 
     m.def("print_model_parameters", static_cast<void (*)()>(&printModelParameters), R"pbdoc(
@@ -60,6 +63,9 @@ PYBIND11_MODULE(_core, m) {
     )pbdoc");
 
     m.def("run_sim", &run_sim, R"pbdoc(
+    )pbdoc");
+
+    m.def("run_sweep", &run_sweep, R"pbdoc(
     )pbdoc");
 
 
