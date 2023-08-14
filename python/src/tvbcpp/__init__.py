@@ -1,1 +1,13 @@
-from ._core import __doc__, __version__, set_weights, set_global_coupling, set_lenghts, set_integrator_es, set_model, set_model_parameter, set_model_parameter_sweep, add_raw_monitor, add_temporal_average_monitor, add_average_monitor, run_sim, print_model_parameters
+from ._core import (__doc__, __version__,
+                    set_weights,
+                    set_global_coupling,
+                    set_lenghts,
+                    set_integrator_es,
+                    set_model,
+                    set_model_parameter,
+                    set_model_parameter_sweep,
+                    set_num_threads,
+                    add_raw_monitor,
+                    add_temporal_average_monitor,
+                    run_sim, run_sweep,
+                    print_model_parameters)
