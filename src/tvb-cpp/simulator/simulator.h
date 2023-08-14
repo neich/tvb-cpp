@@ -39,7 +39,7 @@ namespace tvb {
         }
 
         TArray1d _loop_update_stimulus(int step, const TArray1d &stimulus) {
-            return tvb::TArray1d();
+            return {};
         }
 
         void _loop_update_history(Coupling &coupling, int step, const State &state) {
