@@ -117,7 +117,7 @@ include_directories(${ZLIB_INCLUDE_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/../src)
 
-pybind11_add_module(_core MODULE src/main.cpp src/api.cpp ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
+pybind11_add_module(_core MODULE src/main.cpp src/api.cpp src/api.h ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 
 if (UNIX)
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -DEIGEN_NO_DEBUG" CACHE STRING "" FORCE)
