@@ -103,7 +103,6 @@ namespace tvb {
     };
 
     class RawSubSample : public Monitor {
-        int m_every_n;
 
     public:
         explicit RawSubSample(tvb::Float period, tvb::Float dt, const std::vector<int>& voi): Monitor(period, dt, voi) {}
