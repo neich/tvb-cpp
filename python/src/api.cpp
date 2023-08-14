@@ -182,19 +182,6 @@ SimResult genSimResultFromMonitors(const std::vector<tvb::Monitor *> &mntrs) {
         int n_voi = m->getRecords()[0].record.cols();
         int n_regions = m->getRecords()[0].record.rows();
 
-        py::print(string_format("Monitor with %d records, for %d regions, for %d vois", n_records, n_regions, n_voi));
-
-
-//    for (int rec = 0; rec < n_records; ++rec)
-//        if (!m->getRecords()[rec].record.allFinite()) {
-//            std::cerr << "Error in record " << rec << "\n";
-//            for (int voi = 0; voi < n_voi; ++voi)
-//                for (int reg = 0; reg < n_regions; ++reg)
-//                    std::cerr << m->getRecords()[rec].record(reg, voi) << ", ";
-//            std::cerr << std::endl;
-//            break;
-//        }
-
         size_t sizef = sizeof(tvb::Float);
         size_t size = n_records * n_voi * n_regions;
         size_t rec_size = n_voi * n_regions;
@@ -255,14 +242,12 @@ SweepResult run_sweep(tvb::Float t_start, tvb::Float t_end) {
     assert(("No sweep defined!", !params_sweep.empty()));
 
     try {
-
         checkState();
 
-        py::print("Generating parameter combinations");
         std::vector<ParamSet> param_combs(1);
         for (auto const &p: params_sweep) {
             std::vector<ParamSet> new_param_combs;
-            for (auto v: tvb::range(p.second.v_start, p.second.v_start, p.second.n)) {
+            for (auto v: tvb::range(p.second.v_start, p.second.v_end, p.second.n)) {
                 for (auto const &pc: param_combs) {
                     new_param_combs.push_back(pc);
                     new_param_combs.back().emplace_back(p.first, v);
@@ -278,7 +263,6 @@ SweepResult run_sweep(tvb::Float t_start, tvb::Float t_end) {
 
         tvb::Connectivity con(weights, lengths, speed);
 
-        py::print("Cloning monitors");
         std::vector<std::vector<tvb::Monitor *>> sim_results;
         for (auto &pc: param_combs) {
             sim_results.emplace_back();
@@ -291,17 +275,14 @@ SweepResult run_sweep(tvb::Float t_start, tvb::Float t_end) {
         tvb::ThreadPool<int> tp(num_threads);
         tp.start();
 
-        py::print(string_format("Starting...", num_threads));
         int nsim = 0;
         for (auto &pc: param_combs) {
-            py::print(string_format("Init model parameters", num_threads));
 
             tvb::Model *model = genModel(model_name);
             for (auto const &p: pc)
                 model->set_param(std::get<0>(p), std::get<1>(p));
             model->init_dependant();
 
-            py::print(string_format("Init coupling", num_threads));
             auto *coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
             coupling->setScale(G);
 
@@ -313,12 +294,10 @@ SweepResult run_sweep(tvb::Float t_start, tvb::Float t_end) {
 
             const tvb::Connectivity *con_ref = &con;
             const std::vector<tvb::Monitor *> &sim_monitors = sim_results[nsim];
-            py::print(string_format("Launching job %d", nsim));
             tp.queue_job([model, con_ref, integrator, sim_monitors, coupling, t_start, t_end, nsim] {
                 simulate(model, con_ref, integrator, sim_monitors, coupling, t_start, t_end);
                 return nsim;
             });
-            py::print(string_format("Launched job %d", nsim));
             nsim++;
         }
 
@@ -327,7 +306,6 @@ SweepResult run_sweep(tvb::Float t_start, tvb::Float t_end) {
             std::optional<int> op = tp.get_result();
             if (op.has_value()) {
                 int nsim = op.value();
-                py::print(string_format("Collecting job %d", nsim));
                 return_values.emplace_back(param_combs[nsim], genSimResultFromMonitors(sim_results[nsim]));
             }
             sleep(1);
