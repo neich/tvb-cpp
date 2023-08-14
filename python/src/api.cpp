@@ -9,13 +9,13 @@
 #include <algorithm>
 
 #include <tvb-cpp/simulator/integrators/euler_stochastic.h>
-#include <tvb-cpp/simulator/noise.h>
 #include <tvb-cpp/simulator/models/reduced_ww_ext.h>
 #include <tvb-cpp/simulator/models/montbrio.h>
 #include <tvb-cpp/simulator/models/zerlaut.h>
 #include <tvb-cpp/simulator/noise.h>
 #include <tvb-cpp/simulator/noise.h>
 #include <tvb-cpp/simulator/simulator.h>
+#include <tvb-cpp/tools/threadpool.h>
 
 
 tvb::TArray2d weights;
@@ -23,11 +23,12 @@ tvb::TArray2d lengths;
 tvb::Float speed;
 tvb::Integrator *integrator;
 std::vector<tvb::Monitor *> monitors;
-tvb::Model *model;
+std::string model_name{};
 tvb::Monitor *monitor;
 tvb::Float dt = 0.1;
 int N = 0;
 tvb::Float G = 1.0;
+int num_threads = 1;
 
 struct ParamSweep {
     tvb::Float v_start;
@@ -35,7 +36,15 @@ struct ParamSweep {
     int n;
 };
 
-std::unordered_map<std::string, ParamSweep> params;
+void checkState();
+
+SimResult genSimResultFromMonitors(const std::vector<tvb::Monitor *> &mntrs);
+
+tvb::Model *genModel(const string &name);
+
+std::unordered_map<std::string, ParamSweep> params_sweep;
+std::vector<ParamScalar> params_scalar;
+std::vector<ParamArray> params_array;
 
 void setWeights(py::EigenDRef<tvb::TArray2d> vref) {
     weights = vref;
@@ -59,7 +68,12 @@ void setIntegratorES(tvb::Float d, py::EigenDRef<tvb::TArray1d> sigmas) {
 }
 
 void setModel(std::string name) {
+    model_name = name;
+}
+
+tvb::Model *genModel(const string &name) {
     assert(("Unknown number of regions, configure weight matrix first", N > 0));
+    tvb::Model *model;
     if (name == "ReducedWongWangExcInh")
         model = new tvb::ReducedWongWangExcInh(N);
     else if (name == "Montbrio")
@@ -68,27 +82,32 @@ void setModel(std::string name) {
         model = new tvb::ZerlautAdaptationFirstOrder(N);
     else if (name == "ZerlautAdptationSecondOrder")
         model = new tvb::ZerlautAdaptationSecondOrder(N);
-    else throw std::runtime_error(string_format("Model wit name <%s> does not exist", name.c_str()));
+    else throw runtime_error(string_format("Model wit name <%s> does not exist", name.c_str()));
 
     model->configure();
+
+    return model;
 }
 
-void setModelParameter(std::string name, tvb::Float value) {
-    model->set_param(name, value);
+void setModelParameter(const std::string& name, tvb::Float value) {
+    params_scalar.emplace_back(name, value);
 }
 
-void setModelParameter(std::string name, py::EigenDRef<tvb::TArray1d> value) {
-    model->set_param(name, value);
+void setModelParameter(const std::string& name, const py::EigenDRef<tvb::TArray1d>& value) {
+    params_array.emplace_back(name, value);
 }
 
-void setModelParameterSweep(std::string name, tvb::Float v_start, tvb::Float v_end, int n) {
-    params[name] = ParamSweep(v_start, v_end, n);
+void setModelParameterSweep(const std::string& name, tvb::Float v_start, tvb::Float v_end, int n) {
+    params_sweep[name] = ParamSweep(v_start, v_end, n);
+}
+
+void setNumThreads(int n) {
+    assert(("It has to be a number greater than 0!", n > 0));
+    num_threads = n;
 }
 
 void printModelParameters() {
     std::cout << "Parameters:\n";
-    for (auto pname: model->get_param_list())
-        std::cout << pname << ": " << model->get_param_value(pname);
 }
 
 void addRawMonitor(tvb::Float period, std::vector<int> voi) {
@@ -99,26 +118,31 @@ void addTemporalAverageMonitor(tvb::Float period, std::vector<int> voi) {
     monitors.push_back(new tvb::TemporalAverage(weights.cols(), period, dt, voi));
 }
 
-std::vector<std::tuple<py::array_t<tvb::Float>, py::array_t<tvb::Float>>>
+void simulate(const tvb::Model *model,
+              const tvb::Connectivity *con,
+              const tvb::Integrator *integrator,
+              const std::vector<tvb::Monitor*> &monitors,
+              tvb::Coupling *coupling,
+              tvb::Float t_start,
+              tvb::Float t_end) {
+
+    tvb::Simulator simulator{};
+    simulator.run(model, con, integrator, monitors, coupling, t_start, t_end, nullptr);
+}
+
+
+SimResult
 run_sim(tvb::Float t_start, tvb::Float t_end) {
-    if (weights.rows() == 0)
-        throw std::runtime_error("Weights matrix not initialized");
+    if (!params_sweep.empty())
+        throw std::runtime_error("Cannot run a single simulation, a parameter sweep has been defined!");
 
-    if (weights.rows() != weights.cols())
-        throw std::runtime_error("Weights matrix not square");
+    checkState();
 
-    if (lengths.rows() == 0)
-        lengths = tvb::TArray2d::Zero(weights.rows(), weights.cols());
-
-    if (lengths.rows() != lengths.cols())
-        throw std::runtime_error("Lengths matrix not square");
-
-    if (model == nullptr)
-        throw std::runtime_error("Model not initialized");
-
-    if (integrator == nullptr)
-        throw std::runtime_error("Integrator not initialized");
-
+    tvb::Model *model = genModel(model_name);
+    for (auto const &p: params_scalar)
+        model->set_param(std::get<0>(p), std::get<1>(p));
+    for (auto const &p: params_array)
+        model->set_param(std::get<0>(p), std::get<1>(p));
     model->init_dependant();
 
     tvb::Connectivity con(weights, lengths, speed);
@@ -128,31 +152,45 @@ run_sim(tvb::Float t_start, tvb::Float t_end) {
 
     tvb::Simulator simulator{};
 
-    int index = 0;
-    std::vector<int> vois(model->state_vars().size());
-    std::generate_n(vois.begin(), model->state_vars().size(), [&index]() { return index++; });
+//    int index = 0;
+//    std::vector<int> vois(model->state_vars().size());
+//    std::generate_n(vois.begin(), model->state_vars().size(), [&index]() { return index++; });
 
     py::print("Starting simulation, t_start = ", t_start, ", t_end = ", t_end);
     auto start = std::chrono::high_resolution_clock::now();
-    simulator.run(model, &con, integrator, monitors, coupling, t_start, t_end, nullptr);
+    simulate(model, &con, integrator, monitors, coupling, t_start, t_end);
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - start);
     py::print("Simulation ended in ", to_string(duration.count()), " msec");
 
-    std::vector<std::tuple<py::array_t<tvb::Float>, py::array_t<tvb::Float>>> result;
+    SimResult result = genSimResultFromMonitors(monitors);
 
-    for (auto &monitor: monitors) {
-        int n_records = monitor->getRecords().size();
-        int n_voi = monitor->getRecords()[0].record.cols();
-        int n_regions = monitor->getRecords()[0].record.rows();
+    return result;
+}
+
+SimResult genSimResultFromMonitors(const std::vector<tvb::Monitor *> &mntrs) {
+    SimResult result;
+
+    for (auto &m: mntrs) {
+        int n_records = m->getRecords().size();
+        if (n_records == 0) {
+            py::print("Monitor empty!");
+            continue;
+        }
+
+        int n_voi = m->getRecords()[0].record.cols();
+        int n_regions = m->getRecords()[0].record.rows();
+
+        py::print(string_format("Monitor with %d records, for %d regions, for %d vois", n_records, n_regions, n_voi));
+
 
 //    for (int rec = 0; rec < n_records; ++rec)
-//        if (!monitor->getRecords()[rec].record.allFinite()) {
+//        if (!m->getRecords()[rec].record.allFinite()) {
 //            std::cerr << "Error in record " << rec << "\n";
 //            for (int voi = 0; voi < n_voi; ++voi)
 //                for (int reg = 0; reg < n_regions; ++reg)
-//                    std::cerr << monitor->getRecords()[rec].record(reg, voi) << ", ";
+//                    std::cerr << m->getRecords()[rec].record(reg, voi) << ", ";
 //            std::cerr << std::endl;
 //            break;
 //        }
@@ -163,8 +201,8 @@ run_sim(tvb::Float t_start, tvb::Float t_end) {
         auto *data_monitor = new tvb::Float[size];
         auto *data_time = new tvb::Float[n_records];
         for (int rec = 0; rec < n_records; ++rec) {
-            data_time[rec] = monitor->getRecords()[rec].time;
-            const tvb::TArray2d &record = monitor->getRecords()[rec].record;
+            data_time[rec] = m->getRecords()[rec].time;
+            const tvb::TArray2d &record = m->getRecords()[rec].record;
             memcpy(&data_monitor[rec * rec_size], record.data(), rec_size * sizef);
         }
 
@@ -178,21 +216,127 @@ run_sim(tvb::Float t_start, tvb::Float t_end) {
             delete[] d;
         });
 
-        result.emplace_back(py::array_t<tvb::Float>(
+        result.emplace_back(pybind11::array_t<tvb::Float>(
                                     {n_records}, // shape
                                     {sizef}, // C-style contiguous strides for double
                                     data_time, // the data_monitor pointer
                                     free_when_done_time),
-                            py::array_t<tvb::Float>(
+                            pybind11::array_t<tvb::Float>(
                                     {n_records, n_voi, n_regions}, // shape
                                     {n_regions * n_voi * sizef, n_regions * sizef,
                                      sizef}, // C-style contiguous strides for double
                                     data_monitor, // the data_monitor pointer
                                     free_when_done_monitor));
     }
-
     return result;
 }
 
+void checkState() {
+    if (weights.rows() == 0)
+        throw runtime_error("Weights matrix not initialized");
+
+    if (weights.rows() != weights.cols())
+        throw runtime_error("Weights matrix not square");
+
+    if (lengths.rows() == 0)
+        lengths = tvb::TArray2d::Zero(weights.rows(), weights.cols());
+
+    if (lengths.rows() != lengths.cols())
+        throw runtime_error("Lengths matrix not square");
+
+    if (model_name.empty())
+        throw runtime_error("Model not initialized");
+
+    if (integrator == nullptr)
+        throw runtime_error("Integrator not initialized");
+}
+
+SweepResult run_sweep(tvb::Float t_start, tvb::Float t_end) {
+    assert(("No sweep defined!", !params_sweep.empty()));
+
+    try {
+
+        checkState();
+
+        py::print("Generating parameter combinations");
+        std::vector<ParamSet> param_combs(1);
+        for (auto const &p: params_sweep) {
+            std::vector<ParamSet> new_param_combs;
+            for (auto v: tvb::range(p.second.v_start, p.second.v_start, p.second.n)) {
+                for (auto const &pc: param_combs) {
+                    new_param_combs.push_back(pc);
+                    new_param_combs.back().emplace_back(p.first, v);
+                }
+            }
+            param_combs = new_param_combs;
+        }
+        for (auto &pc: param_combs) {
+            for (auto const &p: params_scalar)
+                pc.emplace_back(std::get<0>(p), std::get<1>(p));
+        }
 
 
+        tvb::Connectivity con(weights, lengths, speed);
+
+        py::print("Cloning monitors");
+        std::vector<std::vector<tvb::Monitor *>> sim_results;
+        for (auto &pc: param_combs) {
+            sim_results.emplace_back();
+            for (auto const *m: monitors) {
+                sim_results.back().push_back(m->clone());
+            }
+        }
+
+        py::print(string_format("Creating thread pool with %d threads", num_threads));
+        tvb::ThreadPool<int> tp(num_threads);
+        tp.start();
+
+        py::print(string_format("Starting...", num_threads));
+        int nsim = 0;
+        for (auto &pc: param_combs) {
+            py::print(string_format("Init model parameters", num_threads));
+
+            tvb::Model *model = genModel(model_name);
+            for (auto const &p: pc)
+                model->set_param(std::get<0>(p), std::get<1>(p));
+            model->init_dependant();
+
+            py::print(string_format("Init coupling", num_threads));
+            auto *coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
+            coupling->setScale(G);
+
+            std::string msg = string_format("Starting sweep (%d of %d) for:", nsim, param_combs.size());
+            for (auto const &p: pc)
+                msg += string_format(" %s=%f", std::get<0>(p).c_str(), std::get<1>(p));
+
+            py::print(msg);
+
+            const tvb::Connectivity *con_ref = &con;
+            const std::vector<tvb::Monitor *> &sim_monitors = sim_results[nsim];
+            py::print(string_format("Launching job %d", nsim));
+            tp.queue_job([model, con_ref, integrator, sim_monitors, coupling, t_start, t_end, nsim] {
+                simulate(model, con_ref, integrator, sim_monitors, coupling, t_start, t_end);
+                return nsim;
+            });
+            py::print(string_format("Launched job %d", nsim));
+            nsim++;
+        }
+
+        SweepResult return_values;
+        while (!tp.finished()) {
+            std::optional<int> op = tp.get_result();
+            if (op.has_value()) {
+                int nsim = op.value();
+                py::print(string_format("Collecting job %d", nsim));
+                return_values.emplace_back(param_combs[nsim], genSimResultFromMonitors(sim_results[nsim]));
+            }
+            sleep(1);
+        }
+
+        tp.stop();
+
+        return return_values;
+    } catch (std::runtime_error e) {
+        py::print(string_format("TVB error:%s", e.what()));
+    }
+}
