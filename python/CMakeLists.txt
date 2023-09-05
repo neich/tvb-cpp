@@ -20,12 +20,8 @@ add_subdirectory(pybind11)
 
 if (MSVC)
   #    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/Od" CACHE STRING "" FORCE)
-  set(CMAKE_CXX_FLAGS_RELINTODEB  "")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} /Ox")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor /std:c++20")
 endif()
-
-set(CMAKE_CXX_FLAGS_RELINTODEB  "")
 
 set(TVB_SOURCES
         ../src/tvb-cpp/simulator/simulator.h
@@ -103,14 +99,7 @@ include_directories($<TARGET_PROPERTY:Eigen3::Eigen,INTERFACE_INCLUDE_DIRECTORIE
 find_package(Boost 1.67.0 COMPONENTS program_options filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
-if (UNIX)
-  find_package( ZLIB )
-endif(UNIX)
-
-if (MSVC)
-  # Hack to make it work in Windows
-  set(ZLIB_INCLUDE_DIR, "C:\\local\\zlib\\include\\zlib")
-endif(MSVC)
+find_package( ZLIB )
 
 include_directories(${ZLIB_INCLUDE_DIR})
 
