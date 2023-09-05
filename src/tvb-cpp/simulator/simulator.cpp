@@ -45,7 +45,6 @@ State Simulator::run(const Model *model,
     auto n_steps = int((end_time - start_time) / dt);
 
     State state = initial_state != nullptr ? *initial_state : model->initial();
-    double t = start_time;
 
     coupling->init(dt, state);
 
@@ -65,7 +64,6 @@ State Simulator::run(const Model *model,
 #endif
         for (auto mp: monitors)
             mp->record(step, state);
-        t += integrator->dt();
         this->_loop_update_history(*coupling, step, state);
     }
 
