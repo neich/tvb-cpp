@@ -23,8 +23,6 @@
 #include <tvb-cpp/simulator/monitor.h>
 #include <tvb-cpp/datatypes/connectivity.h>
 
-using namespace std;
-
 namespace tvb {
 
     class Simulator {
