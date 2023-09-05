@@ -7,10 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 if (MSVC)
-#    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/Od" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELINTODEB  "")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} /Ox")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:preprocessor")
 endif()
 
 
@@ -111,7 +108,7 @@ endif()
 
 
 find_package(Eigen3 3.4 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR}/)
+include_directories($<TARGET_PROPERTY:Eigen3::Eigen,INTERFACE_INCLUDE_DIRECTORIES>)
 
 find_package(Boost 1.67.0 COMPONENTS program_options filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
