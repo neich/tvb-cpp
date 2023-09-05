@@ -127,7 +127,7 @@ std::vector<double> tvb::npz2VecDouble(const std::string& filename, const std::s
 
 void tvb::TArray1d2npz(const TArray1d& vec, const std::string& filename, const std::string& index) {
     unsigned mat_size = vec.rows() * vec.cols();
-    cnpy::npz_save<Float>(filename, index, vec.data(), {(size_t)vec.rows(), (size_t)vec.cols()}, "a");
+    cnpy::npz_save<Float>(filename, index, vec.data(), {(size_t)vec.rows(), (size_t)vec.cols()});
 }
 
 void tvb::vecMatrixd2npz(const std::vector<TArray2d>& data, const std::string& filename, const std::string& index) {
@@ -135,7 +135,7 @@ void tvb::vecMatrixd2npz(const std::vector<TArray2d>& data, const std::string& f
     double* raw_data = new double[data.size()*mat_size];
     for (unsigned i = 0; i < data.size(); ++i)
         memcpy(&raw_data[i*mat_size], data[i].data(), mat_size*sizeof(double));
-    cnpy::npz_save(filename, index, raw_data, {data.size(), (size_t)data[0].rows(), (size_t)data[0].cols()}, "a");
+    cnpy::npz_save(filename, index, raw_data, {data.size(), (size_t)data[0].rows(), (size_t)data[0].cols()});
     delete[] raw_data;
 }
 
@@ -147,9 +147,9 @@ void tvb::Matrixd2np(const TArray2d& data, const std::string& filename, const st
         for (int row = 0; row < data.rows(); ++row)
         raw_data[col*data.rows() + row] = data(row, col);
     if (index.size() > 0)
-        cnpy::npz_save(filename, index, raw_data, { (size_t)data.rows(),  (size_t)data.cols()}, "a");
+        cnpy::npz_save(filename, index, raw_data, { (size_t)data.rows(),  (size_t)data.cols()});
     else
-        cnpy::npy_save(filename, raw_data, { (size_t)data.rows(),  (size_t)data.cols()}, "a");
+        cnpy::npy_save(filename, raw_data, { (size_t)data.rows(),  (size_t)data.cols()});
     delete[] raw_data;
 }
 
