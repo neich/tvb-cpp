@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include <tvb-cpp/simulator/integrators/euler_stochastic.h>
+#include <tvb-cpp/simulator/integrators/euler_deterministic.h>
 #include <tvb-cpp/simulator/models/reduced_ww_ext.h>
 #include <tvb-cpp/simulator/models/montbrio.h>
 #include <tvb-cpp/simulator/models/zerlaut.h>
@@ -16,12 +17,26 @@
 #include <tvb-cpp/simulator/noise.h>
 #include <tvb-cpp/simulator/simulator.h>
 #include <tvb-cpp/tools/threadpool.h>
+#include <tvb-cpp/simulator/monitors/bold_tvb.h>
 
+#ifdef __unix__
+# include <unistd.h>
+
+#elif defined _WIN32
+# include <windows.h>
+#define sleep(x) Sleep(1000 * (x))
+#endif
+
+using namespace std;
+
+tvb::TArray1d EMPTY(0);
 
 tvb::TArray2d weights;
 tvb::TArray2d lengths;
 tvb::Float speed;
-tvb::Integrator *integrator;
+string integrator_name;
+tvb::TArray1d int_sigmas = EMPTY;
+tvb::Float int_dt = 0.1;
 std::vector<tvb::Monitor *> monitors;
 std::string model_name{};
 tvb::Monitor *monitor;
@@ -35,6 +50,7 @@ struct ParamSweep {
     tvb::Float v_end;
     int n;
 };
+
 
 void checkState();
 
@@ -62,12 +78,13 @@ void setLengths(py::EigenDRef<tvb::TArray2d> vref, tvb::Float s) {
     speed = s;
 }
 
-void setIntegratorES(tvb::Float d, py::EigenDRef<tvb::TArray1d> sigmas) {
-    integrator = new tvb::EulerStochastic(d, new tvb::Additive(sigmas, d));
-    dt = d;
+void setIntegrator(const string& name, tvb::Float d, py::EigenDRef<tvb::TArray1d> sgms = EMPTY) {
+    integrator_name = name;
+    int_sigmas = sgms;
+    int_dt = d;
 }
 
-void setModel(std::string name) {
+void setModel(const std::string& name) {
     model_name = name;
 }
 
@@ -82,11 +99,21 @@ tvb::Model *genModel(const string &name) {
         model = new tvb::ZerlautAdaptationFirstOrder(N);
     else if (name == "ZerlautAdptationSecondOrder")
         model = new tvb::ZerlautAdaptationSecondOrder(N);
-    else throw runtime_error(string_format("Model wit name <%s> does not exist", name.c_str()));
+    else throw runtime_error(string_format("Model with name <%s> does not exist", name.c_str()));
 
     model->configure();
 
     return model;
+}
+tvb::Integrator *genIntegrator(const string &name) {
+    tvb::Integrator *integrator_ret;
+    if (name == "EulerDeterministic")
+        integrator_ret = new tvb::EulerDeterministic(N);
+    else if (name == "EulerStochastic")
+        integrator_ret = new tvb::EulerStochastic(int_dt, new tvb::Additive(int_sigmas, int_dt));
+    else throw runtime_error(string_format("Integrator with name <%s> does not exist", name.c_str()));
+
+    return integrator_ret;
 }
 
 void setModelParameter(const std::string& name, tvb::Float value) {
@@ -116,6 +143,10 @@ void addRawMonitor(tvb::Float period, std::vector<int> voi) {
 
 void addTemporalAverageMonitor(tvb::Float period, std::vector<int> voi) {
     monitors.push_back(new tvb::TemporalAverage(weights.cols(), period, dt, voi));
+}
+
+void addBOLDMonitor(tvb::Float period, std::vector<int> voi) {
+    monitors.push_back(new tvb::BoldTVB(weights.cols(), period, dt, voi));
 }
 
 void simulate(const tvb::Model *model,
@@ -158,6 +189,7 @@ run_sim(tvb::Float t_start, tvb::Float t_end) {
 
     py::print("Starting simulation, t_start = ", t_start, ", t_end = ", t_end);
     auto start = std::chrono::high_resolution_clock::now();
+    auto *integrator = genIntegrator(integrator_name);
     simulate(model, &con, integrator, monitors, coupling, t_start, t_end);
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -234,7 +266,7 @@ void checkState() {
     if (model_name.empty())
         throw runtime_error("Model not initialized");
 
-    if (integrator == nullptr)
+    if (integrator_name.empty())
         throw runtime_error("Integrator not initialized");
 }
 
@@ -270,6 +302,8 @@ SweepResult run_sweep(tvb::Float t_start, tvb::Float t_end) {
                 sim_results.back().push_back(m->clone());
             }
         }
+
+        auto *integrator = genIntegrator(integrator_name);
 
         py::print(string_format("Creating thread pool with %d threads", num_threads));
         tvb::ThreadPool<int> tp(num_threads);
