@@ -25,8 +25,8 @@ typedef typename std::vector<std::tuple<ParamSet, SimResult >> SweepResult;
 void setWeights(py::EigenDRef<tvb::TArray2d> vref);
 void setGlobalCoupling(tvb::Float g);
 void setLengths(py::EigenDRef<tvb::TArray2d> vref, tvb::Float s);
-void setIntegratorES(tvb::Float dt, py::EigenDRef<tvb::TArray1d> sigmas);
-void setModel(std::string name);
+void setIntegrator(const std::string &name, tvb::Float dt, py::EigenDRef<tvb::TArray1d> sigmas);
+void setModel(const std::string &name);
 void setModelParameter(const std::string& name, tvb::Float value);
 void setModelParameter(const std::string& name, const py::EigenDRef<tvb::TArray1d>& value);
 void setModelParameterSweep(const std::string& name, tvb::Float v_start, tvb::Float v_end, int n);
@@ -34,6 +34,7 @@ void setNumThreads(int n);
 void printModelParameters();
 void addRawMonitor(tvb::Float period, std::vector<int> voi);
 void addTemporalAverageMonitor(tvb::Float period, std::vector<int> voi);
+void addBOLDMonitor(tvb::Float period, std::vector<int> voi);
 SimResult run_sim(tvb::Float t_start, tvb::Float t_end);
 SweepResult run_sweep(tvb::Float t_start, tvb::Float t_end);
 
