@@ -76,7 +76,7 @@ namespace tvb {
         
         void set_param(const std::string& param, const TArray1d& value) override {
             ADD_SETTER_VALUE(tau_e, tau_i, tau_N, delta_e, delta_i, eta_e, eta_i, a_e, a_i, g_e, g_i, I_e_ext, I_i_ext, J_e, J_i, J_A, J_G, J_N, J)
-            throw std::runtime_error(string_format("ParamScalar %s does not exist in this model", param.c_str()));
+            throw std::runtime_error(string_format("ParamArray %s does not exist in this model", param.c_str()));
 
         }
 
