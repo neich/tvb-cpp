@@ -35,7 +35,7 @@ PYBIND11_MODULE(_core, m) {
     m.def("set_lenghts", &setLengths, R"pbdoc(
     )pbdoc");
 
-    m.def("set_integrator_es", &setIntegratorES, R"pbdoc(
+    m.def("set_integrator", &setIntegrator, R"pbdoc(
     )pbdoc");
 
     m.def("set_model", &setModel, R"pbdoc(
@@ -60,6 +60,9 @@ PYBIND11_MODULE(_core, m) {
     )pbdoc");
 
     m.def("add_temporal_average_monitor", &addTemporalAverageMonitor, R"pbdoc(
+    )pbdoc");
+
+    m.def("add_bold_monitor", &addBOLDMonitor, R"pbdoc(
     )pbdoc");
 
     m.def("run_sim", &run_sim, R"pbdoc(
