@@ -15,20 +15,19 @@
 #include <string>
 #include <chrono>
 
-#include <tvb-root-cpp/tools/npz_tools.h>
-#include <tvb-root-cpp/simulator/simulate.h>
-#include <tvb-root-cpp/simulator/monitor.h>
-#include <tvb-root-cpp/simulator/models/reduced_ww_ext.h>
-#include <tvb-root-cpp/simulator/models/montbrio.h>
-#include <tvb-root-cpp/simulator/integrators/euler_stochastic.h>
-#include <tvb-root-cpp/tools/csv_tools.h>
-#include <tvb-root-cpp/simulator/integrators/euler_deterministic.h>
-#include <tvb-root-cpp/simulator/models/zerlaut.h>
-#include <tvb-root-cpp/simulator/simulator.h>
-#include <tvb-root-cpp/simulator/monitors/bold_tvb.h>
-#include <tvb-root-cpp/simulator/monitors/bold_BalloonWindkessel.h>
+#include <tvb-cpp/tools/npz_tools.h>
+#include <tvb-cpp/simulator/simulate.h>
+#include <tvb-cpp/simulator/monitor.h>
+#include <tvb-cpp/simulator/models/reduced_ww_ext.h>
+#include <tvb-cpp/simulator/models/montbrio.h>
+#include <tvb-cpp/simulator/integrators/euler_stochastic.h>
+#include <tvb-cpp/tools/csv_tools.h>
+#include <tvb-cpp/simulator/integrators/euler_deterministic.h>
+#include <tvb-cpp/simulator/models/zerlaut.h>
+#include <tvb-cpp/simulator/simulator.h>
+#include <tvb-cpp/simulator/monitors/bold_tvb.h>
+#include <tvb-cpp/simulator/monitors/bold_BalloonWindkessel.h>
 
-#include <tvb-root-cpp/matplotlibcpp.h>
 #include <chrono>
 #include <boost/program_options.hpp>
 #include <utility>
@@ -37,7 +36,6 @@
 
 using namespace tvb;
 using namespace std::chrono;
-namespace plt = matplotlibcpp;
 using namespace boost::program_options;
 
 int main(int argc, char ** argv) {
@@ -93,7 +91,7 @@ int main(int argc, char ** argv) {
         std::cerr << ex.what() << '\n';
     }
 
-    string filename = vm["out-file-prefix"].as<string>();
+    std::string filename = vm["out-file-prefix"].as<std::string>();
     for (auto const &p: params) {
         filename += string_format("_%s_%.2f", p.first.c_str(), p.second);
     }
@@ -106,11 +104,13 @@ int main(int argc, char ** argv) {
     }
 
     tvb::TArray2d C;
-    string file_weights = vm["sc-matrix"].as<string>();
+    std::string file_weights = vm["sc-matrix"].as<std::string>();
     if (file_weights.ends_with(".csv"))
         C = tvb::csv_load(file_weights);
     else if (file_weights.ends_with(".npz"))
         C = tvb::npz2Matrixd(file_weights, "SC");
+    else if (file_weights.ends_with(".npy"))
+        C = tvb::npy2Matrixd(file_weights);
     else
         throw std::runtime_error(string_format("Unknown file extension for: %s", file_weights.c_str()));
 
@@ -121,7 +121,7 @@ int main(int argc, char ** argv) {
 
     tvb::TArray2d tl;
     if (vm.count("length-matrix") > 0)
-        tl = tvb::csv_load(vm["length-matrix"].as<string>());
+        tl = tvb::csv_load(vm["length-matrix"].as<std::string>());
     else
         tl = tvb::TArray2d::Zero(C.rows(), C.cols());
     tvb::Connectivity con(C, tl, vm["speed"].as<float>());
@@ -130,12 +130,13 @@ int main(int argc, char ** argv) {
     std::cout << string_format("Starting computation for: %s", filename.c_str()) << std::endl;
 
     //auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, rp.dt);
-    auto *model = new tvb::ReducedWongWangExcInh(N);
+    // auto *model = new tvb::ReducedWongWangExcInh(N);
+    auto *model = new tvb::ZerlautAdaptationSecondOrder(N);
     for (auto const &p: params)
         model->set_param(p.first, p.second);
 
     if (vm.count("params-file") > 0) {
-        TArray2dMap pmap = npz2MatrixdMap(vm["params-file"].as<string>());
+        TArray2dMap pmap = npz2MatrixdMap(vm["params-file"].as<std::string>());
         if (pmap.contains("G"))
             model->set_param("G", pmap["G"](0, 0));
         if (pmap.contains("J_i"))
@@ -182,17 +183,4 @@ int main(int argc, char ** argv) {
     std::vector<Float> ls(n_records);
     std::transform(monitor->getRecords().begin(), monitor->getRecords().end(), ls.begin(),
                    [](const Monitor::Record &r) { return r.time/1000; });
-    for (unsigned n = 0; n < N; ++n) {
-        plt::plot(ls, y_plot[n]);
-    }
-    // Plot a red dashed line from given x and y data.
-    // plt::plot(x, w,"r--");
-    // Plot a line whose name will show up as "log(x)" in the legend.
-
-    plt::title("RWW");
-    plt::ylabel("Ie");
-    plt::ylim(0.35, 0.4);
-    plt::xlabel("Seconds");
-    // Save the image (file format is determined by the extension)
-    plt::save("./test_stroke.png", 300);
 }
