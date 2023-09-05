@@ -363,6 +363,18 @@ RunParams run(RunParams rp) {
         delete coupling;
     } else {
 
+        path npz_file = out_dir;
+        npz_file /= rp.job_id + f_prefix + ".npz";
+
+        if (std::filesystem::exists(npz_file) && !rp.force_output) {
+            std::cout << string_format("File %s already exists", npz_file.c_str()) << std::endl;
+            delete rp.monitor;
+            rp.monitor = nullptr;
+            delete model;
+            delete coupling;
+            return rp;
+        }
+
         path pe_file = out_dir / "fNeuro_emp.npy";
         if (!exists(pe_file))
             throw std::runtime_error(string_format("Preprocessed file does not exists %s\n", pe_file.c_str()));
@@ -415,8 +427,6 @@ RunParams run(RunParams rp) {
         TArray2dMap npz_data;
         npz_data["measure"] = measureValues;
         npz_data["fit"] = {{(double)fitting}};
-        path npz_file = out_dir;
-        npz_file /= rp.job_id + f_prefix + ".npz";
         MatrixdMap2npz(npz_file.c_str(), npz_data);
     }
 
