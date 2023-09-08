@@ -301,9 +301,9 @@ RunParams run(RunParams rp) {
 */
 
 
-    // sigmas << 3e-5, 3e-5, 0.0, 0.0;
-    // auto *integrator = new tvb::EulerStochastic(rp.dt, new Additive(sigmas, rp.dt));
-    auto *integrator = new tvb::EulerDeterministic(rp.dt);
+    sigmas << 0,0,0,0,0,0,0,1;
+    auto *integrator = new tvb::EulerStochastic(rp.dt, new Additive(sigmas, rp.dt));
+    // auto *integrator = new tvb::EulerDeterministic(rp.dt);
 
     auto coupling = new tvb::CouplingLinearSparse(con->weights(), con->delays(), model->cvars());
     coupling->setScale(G);
@@ -383,7 +383,7 @@ RunParams run(RunParams rp) {
         TArray2d processed_emp = data["swFCD"];
 
         BandPassFilter bpf(0.008, 0.08, 2.5);
-        SW_FC measure(80, 18, true, bpf);
+        SW_FC measure(30, 10, true, bpf);
 
         int N = data["nsub"](0, 0);
         measure.init(N, N);
@@ -583,8 +583,8 @@ int main(int argc, char **argv) {
 
                 cout << "Preprocessing BOLD signals ..." << endl;
                 vector<TArray2d> ts = np2VecMatrixd(vm["time-series"].as<string>());
-                BandPassFilter bpf(0.008, 0.08, 2.4);
-                SW_FC measure(80, 18, true, bpf);
+                BandPassFilter bpf(0.008, 0.08, 2.5);
+                SW_FC measure(30, 10, true, bpf);
                 vector<TArray2d> transformed_ts;
                 for (auto &b: ts)
                     transformed_ts.emplace_back(b.transpose());
