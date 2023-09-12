@@ -48,10 +48,10 @@ TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of
         TArray2d sfilt = signal_filtered(Eigen::all, Eigen::seqN(t, m_windowSize + 1)).transpose();
         TArray2d cc = corrcoef(sfilt, TArray2d(), false);  // Pearson correlation coefficients
         for (int t2 = 0; t2 < lastWindow; t2+=m_windowStep) {
-            TArray2d sfilt2 = signal_filtered(Eigen::all, Eigen::seqN(t2, m_windowSize + 1)).transpose();
-            TArray2d cc2 = corrcoef(sfilt2, TArray2d(), false);  // Pearson correlation coefficients
-            double ca = pearson_r(tril_indices(cc, N, -1), tril_indices(cc2, N, -1));  // Correlation between both FC
             if (jj2 > ii2) {  // Only keep the upper triangular part
+                TArray2d sfilt2 = signal_filtered(Eigen::all, Eigen::seqN(t2, m_windowSize + 1)).transpose();
+                TArray2d cc2 = corrcoef(sfilt2, TArray2d(), false);  // Pearson correlation coefficients
+                double ca = pearson_r(tril_indices(cc, N, -1), tril_indices(cc2, N, -1));  // Correlation between both FC
                 cotsampling[kk++] = ca;
             }
             jj2++;
