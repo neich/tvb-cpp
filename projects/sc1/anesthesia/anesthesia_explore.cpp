@@ -90,6 +90,7 @@ struct RunParams {
     float speed = 1e6;
     float G = 1.0;
     float tr;
+    float ta_period = 1.0;
 
     RunParams() = default;
 
@@ -119,6 +120,7 @@ struct RunParams {
         this->experiment_name = vm["experiment-name"].as<std::string>();
         this->speed = vm["speed"].as<float>();
         this->force_output = vm["force-output"].as<bool>();
+        this->ta_period = vm["ta-period"].as<float>();
     }
 };
 
@@ -309,11 +311,11 @@ RunParams run(RunParams rp) {
     coupling->setScale(G);
 
     if (rp.algo == "explore_G") {
-        path cvs_file = out_dir;
-        cvs_file /= rp.job_id + f_prefix + ".csv";
+        path npy_file = out_dir;
+        npy_file /= rp.job_id + f_prefix + ".npy";
 
-        if (!rp.force_output && std::filesystem::exists(cvs_file)) {
-            std::cout << string_format("File %s already exists", cvs_file.c_str()) << std::endl;
+        if (!rp.force_output && std::filesystem::exists(npy_file)) {
+            std::cout << string_format("File %s already exists", npy_file.c_str()) << std::endl;
             delete rp.monitor;
             rp.monitor = nullptr;
             return rp;
@@ -334,7 +336,7 @@ RunParams run(RunParams rp) {
 
         Simulator simulator{};
         TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
-        auto *monitor = new TemporalAverage(con->weights().cols(), 1.0, 0.1, {rp.voi});
+        auto *monitor = new TemporalAverage(con->weights().cols(), rp.ta_period, rp.dt, {rp.voi});
 
         simulator.run(sim_config.model(),
                       sim_config.connectivity(),
@@ -349,15 +351,16 @@ RunParams run(RunParams rp) {
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now() - start);
 
-        std::cout << string_format("Computation time (%s): %d msecs", cvs_file.c_str(), duration.count()) << std::endl;
+        std::cout << string_format("Computation time (%s): %d msecs", npy_file.c_str(), duration.count()) << std::endl;
 
         total_time += duration;
 
         // save_fig(monitor, f_prefix);
-        save_cvs(monitor, cvs_file);
+        TArray2d data = monitor->voi2Array(rp.voi);
+        Matrixd2np(data.transpose(), npy_file);
 
         delete monitor;
-        rp.file_out = cvs_file;
+        rp.file_out = npy_file;
 
         delete model;
         delete coupling;
@@ -411,14 +414,15 @@ RunParams run(RunParams rp) {
                       nullptr,
                       &initial_state);
 
-        TArray2d bold_signal = btvb->voi2Array(rp.voi);
-        TArray2d proc_signal = measure.from_fMRI(bold_signal);
-        measure.accumulate(proc_signal);
-
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now() - start);
         cout << string_format("Computed time series for <%s> (time: <%d>)\n", f_prefix.c_str(), duration.count()) << flush;
+
+        TArray2d bold_signal = btvb->voi2Array(rp.voi);
+        TArray2d proc_signal = measure.from_fMRI(bold_signal);
+        measure.accumulate(proc_signal);
+
 
         auto measureValues = measure.postprocess();
         auto fitting = measure.distance(measureValues, processed_emp);
@@ -467,13 +471,14 @@ int main(int argc, char **argv) {
                 ("gaba-vector", value<std::string>(), "Vector with neuroreceptor density")
                 ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
                 ("speed", value<float>()->default_value(1e6), "Signal speed")
-                ("tr", value<float>()->default_value(1e6), "Bold sampling rate (s)")
+                ("tr", value<float>()->default_value(2500.0), "Bold sampling rate (ms)")
                 ("model", value<std::string>()->default_value("ZerlautGABA"), "Model to use in the simulations")
                 ("use-threads", bool_switch()->default_value(false), "Use threads")
                 ("srun", bool_switch()->default_value(false), "Use srun for parallelism")
                 ("force-output", bool_switch()->default_value(false), "Force overwriting of CSV files if they already exists")
                 ("time-start", value<float>()->default_value(0.0), "Start of simulation (ms)")
                 ("time-end", value<float>()->default_value(10000.0), "End of simulation (ms)")
+                ("ta-period", value<float>()->default_value(1.0), "Sampling period for TemporalAverage monitor (ms)")
                 ("dt", value<float>()->default_value(0.1), "Integration step (ms)")
                 ("sigmas", value<std::vector<std::string>>()->multitoken(), "Noise sigmas")
                 ("var-of-interest", value<int>()->default_value(0), "Variable of interest in the model to explore")
