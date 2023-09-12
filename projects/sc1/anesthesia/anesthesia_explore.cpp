@@ -632,6 +632,12 @@ int main(int argc, char **argv) {
                     args += string_format(" --model %s", vm["model"].as<string>().c_str());
                 if (vm.count("time-series") > 0)
                     args += string_format(" --time-series %s", vm["time-series"].as<string>().c_str());
+                if (vm.count("ta-period") > 0)
+                    args += string_format(" --ta-period %s", vm["ta-period"].as<string>().c_str());
+                if (vm.count("time-end") > 0)
+                    args += string_format(" --time-end %s", vm["time-end"].as<string>().c_str());
+                if (vm.count("time-start") > 0)
+                    args += string_format(" --time-start %s", vm["time-start"].as<string>().c_str());
 
                 for (auto const &p: pc.params)
                     args += string_format(" --param %s %f", p.name.c_str(), p.value);
