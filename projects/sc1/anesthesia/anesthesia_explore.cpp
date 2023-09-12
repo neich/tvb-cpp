@@ -414,10 +414,6 @@ RunParams run(RunParams rp) {
                       nullptr,
                       &initial_state);
 
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::high_resolution_clock::now() - start);
-        cout << string_format("Computed time series for <%s> (time: <%d>)\n", f_prefix.c_str(), duration.count()) << flush;
 
         TArray2d bold_signal = btvb->voi2Array(rp.voi);
         TArray2d proc_signal = measure.from_fMRI(bold_signal);
@@ -432,6 +428,12 @@ RunParams run(RunParams rp) {
         npz_data["measure"] = measureValues;
         npz_data["fit"] = {{(double)fitting}};
         MatrixdMap2npz(npz_file.c_str(), npz_data);
+
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::high_resolution_clock::now() - start);
+        cout << string_format("Computed time series (%d, %d) for <%s> (time: <%d>)\n", bold_signal.rows(), bold_signal.cols(), f_prefix.c_str(), duration.count()) << flush;
+
     }
 
     return rp;
