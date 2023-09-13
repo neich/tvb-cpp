@@ -626,7 +626,7 @@ int main(int argc, char **argv) {
                 }
                 if (vm.count("gaba-vector") > 0)
                     args += string_format(" --gaba-vector %s", vm["gaba-vector"].as<string>().c_str());
-                if (vm.count("force-output") > 0)
+                if (vm["force-output"].as<bool>())
                     args += " --force-output";
                 if (vm.count("tr") > 0)
                     args += string_format(" --tr %f", vm["tr"].as<float>());
