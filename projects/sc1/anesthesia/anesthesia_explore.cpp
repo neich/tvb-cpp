@@ -223,7 +223,7 @@ load_data(const string &file_weights, const string &file_lengths, const string &
 }
 
 
-RunParams run(RunParams rp) {
+RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
 
     string f_prefix;
     for (auto const &p: rp.params) {
@@ -258,7 +258,7 @@ RunParams run(RunParams rp) {
     auto *con = new tvb::Connectivity(C, tl, rp.speed);
 
     milliseconds total_time(0);
-    std::cout << string_format("Starting computation for: %s", f_prefix.c_str()) << std::endl;
+    std::cout << string_format("Starting computation (%d of %d)for: %s", n, total, f_prefix.c_str()) << std::endl;
 
     // auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, rp.dt);
     // auto *model = new tvb::ReducedWongWangExcInh(N);
@@ -660,17 +660,20 @@ int main(int argc, char **argv) {
 
             if (!vm["use-threads"].as<bool>()) {
                 cout << "one at a time" << endl;
+                unsigned n = 1, total = param_combs.size();
                 for (auto &pc: param_combs) {
                     pc.init(vm);
-                    run(pc);
+                    run(pc, n++, total);
                 }
             } else {
                 cout << "using threads" << endl;
                 tvb::ThreadPool<RunParams> tp(num_cores);
                 tp.start();
+                unsigned n = 1, total = param_combs.size();
                 for (auto &pc: param_combs) {
                     pc.init(vm);
-                    tp.queue_job([pc] { return run(pc); });
+                    tp.queue_job([pc, n, total] { return run(pc, n, total); });
+                    n++;
                 }
 
                 while (!tp.finished()) {
