@@ -468,6 +468,7 @@ int main(int argc, char **argv) {
         desc.add_options()
                 ("help,h", "Help screen")
                 ("param", value<std::vector<std::string>>()->multitoken()->required(), "Parameters to sweep")
+                ("process-number", value<std::vector<unsigned>>()->multitoken(), "Process number plus total")
                 ("norm", value<std::vector<std::string>>()->multitoken(), "Matrix normalilzation method")
                 ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
                 ("gaba-vector", value<std::string>(), "Vector with neuroreceptor density")
@@ -608,6 +609,7 @@ int main(int argc, char **argv) {
             cout << "Running jobs using srun/slurm" << endl;
             std::vector<child*> processes;
             auto srun = search_path("srun");
+            unsigned n = 1, total = param_combs.size();
             for (auto &pc: param_combs) {
                 string args = "";
                 args += string_format(" -N 1 -n 1 -c 1 --exclusive --mem-per-cpu=2000MB %s",
@@ -642,6 +644,8 @@ int main(int argc, char **argv) {
                 for (auto const &p: pc.params)
                     args += string_format(" --param %s %f", p.name.c_str(), p.value);
 
+                args += string_format(" --process-number %d %d", n++, total);
+
                 cout << string_format("Executing [%s, %s]\n", srun.c_str(), args.c_str());
                 auto *c = new child(srun.string() + args);
                 processes.push_back(c);
@@ -663,7 +667,10 @@ int main(int argc, char **argv) {
                 unsigned n = 1, total = param_combs.size();
                 for (auto &pc: param_combs) {
                     pc.init(vm);
-                    run(pc, n++, total);
+                    if (vm.count("process-number") > 0)
+                        run(pc, vm["process-number"].as<vector<unsigned>>()[0], vm["process-number"].as<vector<unsigned>>()[1]);
+                    else
+                        run(pc, n++, total);
                 }
             } else {
                 cout << "using threads" << endl;
