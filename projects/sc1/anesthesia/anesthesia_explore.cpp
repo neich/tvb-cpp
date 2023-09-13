@@ -370,7 +370,7 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
         npz_file /= rp.job_id + f_prefix + ".npz";
 
         if (std::filesystem::exists(npz_file) && !rp.force_output) {
-            std::cout << string_format("File %s already exists", npz_file.c_str()) << std::endl;
+            std::cout << string_format("File %s already exists\n", npz_file.c_str()) << std::flush;
             delete rp.monitor;
             rp.monitor = nullptr;
             delete model;
