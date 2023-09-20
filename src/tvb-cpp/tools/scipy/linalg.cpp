@@ -12,7 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include <tvb-cpp/tools/algo/external/scipy/linalg.h>
+#include "linalg.h"
 
 using namespace tvb;
 

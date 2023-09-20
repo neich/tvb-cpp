@@ -15,13 +15,13 @@
 #ifndef TVB_CPP_GBC_H
 #define TVB_CPP_GBC_H
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
 #include <tvb-cpp/tools/algo/external/scipy/stats/stats.h>
 #include <tvb-cpp/tools/algo/external/numpy/numpy.h>
 
-#include <tvb-cpp/tools/algo/fic/functions/filter.h>
-#include <tvb-cpp/tools/algo/fic/functions/observers/fc.h>
+#include "tvb-cpp/tools/filter.h"
+#include "fc.h"
 
 
 class GBC_FC : public FunctionalConnectivityStandard {

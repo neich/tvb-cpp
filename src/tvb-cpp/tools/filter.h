@@ -12,11 +12,21 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef TVB_CPP_KSSTATS_H
-#define TVB_CPP_KSSTATS_H
+#ifndef TVB_CPP_FILTER_H
+#define TVB_CPP_FILTER_H
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
-tvb::Float kolmogn(tvb::Float n, tvb::Float x, bool cdf = true);
+#include <tvb-cpp/tools/algo/external/scipy/signal/filter_design.h>
+#include <tvb-cpp/tools/algo/external/scipy/signal/signaltools.h>
+#include <tvb-cpp/tools/algo/external/eigen/eigen.h>
 
-#endif //TVB_CPP_KSSTATS_H
+
+class Filter {
+public:
+    virtual tvb::TArray2d apply(const tvb::TArray2d& signal) const {
+        return signal;
+    }
+};
+
+#endif //TVB_CPP_BOLD_FILTERS_H

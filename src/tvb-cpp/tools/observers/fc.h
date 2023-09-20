@@ -15,12 +15,12 @@
 #ifndef TVB_CPP_FC_H
 #define TVB_CPP_FC_H
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
 #include <tvb-cpp/tools/algo/external/scipy/stats/stats.h>
 #include <tvb-cpp/tools/algo/external/numpy/numpy.h>
 
-#include <tvb-cpp/tools/algo/fic/functions/filter.h>
+#include "tvb-cpp/tools/filter.h"
 
 
 

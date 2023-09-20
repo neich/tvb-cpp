@@ -57,6 +57,7 @@ int main(int argc, char ** argv) {
                 ("force-output", bool_switch()->default_value(false), "Force overwrite output files")
                 ("params-file", value<std::string>(), "NPZ file with simulation parameters")
                 ("gaba-vector", value<std::string>(), "Vector with neuroreceptor density")
+               // ("norm", value<std::vector<std::string>>()->multitoken(), "Matrix normalilzation method")
                 ("out-file-prefix", value<std::string>()->required(), "Output file prefix");
 
         store(command_line_parser(argc, argv)
@@ -128,8 +129,8 @@ int main(int argc, char ** argv) {
 
     int N = C.rows();
 
-    // C = C / C.rowwise().sum().maxCoeff() * 2.0;
-    // tvb::csv_save("sc_d_norm.csv", C);
+    double maxC = C.rowwise().sum().maxCoeff();
+    C = C / maxC;
 
     tvb::TArray2d tl;
     if (vm.count("length-matrix") > 0)
@@ -162,6 +163,11 @@ int main(int argc, char ** argv) {
     model->set_param("gaba_ratio", gaba_vector);
     model->init_dependant();
 
+//    for (auto &s: model->get_param_list())
+//        std::cout << string_format("Parameter %s = %f\n", s.c_str(), model->get_param_value(s)[0]);
+
+    // std::cout << std::flush;
+
     if (vm.count("params-file") > 0) {
         TArray2dMap pmap = npz2MatrixdMap(vm["params-file"].as<std::string>());
         if (pmap.contains("G"))
@@ -174,7 +180,7 @@ int main(int argc, char ** argv) {
 
     // auto *model = new tvb:std:ZerlautAdaptationFirstOrder(N);
     tvb::TArray1d sigmas(8);
-    sigmas << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1e-1;
+    sigmas << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1;
     auto *integrator = new tvb::EulerStochastic(dt, new Additive(sigmas, dt));
     // auto *integrator = new tvb::EulerDeterministic(dt);
     auto *coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());

@@ -17,9 +17,9 @@
 
 #include <algorithm>
 
-#include <tvb-cpp/definitions.h>
-#include <tvb-cpp/tools/algo/external/scipy/stats/ksstats.h>
-#include <tvb-cpp/tools/algo/external/scipy/special/cephes/kolmogorov.h>
+#include "tvb-cpp/definitions.h"
+#include "ksstats.h"
+#include "tvb-cpp/tools/scipy/special/cephes/kolmogorov.h"
 #include <tvb-cpp/tools/algo/external/numpy/numpy.h>
 #include <tvb-cpp/tools/algo/external/numpy/core/numeric.h>
 

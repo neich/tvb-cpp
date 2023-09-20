@@ -12,7 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include <tvb-cpp/tools/algo/external/numpy/core/numeric.h>
+#include "numeric.h"
 
 using namespace tvb;
 

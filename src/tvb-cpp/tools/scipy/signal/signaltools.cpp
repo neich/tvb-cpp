@@ -14,10 +14,11 @@
 
 #include <unordered_set>
 
-#include <tvb-cpp/definitions.h>
+#include "signaltools.h"
+
 #include <tvb-cpp/tools/algo/external/numpy/numpy.h>
-#include <tvb-cpp/tools/algo/external/scipy/linalg.h>
-#include <tvb-cpp/tools/algo/external/scipy/signal/signaltools.h>
+#include "tvb-cpp/tools/scipy/linalg.h"
+#include "tvb-cpp/tools/scipy/fft.h"
 
 using namespace tvb;
 using namespace std;
@@ -926,3 +927,46 @@ TArray1d filtfilt_pad(const TArray1d& b, const TArray1d& a, const TArray1d& x,
 
     return y;
 }
+
+TArray2dc hilbert_matrix(const Eigen::Ref<const Eigen::MatrixXd> &bfFrame) {
+    int N = bfFrame.rows();
+    Eigen::FFT<tvb::Float> fft;
+    Eigen::MatrixXcd out(N, N);
+
+//     #pragma omp parallel for
+    for (int k = 0; k < N; k++) {
+        Eigen::VectorXcd tmpOut = fft.fwd(Eigen::VectorXd{bfFrame.col(k)});
+        tmpOut(Eigen::seq(0, N / 2 - 1)).setZero();
+        tmpOut(N / 2) *= 0.5;
+        out.col(k) = fft.inv(tmpOut);
+    }
+
+    return out;
+}
+
+
+TArray1dc hilbert_signal(const TArray1d &x, int N) {
+    assert(("N must be possitive", N >= 0));
+    if (N == 0)
+        N = x.size();
+
+    Eigen::FFT<tvb::Float> fft;
+
+    Eigen::VectorXcd Xf;
+    Eigen::VectorXcd xx = x;
+    fft.fwd(Xf, xx);
+    Eigen::VectorXcd h = Eigen::VectorXd::Zero(N);
+    if (N % 2 == 0) {
+        unsigned i = N / 2;
+        h[0] = 1.0;
+        h[i] = 1.0;
+        h.segment(1, i - 1).setConstant(2.0);
+    } else {
+        h[0] = 1;
+        h(Eigen::seq(1, (N + 1) / 2)).setConstant(2.0);
+    }
+    Eigen::VectorXcd tmp = Xf.array() * h.array();
+    xx = fft_inv( tmp);
+    return xx;
+}
+

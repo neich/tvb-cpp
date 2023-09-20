@@ -15,13 +15,13 @@
 #ifndef TVB_CPP_BOLD_FILTERS_H
 #define TVB_CPP_BOLD_FILTERS_H
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
 #include <tvb-cpp/tools/algo/external/scipy/signal/filter_design.h>
 #include <tvb-cpp/tools/algo/external/scipy/signal/signaltools.h>
 #include <tvb-cpp/tools/algo/external/eigen/eigen.h>
 
-#include <tvb-cpp/tools/algo/fic/functions/filter.h>
+#include "filter.h"
 
 class BandPassFilter : public Filter {
     double m_TR; //                     # sampling interval

@@ -12,11 +12,17 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef TVB_CPP_LINALG_H
-#define TVB_CPP_LINALG_H
+#ifndef TVB_CPP_EIGEN_H
+#define TVB_CPP_EIGEN_H
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
-tvb::TMatrix companion(const tvb::TArray1d& a);
+inline
+tvb::TArray1d vc2vd(const tvb::TArray1dc& x) {
+    tvb::TArray1d y(x.size());
+    for (unsigned i = 0; i < x.size(); ++i)
+        y[i] = x[i].real();
+    return y;
+}
 
-#endif //TVB_CPP_LINALG_H
+#endif //TVB_CPP_EIGEN_H

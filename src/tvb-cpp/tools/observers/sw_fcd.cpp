@@ -12,11 +12,11 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include <tvb-cpp/simulator/monitors/bold_tvb.h>
+#include "tvb-cpp/simulator/monitors/bold_tvb.h"
 
 #include <tvb-cpp/tools/algo/external/scipy/stats/stats.h>
 #include <tvb-cpp/tools/algo/external/numpy/numpy.h>
-#include <tvb-cpp/tools/algo/fic/functions/observers/sw_fcd.h>
+#include "sw_fcd.h"
 
 
 int calc_length(int start, int end, int step) {

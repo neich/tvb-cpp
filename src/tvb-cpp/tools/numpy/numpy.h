@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
 int searchsorted(const tvb::TArray1d &a, double v, const std::string &side);
 

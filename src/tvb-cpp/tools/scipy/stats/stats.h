@@ -12,16 +12,19 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef TVB_CPP_NUMERIC_H
-#define TVB_CPP_NUMERIC_H
-
-#include <tvb-cpp/definitions.h>
-
-tvb::TArray1d poly(const tvb::TArray1d& seq_of_zeros);
-tvb::TArray1d poly(const tvb::TArray1dc& seq_of_zeros);
-
-tvb::TArray1d convolve(const tvb::TArray1d &a, const tvb::TArray1d &b);
-tvb::TArray1dc convolve(const tvb::TArray1dc &a, const tvb::TArray1dc &b);
+#ifndef TVB_CPP_MATH_H
+#define TVB_CPP_MATH_H
 
 
-#endif //TVB_CPP_NUMERIC_H
+#include "tvb-cpp/definitions.h"
+
+using namespace tvb;
+
+double corrcoef(const TArray1d &x, const TArray1d &y);
+
+std::pair<double, double> ks_2samp(const TArray1d &data1,
+                                   const TArray1d &y,
+                                   const std::string& alternative="two-sided",
+                                   std::string mode="auto");
+
+#endif //TVB_CPP_MATH_H

@@ -45,7 +45,7 @@
  *
  */
 
-#include <tvb-cpp/tools/algo/external/scipy/special/cephes/mconf.h>
+#include "mconf.h"
 #include <float.h>
 #include <math.h>
 #include <assert.h>
@@ -124,7 +124,7 @@ _within_tol(double x, double y, double atol, double rtol)
     return result;
 }
 
-#include <tvb-cpp/tools/algo/external/scipy/special/cephes/dd_real.h>
+#include "dd_real.h"
 
 /* Shorten some of the double-double names for readibility */
 #define valueD dd_to_double

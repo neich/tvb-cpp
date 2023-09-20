@@ -16,9 +16,9 @@
 #include <vector>
 #include <algorithm>
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 #include "stats.h"
-#include <tvb-cpp/tools/algo/external/scipy/stats/ksstats.h>
+#include "ksstats.h"
 #include <tvb-cpp/tools/algo/external/numpy/numpy.h>
 
 using namespace std;

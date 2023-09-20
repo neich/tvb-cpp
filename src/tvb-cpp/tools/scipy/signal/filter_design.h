@@ -17,7 +17,7 @@
 
 #include <tuple>
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
 typedef std::tuple<tvb::TArray1d, tvb::TArray1dc, tvb::Float> ZeroPoleGain;
 

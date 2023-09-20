@@ -17,13 +17,13 @@
 #include <string>
 #include <unordered_map>
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
 #include <tvb-cpp/tools/algo/external/numpy/numpy.h>
 #include <tvb-cpp/tools/algo/external/numpy/core/numeric.h>
 #include <tvb-cpp/tools/algo/external/eigen/eigen.h>
 
-#include <tvb-cpp/tools/algo/external/scipy/signal/filter_design.h>
+#include "filter_design.h"
 
 using namespace std;
 using namespace tvb;

@@ -12,19 +12,11 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef TVB_CPP_MATH_H
-#define TVB_CPP_MATH_H
+#ifndef TVB_CPP_LINALG_H
+#define TVB_CPP_LINALG_H
 
+#include "tvb-cpp/definitions.h"
 
-#include <tvb-cpp/definitions.h>
+tvb::TMatrix companion(const tvb::TArray1d& a);
 
-using namespace tvb;
-
-double corrcoef(const TArray1d &x, const TArray1d &y);
-
-std::pair<double, double> ks_2samp(const TArray1d &data1,
-                                   const TArray1d &y,
-                                   const std::string& alternative="two-sided",
-                                   std::string mode="auto");
-
-#endif //TVB_CPP_MATH_H
+#endif //TVB_CPP_LINALG_H

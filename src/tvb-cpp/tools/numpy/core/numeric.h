@@ -12,17 +12,16 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef TVB_CPP_EIGEN_H
-#define TVB_CPP_EIGEN_H
+#ifndef TVB_CPP_NUMERIC_H
+#define TVB_CPP_NUMERIC_H
 
-#include <tvb-cpp/definitions.h>
+#include "tvb-cpp/definitions.h"
 
-inline
-tvb::TArray1d vc2vd(const tvb::TArray1dc& x) {
-    tvb::TArray1d y(x.size());
-    for (unsigned i = 0; i < x.size(); ++i)
-        y[i] = x[i].real();
-    return y;
-}
+tvb::TArray1d poly(const tvb::TArray1d& seq_of_zeros);
+tvb::TArray1d poly(const tvb::TArray1dc& seq_of_zeros);
 
-#endif //TVB_CPP_EIGEN_H
+tvb::TArray1d convolve(const tvb::TArray1d &a, const tvb::TArray1d &b);
+tvb::TArray1dc convolve(const tvb::TArray1dc &a, const tvb::TArray1dc &b);
+
+
+#endif //TVB_CPP_NUMERIC_H
