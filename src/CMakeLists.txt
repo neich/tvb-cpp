@@ -51,40 +51,46 @@ set(TVB_SOURCES
         )
 
 set(TVB_TOOLS_SOURCES
-        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
-        tvb-cpp/tools/algo/fic/functions/observers/fc.h
-        tvb-cpp/tools/algo/fic/functions/observers/sw_fcd.h
-        tvb-cpp/tools/algo/fic/functions/observers/gbc.h
-        tvb-cpp/tools/algo/fic/functions/observers/sw_fcd.cpp
-        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
-        tvb-cpp/tools/algo/fic/functions/bold_filters.h
-        tvb-cpp/tools/algo/fic/functions/bold_filters.cpp
-        tvb-cpp/tools/algo/external/scipy/stats/stats.h
-        tvb-cpp/tools/algo/external/scipy/stats/stats.cpp
-        tvb-cpp/tools/algo/external/numpy/core/numeric.h
-        tvb-cpp/tools/algo/external/numpy/core/numeric.cpp
-        tvb-cpp/tools/algo/external/numpy/numpy.h
-        tvb-cpp/tools/algo/external/numpy/numpy.cpp
-        tvb-cpp/tools/algo/external/scipy/special/cephes/dd_real.cpp
-        tvb-cpp/tools/algo/external/scipy/special/cephes/kolmogorov.cpp
-        tvb-cpp/tools/algo/external/scipy/special/cephes/kolmogorov.h
-        tvb-cpp/tools/algo/external/scipy/stats/ksstats.h
-        tvb-cpp/tools/algo/external/scipy/stats/ksstats.cpp
-        tvb-cpp/tools/algo/external/scipy/signal/filter_design.h
-        tvb-cpp/tools/algo/external/scipy/signal/filter_design.cpp
-        tvb-cpp/tools/algo/external/scipy/signal/signaltools.h
-        tvb-cpp/tools/algo/external/scipy/signal/signaltools.cpp
-        tvb-cpp/tools/algo/external/scipy/linalg.h
-        tvb-cpp/tools/algo/external/scipy/linalg.cpp
-        tvb-cpp/tools/algo/external/eigen/eigen.h
-        tvb-cpp/tools/algo/fic/functions/observers/fc.h
-        tvb-cpp/tools/algo/fic/functions/g_optim.h
-        tvb-cpp/tools/algo/fic/functions/g_optim.cpp
-        tvb-cpp/tools/algo/fic/functions/simulate_fcd.h
-        tvb-cpp/tools/algo/fic/functions/simulate_fcd.cpp
+#        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
+        tvb-cpp/tools/observers/fc.h
+        tvb-cpp/tools/observers/sw_fcd.h
+        tvb-cpp/tools/observers/gbc.h
+        tvb-cpp/tools/observers/sw_fcd.cpp
+#        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
+        tvb-cpp/tools/bold_filters.h
+        tvb-cpp/tools/bold_filters.cpp
+        tvb-cpp/tools/scipy/stats/stats.h
+        tvb-cpp/tools/scipy/stats/stats.cpp
+        tvb-cpp/tools/numpy/core/numeric.h
+        tvb-cpp/tools/numpy/core/numeric.cpp
+        tvb-cpp/tools/numpy/numpy.h
+        tvb-cpp/tools/numpy/numpy.cpp
+        tvb-cpp/tools/scipy/special/cephes/dd_real.cpp
+        tvb-cpp/tools/scipy/special/cephes/kolmogorov.cpp
+        tvb-cpp/tools/scipy/special/cephes/kolmogorov.h
+        tvb-cpp/tools/scipy/stats/ksstats.h
+        tvb-cpp/tools/scipy/stats/ksstats.cpp
+        tvb-cpp/tools/scipy/signal/filter_design.h
+        tvb-cpp/tools/scipy/signal/filter_design.cpp
+        tvb-cpp/tools/scipy/signal/signaltools.h
+        tvb-cpp/tools/scipy/signal/signaltools.cpp
+        tvb-cpp/tools/scipy/fft.h
+        tvb-cpp/tools/scipy/fft.cpp
+        tvb-cpp/tools/scipy/linalg.h
+        tvb-cpp/tools/scipy/linalg.cpp
+        tvb-cpp/tools/eigen/eigen.h
+        tvb-cpp/tools/observers/fc.h
+#        tvb-cpp/tools/algo/fic/functions/g_optim.h
+#        tvb-cpp/tools/algo/fic/functions/g_optim.cpp
+#        tvb-cpp/tools/algo/fic/functions/simulate_fcd.h
+#        tvb-cpp/tools/algo/fic/functions/simulate_fcd.cpp
         tvb-cpp/tools/algo/load_or_compute.h
         tvb-cpp/tools/npy.h
-        tvb-cpp/tools/json.h)
+        tvb-cpp/tools/json.h
+        tvb-cpp/tools/observers/ph_fcd.h
+        tvb-cpp/tools/observers/ph_fcd.cpp
+        tvb-cpp/tools/observers/phase_interaction_matrix.cpp
+        tvb-cpp/tools/observers/phase_interaction_matrix.h)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 
