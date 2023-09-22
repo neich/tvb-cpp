@@ -26,8 +26,9 @@
 #include <tvb-cpp/tools/csv_tools.h>
 #include <tvb-cpp/tools/npy.h>
 #include <tvb-cpp/simulator/integrators/euler_deterministic.h>
-#include <tvb-cpp/tools/algo/fic/functions/observers/sw_fcd.h>
-#include <tvb-cpp/tools/algo/fic/functions/bold_filters.h>
+#include <tvb-cpp/tools/observers/sw_fcd.h>
+#include <tvb-cpp/tools/observers/ph_fcd.h>
+#include "tvb-cpp/tools/bold_filters.h"
 #include <tvb-cpp/simulator/monitors/bold_tvb.h>
 #include "zerlaut_gaba.h"
 
@@ -386,7 +387,8 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
         TArray2d processed_emp = data["swFCD"];
 
         BandPassFilter bpf(0.008, 0.08, 2.5);
-        SW_FC measure(30, 10, true, bpf);
+        // SW_FC measure(30, 10, true, bpf);
+        PhFCD measure(5, true, bpf);
 
         int N = data["nsub"](0, 0);
         measure.init(N, N);
@@ -448,7 +450,7 @@ void to_cout(const std::vector<std::string> &v) {
             std::cout, "\n"});
 }
 
-TArray2d processBOLDSignals(const vector<TArray2d> &bolds, SW_FC &measure) {
+TArray2d processBOLDSignals(const vector<TArray2d> &bolds, PhFCD &measure) {
     int NumSubjects = bolds.size();
     int N = bolds[0].rows();
 
@@ -592,7 +594,8 @@ int main(int argc, char **argv) {
                 cout << "Preprocessing BOLD signals ..." << endl;
                 vector<TArray2d> ts = np2VecMatrixd(vm["time-series"].as<string>());
                 BandPassFilter bpf(0.008, 0.08, 2.5);
-                SW_FC measure(30, 10, true, bpf);
+                // SW_FC measure(30, 10, true, bpf);
+                PhFCD measure(5, true, bpf);
                 vector<TArray2d> transformed_ts;
                 for (auto &b: ts)
                     transformed_ts.emplace_back(b.transpose());
