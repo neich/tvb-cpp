@@ -14,6 +14,8 @@
 
 #include <unordered_set>
 
+#include <unsupported/Eigen/FFT>
+
 #include "signaltools.h"
 
 #include <tvb-cpp/tools/numpy/numpy.h>
