@@ -58,32 +58,32 @@ set(TVB_SOURCES
 
 set(TVB_TOOLS_SOURCES
         ../src/tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
-        ../src/tvb-cpp/tools/algo/fic/functions/observers/fc.h
-        ../src/tvb-cpp/tools/algo/fic/functions/observers/sw_fcd.h
-        ../src/tvb-cpp/tools/algo/fic/functions/observers/gbc.h
-        ../src/tvb-cpp/tools/algo/fic/functions/observers/sw_fcd.cpp
+        ../src/tvb-cpp/tools/observers/fc.h
+        ../src/tvb-cpp/tools/observers/sw_fcd.h
+        ../src/tvb-cpp/tools/observers/gbc.h
+        ../src/tvb-cpp/tools/observers/sw_fcd.cpp
         ../src/tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
-        ../src/tvb-cpp/tools/algo/fic/functions/bold_filters.h
-        ../src/tvb-cpp/tools/algo/fic/functions/bold_filters.cpp
-        ../src/tvb-cpp/tools/algo/external/scipy/stats/stats.h
-        ../src/tvb-cpp/tools/algo/external/scipy/stats/stats.cpp
-        ../src/tvb-cpp/tools/algo/external/numpy/core/numeric.h
-        ../src/tvb-cpp/tools/algo/external/numpy/core/numeric.cpp
-        ../src/tvb-cpp/tools/algo/external/numpy/numpy.h
-        ../src/tvb-cpp/tools/algo/external/numpy/numpy.cpp
-        ../src/tvb-cpp/tools/algo/external/scipy/special/cephes/dd_real.cpp
-        ../src/tvb-cpp/tools/algo/external/scipy/special/cephes/kolmogorov.cpp
-        ../src/tvb-cpp/tools/algo/external/scipy/special/cephes/kolmogorov.h
-        ../src/tvb-cpp/tools/algo/external/scipy/stats/ksstats.h
-        ../src/tvb-cpp/tools/algo/external/scipy/stats/ksstats.cpp
-        ../src/tvb-cpp/tools/algo/external/scipy/signal/filter_design.h
-        ../src/tvb-cpp/tools/algo/external/scipy/signal/filter_design.cpp
-        ../src/tvb-cpp/tools/algo/external/scipy/signal/signaltools.h
-        ../src/tvb-cpp/tools/algo/external/scipy/signal/signaltools.cpp
-        ../src/tvb-cpp/tools/algo/external/scipy/linalg.h
-        ../src/tvb-cpp/tools/algo/external/scipy/linalg.cpp
-        ../src/tvb-cpp/tools/algo/external/eigen/eigen.h
-        ../src/tvb-cpp/tools/algo/fic/functions/observers/fc.h
+        ../src/tvb-cpp/tools/bold_filters.h
+        ../src/tvb-cpp/tools/bold_filters.cpp
+        ../src/tvb-cpp/tools/scipy/stats/stats.h
+        ../src/tvb-cpp/tools/scipy/stats/stats.cpp
+        ../src/tvb-cpp/tools/numpy/core/numeric.h
+        ../src/tvb-cpp/tools/numpy/core/numeric.cpp
+        ../src/tvb-cpp/tools/numpy/numpy.h
+        ../src/tvb-cpp/tools/numpy/numpy.cpp
+        ../src/tvb-cpp/tools/scipy/special/cephes/dd_real.cpp
+        ../src/tvb-cpp/tools/scipy/special/cephes/kolmogorov.cpp
+        ../src/tvb-cpp/tools/scipy/special/cephes/kolmogorov.h
+        ../src/tvb-cpp/tools/scipy/stats/ksstats.h
+        ../src/tvb-cpp/tools/scipy/stats/ksstats.cpp
+        ../src/tvb-cpp/tools/scipy/signal/filter_design.h
+        ../src/tvb-cpp/tools/scipy/signal/filter_design.cpp
+        ../src/tvb-cpp/tools/scipy/signal/signaltools.h
+        ../src/tvb-cpp/tools/scipy/signal/signaltools.cpp
+        ../src/tvb-cpp/tools/scipy/linalg.h
+        ../src/tvb-cpp/tools/scipy/linalg.cpp
+        ../src/tvb-cpp/tools/eigen/eigen.h
+        ../src/tvb-cpp/tools/observers/fc.h
         ../src/tvb-cpp/tools/algo/fic/functions/g_optim.h
         ../src/tvb-cpp/tools/algo/fic/functions/g_optim.cpp
         ../src/tvb-cpp/tools/algo/fic/functions/simulate_fcd.h
