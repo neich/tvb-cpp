@@ -17,8 +17,8 @@
 
 #include "tvb-cpp/definitions.h"
 
-#include <tvb-cpp/tools/algo/external/scipy/stats/stats.h>
-#include <tvb-cpp/tools/algo/external/numpy/numpy.h>
+#include <tvb-cpp/tools/scipy/stats/stats.h>
+#include <tvb-cpp/tools/numpy/numpy.h>
 
 #include "tvb-cpp/tools/filter.h"
 #include "fc.h"

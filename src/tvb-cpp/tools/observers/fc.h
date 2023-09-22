@@ -17,8 +17,8 @@
 
 #include "tvb-cpp/definitions.h"
 
-#include <tvb-cpp/tools/algo/external/scipy/stats/stats.h>
-#include <tvb-cpp/tools/algo/external/numpy/numpy.h>
+#include <tvb-cpp/tools/scipy/stats/stats.h>
+#include <tvb-cpp/tools/numpy/numpy.h>
 
 #include "tvb-cpp/tools/filter.h"
 
@@ -51,7 +51,7 @@ public:
 
     static double fc_similarity(const tvb::TArray2d& fcd1, const tvb::TArray2d& fcd2) {
         Eigen::Index N = fcd1.rows();
-        return FunctionalConnectivity::pearson_r(tril_indices(fcd1, N, -1), tril_indices(fcd2, N, -1));
+        return FunctionalConnectivity::pearson_r(tril_values(fcd1, N, -1), tril_values(fcd2, N, -1));
     }
 
     static double pearson_r(const tvb::TArray1d& x, const tvb::TArray1d& y)  {

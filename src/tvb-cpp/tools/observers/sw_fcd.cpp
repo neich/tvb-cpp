@@ -14,8 +14,8 @@
 
 #include "tvb-cpp/simulator/monitors/bold_tvb.h"
 
-#include <tvb-cpp/tools/algo/external/scipy/stats/stats.h>
-#include <tvb-cpp/tools/algo/external/numpy/numpy.h>
+#include <tvb-cpp/tools/scipy/stats/stats.h>
+#include <tvb-cpp/tools/numpy/numpy.h>
 #include "sw_fcd.h"
 
 
@@ -34,7 +34,7 @@ TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of
     else
         signal_filtered = signal;
 
-//    Isubdiag = np.tril_indices(N, k=-1)  // Indices of triangular lower part of matrix
+//    Isubdiag = np.tril_values(N, k=-1)  // Indices of triangular lower part of matrix
 
     // For each pair of sliding windows calculate the FC at t and t2 and
     // compute the correlation between the two.
@@ -51,7 +51,7 @@ TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of
             if (jj2 > ii2) {  // Only keep the upper triangular part
                 TArray2d sfilt2 = signal_filtered(Eigen::all, Eigen::seqN(t2, m_windowSize + 1)).transpose();
                 TArray2d cc2 = corrcoef(sfilt2, TArray2d(), false);  // Pearson correlation coefficients
-                double ca = pearson_r(tril_indices(cc, N, -1), tril_indices(cc2, N, -1));  // Correlation between both FC
+                double ca = pearson_r(tril_values(cc, N, -1), tril_values(cc2, N, -1));  // Correlation between both FC
                 cotsampling[kk++] = ca;
             }
             jj2++;

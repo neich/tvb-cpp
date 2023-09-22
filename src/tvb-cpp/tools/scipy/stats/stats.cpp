@@ -19,7 +19,7 @@
 #include "tvb-cpp/definitions.h"
 #include "stats.h"
 #include "ksstats.h"
-#include <tvb-cpp/tools/algo/external/numpy/numpy.h>
+#include <tvb-cpp/tools/numpy/numpy.h>
 
 using namespace std;
 

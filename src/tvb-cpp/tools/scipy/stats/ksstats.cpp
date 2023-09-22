@@ -20,8 +20,8 @@
 #include "tvb-cpp/definitions.h"
 #include "ksstats.h"
 #include "tvb-cpp/tools/scipy/special/cephes/kolmogorov.h"
-#include <tvb-cpp/tools/algo/external/numpy/numpy.h>
-#include <tvb-cpp/tools/algo/external/numpy/core/numeric.h>
+#include <tvb-cpp/tools/numpy/numpy.h>
+#include <tvb-cpp/tools/numpy/core/numeric.h>
 
 
 using namespace tvb;

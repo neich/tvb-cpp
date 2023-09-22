@@ -17,9 +17,9 @@
 
 #include "tvb-cpp/definitions.h"
 
-#include <tvb-cpp/tools/algo/external/scipy/signal/filter_design.h>
-#include <tvb-cpp/tools/algo/external/scipy/signal/signaltools.h>
-#include <tvb-cpp/tools/algo/external/eigen/eigen.h>
+#include <tvb-cpp/tools/scipy/signal/filter_design.h>
+#include <tvb-cpp/tools/scipy/signal/signaltools.h>
+#include <tvb-cpp/tools/eigen/eigen.h>
 
 #include "filter.h"
 

@@ -13,7 +13,7 @@
 //    limitations under the License.
 
 #include "tvb-cpp/simulator/monitors/bold_tvb.h"
-#include <tvb-cpp/tools/algo/external/scipy/stats/stats.h>
+#include <tvb-cpp/tools/scipy/stats/stats.h>
 
 #include "fc.h"
 

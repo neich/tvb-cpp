@@ -43,16 +43,24 @@ Float polyval(const std::vector<Float>& p, Float x) {
 
 
 
-TArray1d tril_indices(const TArray2d& m, int N, int k) {
+TArray1d tril_values(const TArray2d& m, int N, int k, bool transposed) {
     int R = k < 0 ? -k : 0;
     int C = k >= 0 ? k : 0;
     TArray1d y(N * N);
     int yi = 0;
     int CL = 1;
-    for (int r = R; r < N; ++r) {
-        for (int c = C; c < C+CL; ++c)
-            y(yi++) = m(r, c);
-        CL++;
+    if (transposed) {
+        for (int c = 0; c < N; ++c) {
+            for (int r = R; r < N; ++r)
+                y(yi++) = m(r, c);
+            R++;
+        }
+    } else {
+        for (int r = R; r < N; ++r) {
+            for (int c = C; c < C + CL; ++c)
+                y(yi++) = m(r, c);
+            CL++;
+        }
     }
     return y(Eigen::seqN(0, yi));
 }

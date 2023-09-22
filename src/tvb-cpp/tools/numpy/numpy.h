@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "tvb-cpp/definitions.h"
+#include <tvb-cpp/definitions.h>
 
 int searchsorted(const tvb::TArray1d &a, double v, const std::string &side);
 
@@ -66,6 +66,6 @@ std::pair<tvb::TArray1d, tvb::TArray1d> average(const tvb::TArray2d& x,
                                                 bool row=true,
                                                 const tvb::TArray1d& weights={});
 
-tvb::TArray1d tril_indices(const tvb::TArray2d& m, int N, int k=0);
+tvb::TArray1d tril_values(const tvb::TArray2d &m, int N, int k=0, bool transposed = false);
 
 #endif //TVB_CPP_NUMPY_H

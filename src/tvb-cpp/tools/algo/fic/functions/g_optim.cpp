@@ -14,9 +14,9 @@
 
 #include <chrono>
 
-#include <tvb-cpp/tools/algo/fic/functions/g_optim.h>
+#include <tvb-cpp/tools/g_optim.h>
 #include <tvb-cpp/simulator/models/reduced_ww_ext.h>
-#include <tvb-cpp/tools/algo/fic/functions/balance_fic.h>
+#include <tvb-cpp/tools/balance_fic.h>
 
 using namespace std;
 using namespace tvb;

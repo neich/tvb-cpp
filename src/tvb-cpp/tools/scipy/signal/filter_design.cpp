@@ -19,9 +19,9 @@
 
 #include "tvb-cpp/definitions.h"
 
-#include <tvb-cpp/tools/algo/external/numpy/numpy.h>
-#include <tvb-cpp/tools/algo/external/numpy/core/numeric.h>
-#include <tvb-cpp/tools/algo/external/eigen/eigen.h>
+#include <tvb-cpp/tools/numpy/numpy.h>
+#include <tvb-cpp/tools/numpy/core/numeric.h>
+#include <tvb-cpp/tools/eigen/eigen.h>
 
 #include "filter_design.h"
 

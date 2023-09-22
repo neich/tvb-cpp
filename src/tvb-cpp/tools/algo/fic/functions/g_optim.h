@@ -20,7 +20,7 @@
 
 #include <tvb-cpp/definitions.h>
 
-#include <tvb-cpp/tools/algo/fic/functions/observers/fc.h>
+#include <tvb-cpp/tools/observers/fc.h>
 #include <tvb-cpp/simulator/simulate.h>
 #include "simulate_fcd.h"
 

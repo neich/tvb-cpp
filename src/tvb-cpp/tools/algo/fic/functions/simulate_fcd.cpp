@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include <tvb-cpp/tools/algo/fic/functions/simulate_fcd.h>
-#include <tvb-cpp/tools/algo/external/numpy/numpy.h>
+#include <tvb-cpp/tools/simulate_fcd.h>
+#include <tvb-cpp/tools/numpy/numpy.h>
 #include <tvb-cpp/simulator/monitors/bold_tvb.h>
 
 using namespace tvb;

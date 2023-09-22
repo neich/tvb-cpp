@@ -16,7 +16,7 @@
 
 #include "signaltools.h"
 
-#include <tvb-cpp/tools/algo/external/numpy/numpy.h>
+#include <tvb-cpp/tools/numpy/numpy.h>
 #include "tvb-cpp/tools/scipy/linalg.h"
 #include "tvb-cpp/tools/scipy/fft.h"
 
