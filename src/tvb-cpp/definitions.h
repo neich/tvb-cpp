@@ -34,15 +34,16 @@ namespace tvb {
     typedef typename std::complex<Float> complexd;
     // Eigen::ColMajor is the default
     typedef typename Eigen::Array<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TArray2d;
+    typedef typename Eigen::Array<complexd, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TArray2dc;
     typedef typename Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TMatrix;
     typedef typename Eigen::ArrayXXi TArray2di;
     typedef typename Eigen::Array<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TArray1d;
     typedef typename Eigen::Matrix<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TVector;
     typedef typename Eigen::ArrayXi TArray1di;
-    typedef typename Eigen::Array<complexd, Eigen::Dynamic,1> TArray1dc;
+    typedef typename Eigen::Array<complexd, Eigen::Dynamic, 1> TArray1dc;
     typedef typename std::unordered_map<std::string, TArray2d> TArray2dMap;
 
-    typedef typename Eigen::Array<Float*, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> Matrixdp;
+    typedef typename Eigen::Array<Float *, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> Matrixdp;
 
 //    typedef typename Eigen::MatrixXd TArray2d;
 //    typedef typename Eigen::MatrixXi TArray2di;
@@ -96,7 +97,7 @@ namespace tvb {
 //    }
 
     inline
-    TArray1d operator-(const double d, const TArray1d &v) {
+    TArray1d operator-(const tvb::Float d, const TArray1d &v) {
         TArray1d result(v.size());
         for (unsigned i = 0; i < v.size(); ++i)
             result(i) = d - v(i);
@@ -104,13 +105,13 @@ namespace tvb {
     }
 
     inline
-    int index_circ(int index, int mod, int shift) {
+    int index_circ(int index, int mod, int shift=0) {
         int result = (index % mod) + shift;
         return result >= 0 ? result : result + mod;
     }
 
     inline
-    bool isnan(const TArray1d& vector) {
+    bool isnan(const TArray1d &vector) {
         for (auto const &v: vector)
             if (std::isnan(v))
                 return true;
@@ -118,24 +119,24 @@ namespace tvb {
     }
 
     inline
-    bool isfinite(const TArray1d& vector) {
-        for (auto const& v: vector)
+    bool isfinite(const TArray1d &vector) {
+        for (auto const &v: vector)
             if (!std::isfinite(v))
                 return false;
         return true;
     }
 
     inline
-    bool isnan(const TArray2d& matrix) {
-        for (auto const& v: matrix.reshaped())
+    bool isnan(const TArray2d &matrix) {
+        for (auto const &v: matrix.reshaped())
             if (std::isnan(v))
                 return true;
         return false;
     }
 
     inline
-    bool isfinite(const TArray2d& matrix) {
-        for (auto const& v: matrix.reshaped())
+    bool isfinite(const TArray2d &matrix) {
+        for (auto const &v: matrix.reshaped())
             if (!std::isfinite(v))
                 return false;
         return true;
@@ -143,7 +144,7 @@ namespace tvb {
 
 
     inline
-    bool replace_nan(TArray1d& vector, Float value) {
+    bool replace_nan(TArray1d &vector, Float value) {
         for (auto &v: vector)
             if (std::isnan(v))
                 v = value;
@@ -153,7 +154,7 @@ namespace tvb {
     template<typename Numeric>
     std::vector<Numeric> range(Numeric start, Numeric finish, int intervals) {
         Numeric delta = (finish - start) / intervals;
-        std::vector<Numeric> result(intervals+1);
+        std::vector<Numeric> result(intervals + 1);
         Numeric current = start;
         for (int i = 0; i < intervals; ++i) {
             result[i] = current;
@@ -168,13 +169,12 @@ namespace tvb {
 
 
 template<typename ... Args>
-std::string string_format( const std::string& format, Args ... args )
-{
-    size_t size = snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
-    if( size <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
-    std::unique_ptr<char[]> buf( new char[ size ] );
-    snprintf( buf.get(), size, format.c_str(), args ... );
-    return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+std::string string_format(const std::string &format, Args ... args) {
+    size_t size = snprintf(nullptr, 0, format.c_str(), args ...) + 1; // Extra space for '\0'
+    if (size <= 0) { throw std::runtime_error("Error during formatting."); }
+    std::unique_ptr<char[]> buf(new char[size]);
+    snprintf(buf.get(), size, format.c_str(), args ...);
+    return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
 #endif //TVB_CPP_DEFINITIONS_H
