@@ -28,7 +28,8 @@
 #include <tvb-cpp/simulator/integrators/euler_deterministic.h>
 #include <tvb-cpp/tools/observers/sw_fcd.h>
 #include <tvb-cpp/tools/observers/ph_fcd.h>
-#include "tvb-cpp/tools/bold_filters.h"
+#include <tvb-cpp/tools/bold_filters.h>
+#include <tvb-cpp/tools/json.h>
 #include <tvb-cpp/simulator/monitors/bold_tvb.h>
 #include "zerlaut_gaba.h"
 
@@ -49,6 +50,7 @@ using namespace std::filesystem;
 using namespace tvb;
 using namespace std::chrono;
 using namespace std;
+using json = nlohmann::json;
 
 float base_value = 0.3772258064;
 
@@ -171,6 +173,10 @@ struct RunParams {
 //    }
 //}
 
+string getPrefix(const vector<Parameter> &params);
+
+void collect_results(const string &job_id, const path &out_dir, const vector<RunParams> &param_combs);
+
 void save_cvs(tvb::Monitor *monitor, const string &filename) {
     if (monitor == nullptr) return;
 
@@ -226,10 +232,7 @@ load_data(const string &file_weights, const string &file_lengths, const string &
 
 RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
 
-    string f_prefix;
-    for (auto const &p: rp.params) {
-        f_prefix += string_format("_%s_%.2f", p.name.c_str(), p.value);
-    }
+    string f_prefix = getPrefix(rp.params);
 
     path out_dir = rp.path_out;
     out_dir /= rp.experiment_name;
@@ -268,7 +271,7 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
     if (rp.model == "ZerlautGABA") {
         model = new ZerlautGABA(N);
         sigmas = TArray1d::Constant(model->n_vars(), 0.0);
-        sigmas[model->n_vars()-1] = 1.0;
+        sigmas[model->n_vars() - 1] = 1.0;
         model->configure();
         if (gaba_vector.size() > 0)
             model->set_param("gaba_ratio", gaba_vector);
@@ -304,7 +307,7 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
 */
 
 
-    sigmas << 0,0,0,0,0,0,0,1;
+    sigmas << 0, 0, 0, 0, 0, 0, 0, 1;
     auto *integrator = new tvb::EulerStochastic(rp.dt, new Additive(sigmas, rp.dt));
     // auto *integrator = new tvb::EulerDeterministic(rp.dt);
 
@@ -368,7 +371,8 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
     } else {
 
         path npz_file = out_dir;
-        npz_file /= rp.job_id + f_prefix + ".npz";
+        // npz_file /= rp.job_id + f_prefix + ".npz";
+        npz_file /= f_prefix + ".npz";
 
         if (std::filesystem::exists(npz_file) && !rp.force_output) {
             std::cout << string_format("File %s already exists\n", npz_file.c_str()) << std::flush;
@@ -428,17 +432,37 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
 
         TArray2dMap npz_data;
         npz_data["measure"] = measureValues;
-        npz_data["fit"] = {{(double)fitting}};
+        npz_data["fit"] = {{(double) fitting}};
         MatrixdMap2npz(npz_file.c_str(), npz_data);
 
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now() - start);
-        cout << string_format("Computed time series (%d, %d) for <%s> (time: <%d>)\n", bold_signal.rows(), bold_signal.cols(), f_prefix.c_str(), duration.count()) << flush;
+        cout << string_format("Computed time series (%d, %d) for <%s> (time: <%d>)\n", bold_signal.rows(),
+                              bold_signal.cols(), f_prefix.c_str(), duration.count()) << flush;
 
+        auto json_file = out_dir / (rp.job_id + "_" + f_prefix + ".json");
+        ofstream jsonf(json_file);
+        json oj;
+        oj["fit"] = fitting;
+        json pj;
+        for (auto const &p: rp.params) {
+            pj[p.name.c_str()] = p.value;
+        }
+        oj["params"] = pj;
+        jsonf << oj;
+        jsonf.close();
     }
 
     return rp;
+}
+
+string getPrefix(const vector<Parameter> &params) {
+    string f_prefix;
+    for (auto const &p: params) {
+        f_prefix += string_format("%s_%.2f", p.name.c_str(), p.value);
+    }
+    return f_prefix;
 }
 
 TArray2d simulateSingleSubject(const RunParams &params, SW_FC &fc) {
@@ -469,7 +493,8 @@ int main(int argc, char **argv) {
         options_description desc{"Options"};
         desc.add_options()
                 ("help,h", "Help screen")
-                ("param", value<std::vector<std::string>>()->multitoken()->required(), "Parameters to sweep")
+                ("param", value<std::vector<std::string>>()->multitoken(), "Parameters to sweep")
+                ("param-file", value<std::string>(), "File with parameter set to run")
                 ("process-number", value<std::vector<unsigned>>()->multitoken(), "Process number plus total")
                 ("norm", value<std::vector<std::string>>()->multitoken(), "Matrix normalilzation method")
                 ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
@@ -480,7 +505,8 @@ int main(int argc, char **argv) {
                 ("model", value<std::string>()->default_value("ZerlautGABA"), "Model to use in the simulations")
                 ("use-threads", bool_switch()->default_value(false), "Use threads")
                 ("srun", bool_switch()->default_value(false), "Use srun for parallelism")
-                ("force-output", bool_switch()->default_value(false), "Force overwriting of CSV files if they already exists")
+                ("force-output", bool_switch()->default_value(false),
+                 "Force overwriting of CSV files if they already exists")
                 ("time-start", value<float>()->default_value(0.0), "Start of simulation (ms)")
                 ("time-end", value<float>()->default_value(10000.0), "End of simulation (ms)")
                 ("ta-period", value<float>()->default_value(1.0), "Sampling period for TemporalAverage monitor (ms)")
@@ -502,6 +528,9 @@ int main(int argc, char **argv) {
                       .run(), vm);
         notify(vm);
 
+        if (vm.count("param") == 0 && vm.count("param-file") == 0)
+            throw std::runtime_error("No parameters given!");
+
         path out_dir = vm["out-path"].as<string>();
         if (!exists(out_dir))
             throw std::runtime_error(string_format("Output directory does not exists: %s\n", out_dir.c_str()));
@@ -513,12 +542,12 @@ int main(int argc, char **argv) {
             cout << string_format("Output directory created: %s\n", out_dir.c_str());
         }
 
-        std::vector<SweepParam> params;
         if (vm.count("help")) {
             std::cout << desc << '\n';
             return 0;
         }
 
+        std::vector<SweepParam> params;
         if (vm.count("param")) {
             for (auto &s: vm["param"].as<std::vector<std::string>>()) {
                 if (std::isalpha(s[0])) {
@@ -565,7 +594,7 @@ int main(int argc, char **argv) {
         }
 
 
-        std::vector<RunParams> param_combs(1);
+        std::vector<RunParams> param_combs;
         for (auto const &p: params) {
             if (p.values.size() == 1) {
                 for (auto &pc: param_combs)
@@ -579,6 +608,33 @@ int main(int argc, char **argv) {
                     }
                 }
                 param_combs = new_param_combs;
+            }
+        }
+
+        if (vm.count("param-file")) {
+            ifstream pf;
+            pf.open(vm["param-file"].as<string>());
+            if (!pf.is_open())
+                throw std::runtime_error(
+                        string_format("Cannot open parameter file <%s>\n", vm["param-file"].as<string>().c_str()));
+
+            json data = json::parse(pf);
+
+            if (!data.is_array())
+                throw std::runtime_error("Parameter file must be a list");
+
+            for (auto &[key, param_list]: data.items()) {
+                if (!param_list.is_array())
+                    throw std::runtime_error("Each parameter set has to be a list");
+                RunParams rparams;
+                for (auto &[key2, param_value]: param_list.items()) {
+                    if (!param_value.is_array())
+                        throw std::runtime_error("Each parameter has to be a list of len 2 [str, float]");
+                    rparams.params.emplace_back(param_value[0].template get<std::string>(),
+                                                param_value[1].template get<float>());
+                }
+                param_combs.push_back(rparams);
+
             }
         }
 
@@ -602,15 +658,15 @@ int main(int argc, char **argv) {
                 TArray2d processed_emp = processBOLDSignals(transformed_ts, measure);
                 TArray2dMap data;
                 data["swFCD"] = processed_emp;
-                data["nsub"] = {{(double)ts.size()}};
-                data["nsamples"] = {{(double)ts[0].rows()}};
+                data["nsub"] = {{(double) ts.size()}};
+                data["nsamples"] = {{(double) ts[0].rows()}};
                 MatrixdMap2npz(pe_file.c_str(), data);
             }
         }
 
         if (vm["srun"].as<bool>()) {
             cout << "Running jobs using srun/slurm" << endl;
-            std::vector<child*> processes;
+            std::vector<child *> processes;
             auto srun = search_path("srun");
             unsigned n = 1, total = param_combs.size();
             for (auto &pc: param_combs) {
@@ -657,6 +713,8 @@ int main(int argc, char **argv) {
             for (auto c: processes)
                 c->wait();
 
+            collect_results(vm["job-id"].as<string>(), out_dir, param_combs);
+
         } else {
             cout << "Running jobs locally ... ";
             int num_cores = 8;
@@ -671,7 +729,8 @@ int main(int argc, char **argv) {
                 for (auto &pc: param_combs) {
                     pc.init(vm);
                     if (vm.count("process-number") > 0)
-                        run(pc, vm["process-number"].as<vector<unsigned>>()[0], vm["process-number"].as<vector<unsigned>>()[1]);
+                        run(pc, vm["process-number"].as<vector<unsigned>>()[0],
+                            vm["process-number"].as<vector<unsigned>>()[1]);
                     else
                         run(pc, n++, total);
                 }
@@ -692,10 +751,28 @@ int main(int argc, char **argv) {
                 }
 
                 tp.stop();
+
+                collect_results(vm["job-id"].as<string>(), out_dir, param_combs);
+
             }
         }
     }
     catch (const std::runtime_error &ex) {
         std::cerr << ex.what() << '\n';
     }
+}
+
+void collect_results(const string &job_id, const path &out_dir, const vector<RunParams> &param_combs) {
+    auto json_file = out_dir / (job_id + ".json");
+    ofstream jsonf(json_file);
+    json oj;
+    for (auto &pc: param_combs) {
+        string f_prefix = getPrefix(pc.params);
+        ifstream comb_file(out_dir / (pc.job_id + "_" + f_prefix + ".json"));
+        json cjson;
+        comb_file >> cjson;
+        oj[f_prefix] = cjson;
+    }
+    jsonf << oj;
+    jsonf.close();
 }
