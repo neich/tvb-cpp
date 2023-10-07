@@ -594,7 +594,7 @@ int main(int argc, char **argv) {
         }
 
 
-        std::vector<RunParams> param_combs;
+        std::vector<RunParams> param_combs(1);
         for (auto const &p: params) {
             if (p.values.size() == 1) {
                 for (auto &pc: param_combs)
