@@ -768,10 +768,17 @@ void collect_results(const string &job_id, const path &out_dir, const vector<Run
     json oj;
     for (auto &pc: param_combs) {
         string f_prefix = getPrefix(pc.params);
-        ifstream comb_file(out_dir / (pc.job_id + "_" + f_prefix + ".json"));
-        json cjson;
-        comb_file >> cjson;
-        oj[f_prefix] = cjson;
+        try {
+            auto json_file = out_dir / (pc.job_id + "_" + f_prefix + ".json");
+            ifstream comb_file(json_file);
+            json cjson;
+            comb_file >> cjson;
+            oj[f_prefix] = cjson;
+        } catch (const std::exception& e) {
+            std::cout << "Error parsing JSON file: " << json_file << std::endl;
+            std::cout << "Reason: " << e.what() << std::endl;
+            return;
+        }
     }
     jsonf << oj;
     jsonf.close();
