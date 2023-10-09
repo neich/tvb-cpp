@@ -177,6 +177,8 @@ string getPrefix(const vector<Parameter> &params);
 
 void collect_results(const string &job_id, const path &out_dir, const vector<RunParams> &param_combs);
 
+void saveJSON(const RunParams &rp, const string &f_prefix, const path &out_dir, double fitting);
+
 void save_cvs(tvb::Monitor *monitor, const string &filename) {
     if (monitor == nullptr) return;
 
@@ -376,6 +378,8 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
 
         if (std::filesystem::exists(npz_file) && !rp.force_output) {
             std::cout << string_format("File %s already exists\n", npz_file.c_str()) << std::flush;
+            auto data = npz2MatrixdMap(npz_file);
+            saveJSON(rp, f_prefix, out_dir, data["fit"](0,0));
             delete rp.monitor;
             rp.monitor = nullptr;
             delete model;
@@ -441,20 +445,24 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
         cout << string_format("Computed time series (%d, %d) for <%s> (time: <%d>)\n", bold_signal.rows(),
                               bold_signal.cols(), f_prefix.c_str(), duration.count()) << flush;
 
-        auto json_file = out_dir / (rp.job_id + "_" + f_prefix + ".json");
-        ofstream jsonf(json_file);
-        json oj;
-        oj["fit"] = fitting;
-        json pj;
-        for (auto const &p: rp.params) {
-            pj[p.name.c_str()] = p.value;
-        }
-        oj["params"] = pj;
-        jsonf << oj;
-        jsonf.close();
+        saveJSON(rp, f_prefix, out_dir, fitting);
     }
 
     return rp;
+}
+
+void saveJSON(const RunParams &rp, const string &f_prefix, const path &out_dir, double fitting) {
+    auto json_file = out_dir / (rp.job_id + "_" + f_prefix + ".json");
+    ofstream jsonf(json_file, std::ios_base::out | std::ios_base::trunc);
+    json oj;
+    oj["fit"] = fitting;
+    json pj;
+    for (auto const &p: rp.params) {
+        pj[p.name.c_str()] = p.value;
+    }
+    oj["params"] = pj;
+    jsonf << oj;
+    jsonf.close();
 }
 
 string getPrefix(const vector<Parameter> &params) {
@@ -764,7 +772,7 @@ int main(int argc, char **argv) {
 
 void collect_results(const string &job_id, const path &out_dir, const vector<RunParams> &param_combs) {
     auto json_file = out_dir / (job_id + ".json");
-    ofstream jsonf(json_file);
+    ofstream jsonf(json_file, std::ios_base::out | std::ios_base::trunc);
     json oj;
     for (auto &pc: param_combs) {
         string f_prefix = getPrefix(pc.params);
