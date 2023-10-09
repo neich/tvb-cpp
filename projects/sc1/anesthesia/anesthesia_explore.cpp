@@ -468,6 +468,8 @@ void saveJSON(const RunParams &rp, const string &f_prefix, const path &out_dir, 
 string getPrefix(const vector<Parameter> &params) {
     string f_prefix;
     for (auto const &p: params) {
+        if (f_prefix.size() > 0)
+            f_prefix += "_";
         f_prefix += string_format("%s_%.2f", p.name.c_str(), p.value);
     }
     return f_prefix;
@@ -777,8 +779,8 @@ void collect_results(const string &job_id, const path &out_dir, const vector<Run
     for (auto &pc: param_combs) {
         string f_prefix = getPrefix(pc.params);
         try {
-            auto json_file = out_dir / (pc.job_id + "_" + f_prefix + ".json");
-            ifstream comb_file(json_file);
+            auto sim_file = out_dir / (job_id + "_" + f_prefix + ".json");
+            ifstream comb_file(sim_file);
             json cjson;
             comb_file >> cjson;
             oj[f_prefix] = cjson;
