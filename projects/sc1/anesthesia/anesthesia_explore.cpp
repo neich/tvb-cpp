@@ -289,11 +289,11 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
     auto g_it = std::find(rp.params.begin(), rp.params.end(), "G");
     if (g_it != rp.params.end()) {
         G = g_it->value;
-        rp.params.erase(g_it);
+        // rp.params.erase(g_it);
     }
 
     for (auto const &p: rp.params)
-        if (std::isalpha(p.name[0])) model->set_param(p.name, p.value);
+        if (std::isalpha(p.name[0]) && p.name != "G") model->set_param(p.name, p.value);
 
     model->init_dependant();
     // rp.monitor = new tvb::BoldTVB(N, 720.0, rp.dt, {0});
