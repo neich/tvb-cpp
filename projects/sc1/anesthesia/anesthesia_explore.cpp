@@ -679,6 +679,7 @@ int main(int argc, char **argv) {
             std::vector<child *> processes;
             auto srun = search_path("srun");
             unsigned n = 1, total = param_combs.size();
+            unsigned srun_pack_size = 100;
             for (auto &pc: param_combs) {
                 string args = "";
                 args += string_format(" -N 1 -n 1 -c 1 --exclusive --mem-per-cpu=2000MB %s",
@@ -715,9 +716,15 @@ int main(int argc, char **argv) {
 
                 args += string_format(" --process-number %d %d", n++, total);
 
-                cout << string_format("Executing [%s, %s]\n", srun.c_str(), args.c_str());
+                cout << string_format("Executing [%s, %s]\n", srun.c_str(), args.c_str()) << std::endl;
                 auto *c = new child(srun.string() + args);
                 processes.push_back(c);
+                if (processes.size() == srun_pack_size) {
+                    cout << string_format("Waiting for pack of srun processes to finish (%d total sent)\n", n);
+                    for (auto c: processes)
+                        c->wait();
+                    processes.clear();
+                }
             }
 
             for (auto c: processes)
