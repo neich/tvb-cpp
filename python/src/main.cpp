@@ -53,7 +53,7 @@ PYBIND11_MODULE(_core, m) {
     m.def("set_num_threads", &setNumThreads, R"pbdoc(
     )pbdoc");
 
-    m.def("print_model_parameters", static_cast<void (*)()>(&printModelParameters), R"pbdoc(
+    m.def("get_model_parameters", &getModelParameters, R"pbdoc(
     )pbdoc");
 
     m.def("add_raw_monitor", &addRawMonitor, R"pbdoc(
@@ -69,6 +69,9 @@ PYBIND11_MODULE(_core, m) {
     )pbdoc");
 
     m.def("run_sweep", &run_sweep, R"pbdoc(
+    )pbdoc");
+
+    m.def("set_initial_state", &setInitialState, R"pbdoc(
     )pbdoc");
 
 

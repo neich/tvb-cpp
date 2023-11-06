@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15...3.22)
 
-project(tvb_root_cpp_python VERSION "0.0.4")
+project(tvb_root_cpp_python VERSION "0.0.5")
 set(CMAKE_CXX_STANDARD 20)
 
 #if(SKBUILD)
@@ -82,12 +82,10 @@ set(TVB_TOOLS_SOURCES
         ../src/tvb-cpp/tools/scipy/signal/signaltools.cpp
         ../src/tvb-cpp/tools/scipy/linalg.h
         ../src/tvb-cpp/tools/scipy/linalg.cpp
+        ../src/tvb-cpp/tools/scipy/fft.h
+        ../src/tvb-cpp/tools/scipy/fft.cpp
         ../src/tvb-cpp/tools/eigen/eigen.h
         ../src/tvb-cpp/tools/observers/fc.h
-        ../src/tvb-cpp/tools/algo/fic/functions/g_optim.h
-        ../src/tvb-cpp/tools/algo/fic/functions/g_optim.cpp
-        ../src/tvb-cpp/tools/algo/fic/functions/simulate_fcd.h
-        ../src/tvb-cpp/tools/algo/fic/functions/simulate_fcd.cpp
         ../src/tvb-cpp/tools/algo/load_or_compute.h)
 
 

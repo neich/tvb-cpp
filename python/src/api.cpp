@@ -39,6 +39,7 @@ tvb::TArray1d int_sigmas = EMPTY;
 tvb::Float int_dt = 0.1;
 std::vector<tvb::Monitor *> monitors;
 std::string model_name{};
+tvb::State *initial_state = nullptr;
 tvb::Monitor *monitor;
 tvb::Float dt = 0.1;
 int N = 0;
@@ -88,6 +89,10 @@ void setModel(const std::string& name) {
     model_name = name;
 }
 
+void setInitialState(py::EigenDRef<tvb::TArray2d> is) {
+    initial_state = new tvb::State(is);
+}
+
 tvb::Model *genModel(const string &name) {
     assert(("Unknown number of regions, configure weight matrix first", N > 0));
     tvb::Model *model;
@@ -133,8 +138,19 @@ void setNumThreads(int n) {
     num_threads = n;
 }
 
-void printModelParameters() {
-    std::cout << "Parameters:\n";
+std::vector<std::tuple<std::string, tvb::TArray1d>> getModelParameters() {
+    std::vector<std::tuple<std::string, tvb::TArray1d>> params;
+    tvb::Model *model = genModel(model_name);
+    for (auto const &p: params_scalar)
+        model->set_param(std::get<0>(p), std::get<1>(p));
+    for (auto const &p: params_array)
+        model->set_param(std::get<0>(p), std::get<1>(p));
+    model->init_dependant();
+    auto pnames = model->get_param_list();
+    for (std::string &pname : pnames) {
+        params.emplace_back(pname, model->get_param_value(pname));
+    }
+    return params;
 }
 
 void addRawMonitor(tvb::Float period, std::vector<int> voi) {
@@ -152,13 +168,15 @@ void addBOLDMonitor(tvb::Float period, std::vector<int> voi) {
 void simulate(const tvb::Model *model,
               const tvb::Connectivity *con,
               const tvb::Integrator *integrator,
-              const std::vector<tvb::Monitor*> &monitors,
+              const std::vector<tvb::Monitor*> &mntrs,
               tvb::Coupling *coupling,
               tvb::Float t_start,
-              tvb::Float t_end) {
+              tvb::Float t_end,
+              Stimulus *stimulus = nullptr,
+              const State *istate = nullptr) {
 
     tvb::Simulator simulator{};
-    simulator.run(model, con, integrator, monitors, coupling, t_start, t_end, nullptr);
+    simulator.run(model, con, integrator, mntrs, coupling, t_start, t_end, stimulus, istate);
 }
 
 
@@ -190,7 +208,7 @@ run_sim(tvb::Float t_start, tvb::Float t_end) {
     py::print("Starting simulation, t_start = ", t_start, ", t_end = ", t_end);
     auto start = std::chrono::high_resolution_clock::now();
     auto *integrator = genIntegrator(integrator_name);
-    simulate(model, &con, integrator, monitors, coupling, t_start, t_end);
+    simulate(model, &con, integrator, monitors, coupling, t_start, t_end, nullptr, initial_state);
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - start);

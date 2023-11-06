@@ -11,4 +11,5 @@ from ._core import (__doc__, __version__,
                     add_temporal_average_monitor,
                     add_bold_monitor,
                     run_sim, run_sweep,
-                    print_model_parameters)
+                    get_model_parameters,
+                    set_initial_state)
