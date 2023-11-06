@@ -52,7 +52,7 @@ namespace tvb {
                   Coupling *coupling,
                   float start_time, float end_time,
                   Stimulus* stimulus = nullptr,
-                  State *initial_state = nullptr);
+                  const State *initial_state = nullptr);
     };
 }
 

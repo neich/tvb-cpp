@@ -26,7 +26,7 @@ State Simulator::run(const Model *model,
                      Coupling *coupling,
                      float start_time, float end_time,
                      Stimulus* stimulus,
-                     State *initial_state) {
+                     const State *initial_state) {
 
     assert(("Model cannot be null!", model != nullptr));
     assert(("Connectivity cannot be null!", connectivity != nullptr));
