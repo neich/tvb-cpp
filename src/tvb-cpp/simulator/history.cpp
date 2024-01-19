@@ -26,13 +26,13 @@ HistoryDense::QResult HistoryDense::query(int step) const {
     TArray2d current(m_idelays.rows(), m_cvars.size());
 
     int c_idx = (step - 1) % m_ntime;
-    current = m_buffer(c_idx);
+    current = m_buffer[c_idx];
 
 
     for (unsigned inode = 0; inode < m_idelays.cols(); ++inode)
         for (unsigned inode_from = 0; inode_from < m_idelays.rows(); ++inode_from) {
             int idx = (step - 1 - m_idelays(inode_from, inode) + m_ntime) % m_ntime;
-            delayed[inode].col(inode_from) = m_buffer(idx).col(inode_from);
+            delayed[inode].col(inode_from) = m_buffer[idx].col(inode_from);
         }
 
     return History::QResult(current, delayed);
