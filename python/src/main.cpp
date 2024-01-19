@@ -62,7 +62,7 @@ PYBIND11_MODULE(_core, m) {
     m.def("add_temporal_average_monitor", &addTemporalAverageMonitor, R"pbdoc(
     )pbdoc");
 
-    m.def("add_bold_monitor", &addBOLDMonitor, R"pbdoc(
+    m.def("create_bold", &create_bold, R"pbdoc(
     )pbdoc");
 
     m.def("run_sim", &run_sim, R"pbdoc(
@@ -74,7 +74,11 @@ PYBIND11_MODULE(_core, m) {
     m.def("set_initial_state", &setInitialState, R"pbdoc(
     )pbdoc");
 
-
+    py::class_<BOLDModelWrapper>(m, "BOLDModel")
+            .def("compute_bold", &BOLDModelWrapper::compute_bold)
+            .def("set_param", &BOLDModelWrapper::set_param)
+            .def("get_param", &BOLDModelWrapper::get_param)
+            .def("get_param_list", &BOLDModelWrapper::get_param_list);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
