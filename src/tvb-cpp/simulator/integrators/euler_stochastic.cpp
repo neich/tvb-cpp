@@ -22,7 +22,7 @@ State EulerStochastic::scheme(const State &state,
                                  const TArray1d &local_coupling,
                                  const TArray2d &stimulus) const {
     State d_state = dfun(state, coupling, local_coupling);
-    TArray2d noise = m_noise->generate(state.rows(), state.cols()).rowwise() * m_noise->gfun(state).transpose();
+    TArray2d noise = m_noise->generate(state.rows(), state.cols()); //  * m_noise->gfun(state).transpose();
     State state_next = state + this->dt() * (d_state + stimulus) + noise;
 
     return state_next;
