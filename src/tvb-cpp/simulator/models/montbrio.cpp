@@ -29,17 +29,19 @@ State Montbrio::operator()(const State &x,
     const TArray1d &r_i = x.col(1);
     const TArray1d &u_e = x.col(2);
     const TArray1d &u_i = x.col(3);
-    const TArray1d &S_e = x.col(4);
+    const TArray1d &S_ee = x.col(4);
+    const TArray1d &S_ie = x.col(5);
     const TArray1d &c_0 = coupling.col(0);
 
-    TArray1d I_e = I_e_ext + tau_e*S_e - J * J_G * r_i + J_A * c_0;
-    TArray1d I_i = I_i_ext + tau_e*S_e - tau_i*J_G*r_i;
+    TArray1d I_e = I_e_ext + (tau_e * S_ee) - (J * J_G_ei * tau_i * r_i) + (J_A * tau_e * c_0);
+    TArray1d I_i = I_i_ext + (tau_e * S_ie) - (J_G_ii * tau_i * r_i);
 
     derivative.col(0) = (delta_e / ((Float(M_PI)*tau_e)) + Float(2.0) * r_e * u_e - g_e*r_e) / tau_e;
-    derivative.col(1) = (delta_i / (M_PI*tau_i) + Float(2.0) * r_i * u_i- g_i*r_i) / tau_i;
-    derivative.col(2) = (eta_e + u_e.pow(2.0) - (r_e * M_PI * tau_e).pow(2.0) + I_e) / tau_e;
-    derivative.col(3) = (eta_i + u_i.pow(2.0) - (r_i * M_PI * tau_i).pow(2.0) + I_i) / tau_i;
-    derivative.col(4) = (-S_e + J_N*r_e)/tau_N;
+    derivative.col(1) = (delta_i / ((Float(M_PI)*tau_i)) + Float(2.0) * r_i * u_i - g_i*r_i) / tau_i;
+    derivative.col(2) = (eta_e + u_e.pow(2.0) - (r_e * Float(M_PI) * tau_e).pow(2.0) + I_e) / tau_e;
+    derivative.col(3) = (eta_i + u_i.pow(2.0) - (r_i * Float(M_PI) * tau_i).pow(2.0) + I_i) / tau_i;
+    derivative.col(4) = (-S_ee + J_N_ee*r_e)/tau_N;
+    derivative.col(5) = (-S_ie + J_N_ie*r_e)/tau_N;
 
     return derivative;
 
