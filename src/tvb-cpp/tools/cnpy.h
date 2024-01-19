@@ -12,12 +12,15 @@
 #include<cstdio>
 #include<typeinfo>
 #include<iostream>
+#include<fstream>
 #include<cassert>
-#include<zlib.h>
 #include<map>
 #include<memory>
 #include<stdint.h>
 #include<numeric>
+
+#include <zlib.h>
+
 
 namespace cnpy {
 
@@ -65,10 +68,10 @@ namespace cnpy {
     char BigEndianTest();
     char map_type(const std::type_info& t);
     template<typename T> std::vector<char> create_npy_header(const std::vector<size_t>& shape);
-    void parse_npy_header(FILE* fp,size_t& word_size, std::vector<size_t>& shape, bool& fortran_order);
+    void parse_npy_header(std::fstream& fp,size_t& word_size, std::vector<size_t>& shape, bool& fortran_order);
     void parse_npy_header(unsigned char* buffer,size_t& word_size, std::vector<size_t>& shape, bool& fortran_order);
-    void parse_zip_footer(FILE* fp, uint16_t& nrecs, size_t& global_header_size, size_t& global_header_offset);
-    npz_t npz_load(std::string fname);
+    void parse_zip_footer(std::fstream& fp, uint16_t& nrecs, size_t& global_header_size, size_t& global_header_offset);
+    npz_t npz_load(const std::string& fname);
     NpyArray npz_load(const std::string& fname, const std::string& varname);
     NpyArray npy_load(const std::string& fname);
 
@@ -86,16 +89,19 @@ namespace cnpy {
 
 
     template<typename T> void npy_save(const std::string& fname, const T* data, const std::vector<size_t>& shape, const std::string& mode = "w") {
-        FILE* fp = nullptr;
+        std::fstream fp;
         std::vector<size_t> true_data_shape; //if appending, the shape of existing + new data
 
-        if(mode == "a") fp = fopen(fname.c_str(),"r+b");
+        if (mode == "a")
+            fp.open(fname, std::ios_base::binary | std::ios_base::app);
+        else
+            fp.open(fname, std::ios_base::binary);
 
-        if(fp) {
+        if(fp.is_open()) {
             //file exists. we need to append to it. read the header, modify the array size
             size_t word_size;
             bool fortran_order;
-            parse_npy_header(fp,word_size,true_data_shape,fortran_order);
+            parse_npy_header(fp, word_size, true_data_shape, fortran_order);
             assert(!fortran_order);
 
             if(word_size != sizeof(T)) {
@@ -116,18 +122,18 @@ namespace cnpy {
             true_data_shape[0] += shape[0];
         }
         else {
-            fp = fopen(fname.c_str(),"wb");
+            fp.open(fname, std::ios_base::binary);
             true_data_shape = shape;
         }
 
         std::vector<char> header = create_npy_header<T>(true_data_shape);
         size_t nels = std::accumulate(shape.begin(),shape.end(),1,std::multiplies<size_t>());
 
-        fseek(fp,0,SEEK_SET);
-        fwrite(&header[0],sizeof(char),header.size(),fp);
-        fseek(fp,0,SEEK_END);
-        fwrite(data,sizeof(T),nels,fp);
-        fclose(fp);
+        fp.seekp(0,std::ios_base::beg);
+        fp.write(&header[0],header.size());
+        fp.seekp(0, std::ios_base::end);
+        fp.write((char*)data,sizeof(T)*nels);
+        fp.close();
     }
 
     template<typename T> void npz_save(const std::string& zipname, std::string fname, const T* data, const std::vector<size_t>& shape, std::string mode = "w")
@@ -136,30 +142,36 @@ namespace cnpy {
         fname += ".npy";
 
         //now, on with the show
-        FILE* fp = NULL;
+        std::fstream fp;
         uint16_t nrecs = 0;
         size_t global_header_offset = 0;
         std::vector<char> global_header;
 
-        if(mode == "a") fp = fopen(zipname.c_str(),"r+b");
+        if(mode == "a")
+            fp.open(zipname, std::ios_base::binary | std::ios_base::app);
+        else
+            fp.open(zipname, std::ios_base::binary);
 
-        if(fp) {
+
+        if(fp.is_open()) {
             //zip file exists. we need to add a new npy file to it.
             //first read the footer. this gives us the offset and size of the global header
             //then read and store the global header.
             //below, we will write the the new data at the start of the global header then append the global header and footer below it
             size_t global_header_size;
             parse_zip_footer(fp,nrecs,global_header_size,global_header_offset);
-            fseek(fp,global_header_offset,SEEK_SET);
+            fp.seekp(global_header_offset, std::ios_base::beg);
             global_header.resize(global_header_size);
-            size_t res = fread(&global_header[0],sizeof(char),global_header_size,fp);
-            if(res != global_header_size){
+            try {
+                fp.read(&global_header[0], global_header_size);
+            }
+            catch (std::runtime_error& e) {
                 throw std::runtime_error("npz_save: header read error while adding to existing zip");
             }
-            fseek(fp,global_header_offset,SEEK_SET);
+            fp.seekp(global_header_offset, std::ios_base::beg);
         }
         else {
-            fp = fopen(zipname.c_str(),"wb");
+            fp.open(zipname, std::ios_base::binary);
         }
 
         std::vector<char> npy_header = create_npy_header<T>(shape);
@@ -212,21 +224,21 @@ namespace cnpy {
         footer += (uint16_t) 0; //zip file comment length
 
         //write everything
-        fwrite(&local_header[0],sizeof(char),local_header.size(),fp);
-        fwrite(&npy_header[0],sizeof(char),npy_header.size(),fp);
-        fwrite(data,sizeof(T),nels,fp);
-        fwrite(&global_header[0],sizeof(char),global_header.size(),fp);
-        fwrite(&footer[0],sizeof(char),footer.size(),fp);
-        fclose(fp);
+        fp.write(&local_header[0],local_header.size());
+        fp.write(&npy_header[0],npy_header.size());
+        fp.write((char*)data, nels*sizeof(T));
+        fp.write(&global_header[0],global_header.size());
+        fp.write(&footer[0],footer.size());
+        fp.close();
     }
 
-    template<typename T> void npy_save(std::string fname, const std::vector<T> data, std::string mode = "w") {
+    template<typename T> void npy_save(const std::string& fname, const std::vector<T>& data, std::string mode = "w") {
         std::vector<size_t> shape;
         shape.push_back(data.size());
         npy_save(fname, &data[0], shape, mode);
     }
 
-    template<typename T> void npz_save(std::string zipname, std::string fname, const std::vector<T> data, std::string mode = "w") {
+    template<typename T> void npz_save(const std::string& zipname, const std::string& fname, const std::vector<T>& data, std::string mode = "w") {
         std::vector<size_t> shape;
         shape.push_back(data.size());
         npz_save(zipname, fname, &data[0], shape, mode);
