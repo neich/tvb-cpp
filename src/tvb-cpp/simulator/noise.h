@@ -18,6 +18,7 @@
 #include <random>
 
 #include <tvb-cpp/definitions.h>
+#include "tvb-cpp/simulator/noise/thomsonsed/Xoshiro256plus.h"
 
 namespace tvb {
 
@@ -42,6 +43,21 @@ namespace tvb {
         unsigned min() const override { return std::default_random_engine::min(); }
     };
 
+    class Xoshiro256p : public UniformRandomNumberGenerator {
+    public:
+        explicit Xoshiro256p() : m_x256p() {}
+
+        unsigned operator()() override {
+            return m_x256p.next();
+        }
+
+        unsigned max() const override { return std::numeric_limits<unsigned>::max(); }
+
+        unsigned min() const { return std::numeric_limits<unsigned>::min(); }
+
+    private:
+        Xoshiro256plus m_x256p;
+    };
 
     class Noise {
         tvb::Float m_ntau;
@@ -50,20 +66,21 @@ namespace tvb {
         std::normal_distribution<tvb::Float> m_normal_dist;
 
     public:
-        Noise(tvb::Float dt, tvb::Float ntau = 0.0, UniformRandomNumberGenerator *urng = NULL) :
+        Noise(tvb::Float dt, tvb::Float ntau = 0.0, UniformRandomNumberGenerator *urng = nullptr) :
                 m_ntau(ntau),
                 m_normal_dist(0.0, 1.0) {
             m_dt_sqrt = sqrt(dt);
-            if (urng == NULL)
+            if (urng == nullptr)
+                // m_random_stream = new Xoshiro256p();
                 m_random_stream = new SdtUNRG01();
             else
                 m_random_stream = urng;
         }
 
-        tvb::TArray2d generate(int rows, int cols) {
+        virtual tvb::TArray2d generate(int rows, int cols) {
             if (m_ntau > 0.0)
                 // TODO: implement coloured noise
-                throw ("Coloured noise not implemented!");
+                throw std::runtime_error("Coloured noise not implemented!");
             else
                 return this->white(rows, cols);
         }
@@ -91,7 +108,15 @@ namespace tvb {
             return m_sqrt_2nsig;
         }
 
-    };
+        tvb::TArray2d generate(int rows, int cols) override {
+            TArray2d result = TArray2d::Zero(rows, cols);
+            for (int i = 0; i < cols; ++i)
+                if (m_sqrt_2nsig[i] > 0.0)
+                    result.col(i) = Noise::generate(rows, 1);
+            return result.rowwise() * m_sqrt_2nsig.transpose();
+        }
+
+        };
 }
 
 #endif //TVB_CPP_NOISE_H
