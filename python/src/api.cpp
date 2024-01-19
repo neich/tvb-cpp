@@ -17,9 +17,12 @@
 #include <tvb-cpp/simulator/noise.h>
 #include <tvb-cpp/simulator/simulator.h>
 #include <tvb-cpp/tools/threadpool.h>
-#include <tvb-cpp/simulator/monitors/bold_tvb.h>
+#include "tvb-cpp/simulator/bold/bold_BalloonWindkessel.h"
+#include "tvb-cpp/simulator/bold/bold_Stephan2007.h"
+#include "tvb-cpp/simulator/bold/bold_tvb.h"
 
 #ifdef __unix__
+
 # include <unistd.h>
 
 #elif defined _WIN32
@@ -52,6 +55,44 @@ struct ParamSweep {
     int n;
 };
 
+PyArray tarray2py(const tvb::TArray2d &data) {
+    size_t cols = data.cols();
+    size_t rows = data.rows();
+
+    size_t elsize = sizeof(tvb::Float);
+    size_t size = cols * rows;
+    size_t shape[2]{rows, cols};
+    size_t strides[2]{cols * elsize, elsize};
+    auto a = py::array_t<tvb::Float>(shape, strides);
+    auto view = a.mutable_unchecked<2>();
+
+    for (int r = 0 ; r < rows; ++r)
+        for (int c = 0; c < cols; ++c)
+            view(r, c) = data(r, c);
+
+    return a;
+}
+
+PyArray tarray2py(const tvb::TArray1d &data) {
+
+    size_t elsize = sizeof(tvb::Float);
+    size_t size = data.size();
+    size_t shape[1]{size};
+    size_t strides[1]{elsize};
+    auto a = py::array_t<tvb::Float>(shape, strides);
+    auto view = a.mutable_unchecked<1>();
+
+    for (int r = 0 ; r < size; ++r)
+        view(r) = data[r];
+
+    return a;
+}
+
+PyTupleArray BOLDModelWrapper::compute_bold(const tvb::TArray2d &ts, tvb::Float ts_dt) const {
+    auto [time, data] = m_bm->compute_bold(ts, ts_dt);
+    py::print(string_format("Time samples (%i, %i), data (%i, %i)", time.rows(), time.cols(), data.rows(), data.cols()));
+    return {tarray2py(time), tarray2py(data)};
+}
 
 void checkState();
 
@@ -79,13 +120,13 @@ void setLengths(py::EigenDRef<tvb::TArray2d> vref, tvb::Float s) {
     speed = s;
 }
 
-void setIntegrator(const string& name, tvb::Float d, py::EigenDRef<tvb::TArray1d> sgms = EMPTY) {
+void setIntegrator(const string &name, tvb::Float d, py::EigenDRef<tvb::TArray1d> sgms = EMPTY) {
     integrator_name = name;
     int_sigmas = sgms;
     int_dt = d;
 }
 
-void setModel(const std::string& name) {
+void setModel(const std::string &name) {
     model_name = name;
 }
 
@@ -110,6 +151,7 @@ tvb::Model *genModel(const string &name) {
 
     return model;
 }
+
 tvb::Integrator *genIntegrator(const string &name) {
     tvb::Integrator *integrator_ret;
     if (name == "EulerDeterministic")
@@ -121,15 +163,15 @@ tvb::Integrator *genIntegrator(const string &name) {
     return integrator_ret;
 }
 
-void setModelParameter(const std::string& name, tvb::Float value) {
+void setModelParameter(const std::string &name, tvb::Float value) {
     params_scalar.emplace_back(name, value);
 }
 
-void setModelParameter(const std::string& name, const py::EigenDRef<tvb::TArray1d>& value) {
+void setModelParameter(const std::string &name, const py::EigenDRef<tvb::TArray1d> &value) {
     params_array.emplace_back(name, value);
 }
 
-void setModelParameterSweep(const std::string& name, tvb::Float v_start, tvb::Float v_end, int n) {
+void setModelParameterSweep(const std::string &name, tvb::Float v_start, tvb::Float v_end, int n) {
     params_sweep[name] = ParamSweep(v_start, v_end, n);
 }
 
@@ -147,7 +189,7 @@ std::vector<std::tuple<std::string, tvb::TArray1d>> getModelParameters() {
         model->set_param(std::get<0>(p), std::get<1>(p));
     model->init_dependant();
     auto pnames = model->get_param_list();
-    for (std::string &pname : pnames) {
+    for (std::string &pname: pnames) {
         params.emplace_back(pname, model->get_param_value(pname));
     }
     return params;
@@ -161,14 +203,21 @@ void addTemporalAverageMonitor(tvb::Float period, std::vector<int> voi) {
     monitors.push_back(new tvb::TemporalAverage(weights.cols(), period, dt, voi));
 }
 
-void addBOLDMonitor(tvb::Float period, std::vector<int> voi) {
-    monitors.push_back(new tvb::BoldTVB(weights.cols(), period, dt, voi));
+BOLDModelWrapper create_bold(const std::string &type, tvb::Float tr) {
+    if (type == "Stephan2007")
+        return new tvb::BoldStephan2007(tr);
+    else if (type == "Stephan2007b")
+        return new tvb::BoldStephan2007b(tr);
+    else if (type == "TVB")
+        return new tvb::BoldTVB(tr);
+    else throw runtime_error(string_format("BOLD model with name <%s> does not exist", type.c_str()));
+
 }
 
 void simulate(const tvb::Model *model,
               const tvb::Connectivity *con,
               const tvb::Integrator *integrator,
-              const std::vector<tvb::Monitor*> &mntrs,
+              const std::vector<tvb::Monitor *> &mntrs,
               tvb::Coupling *coupling,
               tvb::Float t_start,
               tvb::Float t_end,
@@ -216,6 +265,8 @@ run_sim(tvb::Float t_start, tvb::Float t_end) {
 
     SimResult result = genSimResultFromMonitors(monitors);
 
+    delete model;
+    delete integrator;
     return result;
 }
 
@@ -240,7 +291,7 @@ SimResult genSimResultFromMonitors(const std::vector<tvb::Monitor *> &mntrs) {
         for (int rec = 0; rec < n_records; ++rec) {
             data_time[rec] = m->getRecords()[rec].time;
             const tvb::TArray2d &record = m->getRecords()[rec].record;
-            memcpy(&data_monitor[rec * rec_size], record.data(), rec_size * sizef);
+            memcpy(&data_monitor[rec * rec_size], record.transpose().data(), rec_size * sizef);
         }
 
         py::capsule free_when_done_monitor(data_monitor, [](void *f) {
@@ -254,15 +305,14 @@ SimResult genSimResultFromMonitors(const std::vector<tvb::Monitor *> &mntrs) {
         });
 
         result.emplace_back(pybind11::array_t<tvb::Float>(
-                                    {n_records}, // shape
-                                    {sizef}, // C-style contiguous strides for double
-                                    data_time, // the data_monitor pointer
+                                    {n_records},
+                                    {sizef},
+                                    data_time,
                                     free_when_done_time),
                             pybind11::array_t<tvb::Float>(
-                                    {n_records, n_voi, n_regions}, // shape
-                                    {n_regions * n_voi * sizef, n_regions * sizef,
-                                     sizef}, // C-style contiguous strides for double
-                                    data_monitor, // the data_monitor pointer
+                                    {n_records, n_regions, n_voi},
+                                    {n_regions * n_voi * sizef, n_voi * sizef, sizef},
+                                    data_monitor,
                                     free_when_done_monitor));
     }
     return result;
