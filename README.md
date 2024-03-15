@@ -18,7 +18,20 @@ So far, it has been tested with:
 
 ### Installation:
 
+First build the library.
+
 ```shell
+$ cd src
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+```
+
+Then proceed with the examples.
+
+```shell
+$ cd examples
 $ mkdir build
 $ cd build
 $ cmake ..
