@@ -16,7 +16,11 @@ So far, it has been tested with:
 * gcc 9.3 on Ubuntu 20.04
 * Intel DPC++ 2021.2.0 on Windows 10
 
-### Installation:
+### Installation on Ubuntu Linux:
+
+The dependencies can be found in the following system packages:
+
+```libboost-all libeigen3-dev```
 
 First build the library.
 
@@ -28,7 +32,7 @@ $ cmake ..
 $ make
 ```
 
-Then proceed with the examples.
+Then proceed with the examples. Make sure, that the `CPATH` environment variable points to directories with `Python.h` and `numpy` headers (e.g. `env/lib/python3.10/site-packages/numpy/core/include`).
 
 ```shell
 $ cd examples
