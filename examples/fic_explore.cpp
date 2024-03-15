@@ -42,6 +42,7 @@
 
 using namespace boost::program_options;
 using namespace std::filesystem;
+using std::string;
 using namespace tvb;
 using namespace std::chrono;
 namespace plt = matplotlibcpp;
@@ -223,7 +224,7 @@ RunParams run(RunParams rp) {
     if (found) {
 
         TArray1d2npz(J_i, f_prefix + ".npz", "J_i");
-        TArray1d2npz(TArray1d::Constant(1, 1, model->get_param("G")[0]), f_prefix + ".npz", "G");
+        TArray1d2npz(TArray1d::Constant(1, 1, model->get_param_value("G")[0]), f_prefix + ".npz", "G");
         TArray1d2npz(sigmas, f_prefix + ".npz", "s");
 
         model->set_param("J_i", J_i);
@@ -336,8 +337,8 @@ void run_seq(RunParams rp) {
         b = b_best;
         last_Ji = J_i;
         TArray1d2npz(J_i, f_prefix + ".npz", "J_i");
-        TArray1d2npz(TArray1d::Constant(1, 1, model->get_param("G")[0]), f_prefix + ".npz", "G");
-        TArray1d2npz(TArray1d::Constant(1, 1, model->get_param("G")[0]), f_prefix + ".npz", "G");
+        TArray1d2npz(TArray1d::Constant(1, 1, model->get_param_value("G")[0]), f_prefix + ".npz", "G");
+        TArray1d2npz(TArray1d::Constant(1, 1, model->get_param_value("G")[0]), f_prefix + ".npz", "G");
         TArray1d ab(2);
         ab << a, b;
         TArray1d2npz(ab, f_prefix + ".npz", "ab");
