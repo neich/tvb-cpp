@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.18)
-cd
 project("tvbcpp")
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)

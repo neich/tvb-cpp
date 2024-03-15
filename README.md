@@ -16,3 +16,11 @@ So far, it has been tested with:
 * gcc 9.3 on Ubuntu 20.04
 * Intel DPC++ 2021.2.0 on Windows 10
 
+### Installation:
+
+```shell
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+```
