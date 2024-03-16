@@ -20,7 +20,7 @@ So far, it has been tested with:
 
 The dependencies can be found in the following system packages:
 
-```libboost-all libeigen3-dev```
+```libboost-all-dev libeigen3-dev```
 
 First build the library.
 
