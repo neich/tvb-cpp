@@ -112,11 +112,12 @@ void cnpy::parse_npy_header(std::fstream& fp, size_t& word_size, std::vector<siz
     fp.read(buffer, 11);
     if (!fp.good()) throw std::runtime_error("parse_npy_header: failed fread");
 
-    fp.read(buffer, 256);
-    if (!fp.good()) throw std::runtime_error("parse_npy_header: failed fread");
+    fp.getline(buffer, 256);
+
+    if (fp.fail())
+        throw std::runtime_error("parse_npy_header: failed to read ny header");
 
     std::string header(buffer);
-    // assert(header[header.size()-1] == '\n');
 
     size_t loc1, loc2;
 
@@ -164,13 +165,10 @@ void cnpy::parse_npy_header(std::fstream& fp, size_t& word_size, std::vector<siz
 void cnpy::parse_zip_footer(std::fstream& fp, uint16_t& nrecs, size_t& global_header_size, size_t& global_header_offset)
 {
     std::vector<char> footer(22);
-    fp.seekg(-22,std::ios_base::end);
-    try {
-        fp.read(&footer[0], 22);
-    }
-    catch (std::runtime_error& e) {
+    fp.seekg(-22, std::ios::end);
+    fp.read(&footer[0], 22);
+    if (!fp)
         throw std::runtime_error("parse_zip_footer: failed fread");
-    }
 
     uint16_t disk_no, disk_start, nrecs_on_disk, comment_len;
     disk_no = *(uint16_t*) &footer[4];
@@ -194,12 +192,10 @@ cnpy::NpyArray load_the_npy_file(std::fstream& fp) {
     cnpy::parse_npy_header(fp,word_size,shape,fortran_order);
 
     cnpy::NpyArray arr(shape, word_size, fortran_order);
-    try {
-        fp.read(arr.data<char>(), arr.num_bytes());
-    }
-    catch (std::runtime_error& e) {
+    fp.read(arr.data<char>(), arr.num_bytes());
+    if (!fp)
         throw std::runtime_error("load_the_npy_file: failed fread");
-    }
+
     return arr;
 }
 
@@ -247,7 +243,7 @@ cnpy::NpyArray load_the_npz_array(std::fstream& fp, uint32_t compr_bytes, uint32
 
 
 cnpy::npz_t cnpy::npz_load(const std::string& fname) {
-    std::fstream fp(fname, std::fstream::binary);
+    std::fstream fp(fname, std::ios::binary | std::ios::in);
 
     if(fp.bad()) {
         throw std::runtime_error("npz_load: Error! Unable to open file "+fname+"!");
@@ -257,12 +253,9 @@ cnpy::npz_t cnpy::npz_load(const std::string& fname) {
 
     while(1) {
         std::vector<char> local_header(30);
-        try {
-            fp.read(&local_header[0], 30);
-        }
-        catch (std::runtime_error& e) {
+        fp.read(&local_header[0], 30);
+        if (fp.fail())
             throw std::runtime_error("npz_load: error reading  header");
-        }
 
         //if we've reached the global header, stop reading
         if(local_header[2] != 0x03 || local_header[3] != 0x04) break;
@@ -270,12 +263,9 @@ cnpy::npz_t cnpy::npz_load(const std::string& fname) {
         //read in the variable name
         uint16_t name_len = *(uint16_t*) &local_header[26];
         std::string varname(name_len,' ');
-        try {
-            fp.read(&varname[0], name_len);
-        }
-        catch (std::runtime_error& e) {
+        fp.read(&varname[0], name_len);
+        if (!fp)
             throw std::runtime_error("npz_load: error reading variable name");
-        }
 
         //erase the lagging .npy
         varname.erase(varname.end()-4,varname.end());
@@ -284,12 +274,9 @@ cnpy::npz_t cnpy::npz_load(const std::string& fname) {
         uint16_t extra_field_len = *(uint16_t*) &local_header[28];
         if(extra_field_len > 0) {
             std::vector<char> buff(extra_field_len);
-            try {
-                fp.read(&buff[0], extra_field_len);
-            }
-            catch (std::runtime_error& e) {
+            fp.read(&buff[0], extra_field_len);
+            if (!fp)
                 throw std::runtime_error("npz_load: error reading extra field");
-            }
         }
 
         uint16_t compr_method = *reinterpret_cast<uint16_t*>(&local_header[0]+8);
@@ -305,19 +292,16 @@ cnpy::npz_t cnpy::npz_load(const std::string& fname) {
 }
 
 cnpy::NpyArray cnpy::npz_load(const std::string& fname, const std::string& varname) {
-    std::fstream fp(fname, std::fstream::binary);
+    std::fstream fp(fname, std::ios::binary | std::ios::in);
 
     if(fp.bad())
         throw std::runtime_error("npz_load: Unable to open file "+fname);
 
     while(true) {
         std::vector<char> local_header(30);
-        try {
-            fp.read(&local_header[0], 30);
-        }
-        catch (std::runtime_error& e) {
+        fp.read(&local_header[0], 30);
+        if (!fp)
             throw std::runtime_error("npz_load: error reading  header");
-        }
 
         //if we've reached the global header, stop reading
         if(local_header[2] != 0x03 || local_header[3] != 0x04) break;
@@ -325,12 +309,9 @@ cnpy::NpyArray cnpy::npz_load(const std::string& fname, const std::string& varna
         //read in the variable name
         uint16_t name_len = *(uint16_t*) &local_header[26];
         std::string vname(name_len,' ');
-        try {
-            fp.read(&vname[0], name_len);
-        }
-        catch (std::runtime_error& e) {
+        fp.read(&vname[0], name_len);
+        if (!fp)
             throw std::runtime_error("npz_load: error reading variable name");
-        }
         vname.erase(vname.end()-4,vname.end()); //erase the lagging .npy
 
         //read in the extra field

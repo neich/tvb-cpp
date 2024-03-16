@@ -148,40 +148,29 @@ namespace cnpy {
         std::vector<char> global_header;
 
         if(mode == "a")
-            fp.open(zipname, std::ios_base::binary | std::ios_base::app);
-        else
-            fp.open(zipname, std::ios_base::binary);
-
+            fp.open(zipname, std::ios::binary | std::ios::in | std::ios::out);
 
         if(fp.is_open()) {
-            //zip file exists. we need to add a new npy file to it.
-            //first read the footer. this gives us the offset and size of the global header
-            //then read and store the global header.
-            //below, we will write the the new data at the start of the global header then append the global header and footer below it
             size_t global_header_size;
-            parse_zip_footer(fp,nrecs,global_header_size,global_header_offset);
+            parse_zip_footer(fp, nrecs, global_header_size, global_header_offset);
             fp.seekp(global_header_offset, std::ios_base::beg);
             global_header.resize(global_header_size);
-            try {
-                fp.read(&global_header[0], global_header_size);
-            }
-            catch (std::runtime_error& e) {
+            fp.read(&global_header[0], global_header_size);
+            if (!fp)
                 throw std::runtime_error("npz_save: header read error while adding to existing zip");
-            }
             fp.seekp(global_header_offset, std::ios_base::beg);
         }
-        else {
-            fp.open(zipname, std::ios_base::binary);
-        }
+        else
+            fp.open(zipname, std::ios_base::binary | std::ios_base::out);
 
         std::vector<char> npy_header = create_npy_header<T>(shape);
 
-        size_t nels = std::accumulate(shape.begin(),shape.end(),1,std::multiplies<size_t>());
+        size_t nels = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<size_t>());
         size_t nbytes = nels*sizeof(T) + npy_header.size();
 
         //get the CRC of the data to be added
-        uint32_t crc = crc32(0L,(uint8_t*)&npy_header[0],npy_header.size());
-        crc = crc32(crc,(uint8_t*)data,nels*sizeof(T));
+        uint32_t crc = crc32(0L, (uint8_t*)&npy_header[0], npy_header.size());
+        crc = crc32(crc, (uint8_t*)data,nels*sizeof(T));
 
         //build the local header
         std::vector<char> local_header;
@@ -224,11 +213,11 @@ namespace cnpy {
         footer += (uint16_t) 0; //zip file comment length
 
         //write everything
-        fp.write(&local_header[0],local_header.size());
-        fp.write(&npy_header[0],npy_header.size());
+        fp.write(&local_header[0], local_header.size());
+        fp.write(&npy_header[0], npy_header.size());
         fp.write((char*)data, nels*sizeof(T));
-        fp.write(&global_header[0],global_header.size());
-        fp.write(&footer[0],footer.size());
+        fp.write(&global_header[0], global_header.size());
+        fp.write(&footer[0], footer.size());
         fp.close();
     }
 
