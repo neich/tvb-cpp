@@ -25,8 +25,9 @@
 #include <tvb-cpp/simulator/integrators/euler_deterministic.h>
 #include <tvb-cpp/simulator/models/zerlaut.h>
 #include <tvb-cpp/simulator/simulator.h>
-#include <tvb-cpp/simulator/monitors/bold_tvb.h>
-#include <tvb-cpp/simulator/monitors/bold_BalloonWindkessel.h>
+#include <tvb-cpp/simulator/bold/bold_tvb.h>
+#include "tvb-cpp/simulator/bold/bold_BalloonWindkessel.h"
+#include "tvb-cpp/simulator/bold/bold_Stephan2007.h"
 
 #include <chrono>
 #include <boost/program_options.hpp>
@@ -39,6 +40,25 @@ using namespace std::chrono;
 using namespace boost::program_options;
 
 int main(int argc, char ** argv) {
+
+
+/*
+    auto *b = new BoldTVB(2000.0);
+    int t_length = 1000000;
+    int n_rois = 76;
+    tvb::TArray2d tmp = tvb::TArray2d::Zero(t_length, n_rois);
+    int val = 0;
+    for (int t = 0; t < t_length; ++t)
+        for (int n = 0; n < n_rois; ++n) {
+            tmp(t, n) = val % 13;
+            val++;
+        }
+
+    tmp = tvb::npy2Matrixd("test_CNT.npy");
+    auto [t_tmp, data_tmp] = b->compute_bold(tmp, 1);
+
+    tvb::Matrixd2np(data_tmp, "tmp_bold_tvb_cpp.npy");
+*/
 
     std::vector<std::pair<std::string, Float>> params;
     variables_map vm;
@@ -116,7 +136,7 @@ int main(int argc, char ** argv) {
 
     int N = C.rows();
 
-    // C = C / C.rowwise().sum().maxCoeff() * 2.0;
+    C = C / C.maxCoeff() * 0.2;
     // tvb::csv_save("sc_d_norm.csv", C);
 
     tvb::TArray2d tl;
@@ -129,58 +149,84 @@ int main(int argc, char ** argv) {
     milliseconds total_time(0);
     std::cout << string_format("Starting computation for: %s", filename.c_str()) << std::endl;
 
-    //auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, rp.dt);
-    // auto *model = new tvb::ReducedWongWangExcInh(N);
-    auto *model = new tvb::ZerlautAdaptationSecondOrder(N);
+    //auto *model = new tvb::Montbrio(N);
+    // tvb::TArray1d sigmas(6);
+    // sigmas << 0,0,0,0,1e-3,1e-3;
+
+    auto *model = new tvb::ReducedWongWangExcInh(N);
+    tvb::TArray1d sigmas(2);
+    sigmas << 1e-5,1e-5;
+    // auto *model = new tvb::ZerlautAdaptationSecondOrder(N);
+    // tvb::TArray1d sigmas(8);
+    // sigmas << 0,0,0,0,0,0,0,1e-5;
+    Float G = 1.0;
+    auto g_it = std::find_if(params.begin(), params.end(), [](const std::pair<std::string, Float>&p) { return p.first == "G"; });
+    if (g_it != params.end()) {
+        G = g_it->second;
+    }
+
     for (auto const &p: params)
-        model->set_param(p.first, p.second);
+        if (std::isalpha(p.first[0]) && p.first != "G") model->set_param(p.first, p.second);
 
     if (vm.count("params-file") > 0) {
         TArray2dMap pmap = npz2MatrixdMap(vm["params-file"].as<std::string>());
         if (pmap.contains("G"))
-            model->set_param("G", pmap["G"](0, 0));
+            G = pmap["G"](0, 0);
         if (pmap.contains("J_i"))
             model->set_param("J_i", pmap["J_i"].col(0));
     }
 
+    model->init_dependant();
+
     float dt = vm["dt"].as<float>();
 
-    // auto *model = new tvb:std:ZerlautAdaptationFirstOrder(N);
-    // tvb::TArray1d sigmas(4);
-    // sigmas << 3e-5, 3e-5, 0.0, 0.0;
-    // auto *integrator = new tvb::EulerStochastic(new Additive(sigmas, 0.1));
-    auto *integrator = new tvb::EulerDeterministic(dt);
+    auto *integrator = new tvb::EulerStochastic(dt, new Additive(sigmas, dt));
+    // auto *integrator = new tvb::EulerDeterministic(dt);
     auto *coupling = new tvb::CouplingLinearSparse(con.weights(), con.delays(), model->cvars());
+    coupling->setScale(G);
+    int voi = 0;
 
     auto start = std::chrono::high_resolution_clock::now();
-    SimConfig sim_config;
 
-    sim_config.setModel(model);
-    sim_config.setConnectivity(&con);
-    sim_config.setIntegrator(integrator);
-    sim_config.setCoupling(coupling);
-    sim_config.setIntegrationInterval(vm["time-start"].as<float>(), vm["time-end"].as<float>());
-    sim_config.setNumIterations(1);
-    sim_config.setDeltaIntegration(0.00001);
+    Simulator simulator{};
+    TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
+    auto *monitor = new TemporalAverage(con.weights().cols(), 1.0 , dt, {0});
 
-    auto [converged, monitor] = tvb::simulate(sim_config, 1.0, 3);
+    simulator.run(model,
+                  &con,
+                  integrator,
+                  {monitor},
+                  coupling,
+                  0, 300000,
+                  nullptr,
+                  &initial_state);
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now() - start);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
     std::cout << string_format("Simulation time (%s): %d msecs", filename.c_str(), duration.count()) << std::endl;
 
+    TArray2d voi_0 = monitor->voi2Array(voi);
     size_t n_records = monitor->getRecords().size();
-    std::vector<std::vector<Float>> y_plot(N, std::vector<Float>(n_records));
-    for (unsigned t = 0; t < n_records; ++t)
-        for (unsigned n = 0; n < N; ++n)
-            y_plot[n][t] = monitor->getRecords()[t].record(n, 0);
 
-    // tvb::csv_save("./paper_RWW_BOLD_TVBCPP.csv", y_plot);
+    tvb::TArray2dMap map_raw;
+    // n_records = 10;
+    // N = 5;
+    map_raw["t_samples"] = tvb::nrange(0.0, 1.0, n_records);
+    map_raw["data"] = voi_0;
+    // map_raw["data"] = TArray2d::Random(n_records, N);
+    tvb::MatrixdMap2npz("paper_RWW_TVBCPP.npz", map_raw);
+
+    auto map = tvb::npz2MatrixdMap("paper_RWW_TVBCPP.npz");
+
+    auto *bold_model_tvb = new BoldTVB(2000.0);
+    tvb::TArray2dMap map_bold_tvb;
+    auto [t_samples_bold_tvb, data_tvb] = bold_model_tvb->compute_bold(voi_0, 1.0);
+    map_bold_tvb["t_samples"] = t_samples_bold_tvb;
+    map_bold_tvb["data"] = data_tvb;
+    tvb::MatrixdMap2npz("paper_RWW_BOLD_TVBCPP.npz", map_bold_tvb);
+
+    return 0;
 
     // Plot line from given x and y data. Color is selected automatically.
-    std::vector<Float> ls(n_records);
-    std::transform(monitor->getRecords().begin(), monitor->getRecords().end(), ls.begin(),
-                   [](const Monitor::Record &r) { return r.time/1000; });
 }

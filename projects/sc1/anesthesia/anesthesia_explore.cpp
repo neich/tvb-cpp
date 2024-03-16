@@ -30,7 +30,7 @@
 #include <tvb-cpp/tools/observers/ph_fcd.h>
 #include <tvb-cpp/tools/bold_filters.h>
 #include <tvb-cpp/tools/json.h>
-#include <tvb-cpp/simulator/monitors/bold_tvb.h>
+#include <tvb-cpp/simulator/bold/bold_tvb.h>
 #include "zerlaut_gaba.h"
 
 #include <chrono>
@@ -94,6 +94,8 @@ struct RunParams {
     float G = 1.0;
     float tr;
     float ta_period = 1.0;
+
+    string error;
 
     RunParams() = default;
 
@@ -222,6 +224,8 @@ load_data(const string &file_weights, const string &file_lengths, const string &
     if (file_gaba.size() == 0)
         gaba_vector = TArray1d::Ones(C.cols());
     else {
+        if (!std::filesystem::exists(file_gaba))
+            throw std::runtime_error(string_format("File does not exists %s", file_gaba.c_str()));
         if (file_gaba.ends_with(".csv"))
             gaba_vector = tvb::csv_load(file_weights);
         else if (file_gaba.ends_with(".npy")) {
@@ -233,6 +237,7 @@ load_data(const string &file_weights, const string &file_lengths, const string &
 
 
 RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
+
 
     string f_prefix = getPrefix(rp.params);
 
@@ -283,6 +288,9 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
         model = new Montbrio(N);
         sigmas = TArray1d::Constant(model->n_vars(), 0.0);
         model->configure();
+    }
+    else {
+        throw std::runtime_error(string_format("Unknown model <%s>\n", rp.model.c_str()));
     }
 
     float G = 1.0;
@@ -363,10 +371,10 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
 
         // save_fig(monitor, f_prefix);
         TArray2d data = monitor->voi2Array(rp.voi);
-        Matrixd2np(data.transpose(), npy_file);
+        Matrixd2np(data, npy_file.string());
 
         delete monitor;
-        rp.file_out = npy_file;
+        rp.file_out = npy_file.string();
 
         delete model;
         delete coupling;
@@ -378,7 +386,7 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
 
         if (std::filesystem::exists(npz_file) && !rp.force_output) {
             std::cout << string_format("File %s already exists\n", npz_file.c_str()) << std::flush;
-            auto data = npz2MatrixdMap(npz_file);
+            auto data = npz2MatrixdMap(npz_file.string());
             saveJSON(rp, f_prefix, out_dir, data["fit"](0,0));
             delete rp.monitor;
             rp.monitor = nullptr;
@@ -391,7 +399,7 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
         if (!exists(pe_file))
             throw std::runtime_error(string_format("Preprocessed file does not exists %s\n", pe_file.c_str()));
 
-        TArray2dMap data = npz2MatrixdMap(pe_file.c_str());
+        TArray2dMap data = npz2MatrixdMap(pe_file.string());
         TArray2d processed_emp = data["swFCD"];
 
         BandPassFilter bpf(0.008, 0.08, 2.5);
@@ -412,20 +420,22 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
         sim_config.setDeltaIntegration(0.00001);
 
         Simulator simulator{};
-        BoldTVB *btvb = new BoldTVB(con->weights().cols(), rp.tr, 0.1, {rp.voi});
+        TemporalAverage* ta_mon = new TemporalAverage(N, 1, rp.dt, {rp.voi});
         TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
 
         simulator.run(sim_config.model(),
                       sim_config.connectivity(),
                       sim_config.integrator(),
-                      {btvb},
+                      {ta_mon},
                       sim_config.coupling(),
                       0, rp.t_end,
                       nullptr,
                       &initial_state);
 
 
-        TArray2d bold_signal = btvb->voi2Array(rp.voi);
+        TArray2d raw_signal = ta_mon->voi2Array(rp.voi);
+        BoldTVB *btvb = new BoldTVB(rp.tr);
+        auto [bold_times, bold_signal] = btvb->compute_bold(raw_signal, 1.0);
         TArray2d proc_signal = measure.from_fMRI(bold_signal);
         measure.accumulate(proc_signal);
 
@@ -437,7 +447,7 @@ RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
         TArray2dMap npz_data;
         npz_data["measure"] = measureValues;
         npz_data["fit"] = {{(double) fitting}};
-        MatrixdMap2npz(npz_file.c_str(), npz_data);
+        MatrixdMap2npz(npz_file.string(), npz_data);
 
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -476,6 +486,7 @@ string getPrefix(const vector<Parameter> &params) {
 }
 
 TArray2d simulateSingleSubject(const RunParams &params, SW_FC &fc) {
+    return TArray2d{};
 }
 
 
@@ -670,7 +681,7 @@ int main(int argc, char **argv) {
                 data["swFCD"] = processed_emp;
                 data["nsub"] = {{(double) ts.size()}};
                 data["nsamples"] = {{(double) ts[0].rows()}};
-                MatrixdMap2npz(pe_file.c_str(), data);
+                MatrixdMap2npz(pe_file.string(), data);
             }
         }
 
@@ -730,6 +741,7 @@ int main(int argc, char **argv) {
             for (auto c: processes)
                 c->wait();
 
+            cout << string_format("Collecting results for %d simulations\n", param_combs.size());
             collect_results(vm["job-id"].as<string>(), out_dir, param_combs);
 
         } else {
@@ -758,13 +770,30 @@ int main(int argc, char **argv) {
                 unsigned n = 1, total = param_combs.size();
                 for (auto &pc: param_combs) {
                     pc.init(vm);
-                    tp.queue_job([pc, n, total] { return run(pc, n, total); });
+                    tp.queue_job([pc, n, total] 
+                        { 
+                            try {
+                                return run(pc, n, total);
+                            }
+                            catch (std::runtime_error& e) {
+                                RunParams rp;
+                                rp.error = e.what();
+                                return rp;
+                            }
+                        });
                     n++;
                 }
 
                 while (!tp.finished()) {
                     std::optional<RunParams> op = tp.get_result();
+                    if (op.has_value())
+                        if (!op.value().error.empty())
+                            cout << string_format("Error running thread: %s\n", op.value().error.c_str());
+#ifdef _WIN32
+                    Sleep(1);
+#else
                     sleep(1);
+#endif
                 }
 
                 tp.stop();

@@ -27,11 +27,9 @@
 #include <tvb-cpp/simulator/integrators/euler_deterministic.h>
 #include <tvb-cpp/simulator/models/zerlaut.h>
 #include <tvb-cpp/simulator/simulator.h>
-#include <tvb-cpp/simulator/monitors/bold_tvb.h>
-#include <tvb-cpp/simulator/monitors/bold_BalloonWindkessel.h>
+#include <tvb-cpp/simulator/bold/bold_tvb.h>
+#include <tvb-cpp/simulator/bold/bold_BalloonWindkessel.h>
 #include <tvb-cpp/tools/algo/fic/functions/balance_fic.h>
-
-#include <tvb-cpp/matplotlibcpp.h>
 
 #include <filesystem>
 #include <thread>
@@ -45,21 +43,20 @@ using namespace std::filesystem;
 using std::string;
 using namespace tvb;
 using namespace std::chrono;
-namespace plt = matplotlibcpp;
 
 float base_value = 0.3772258064;
 std::mutex matplotlib_mutex;                  // Prevents data races to the job queue
 
 struct SweepParam {
-    string name;
+    std::string name;
     std::vector<float> values;
 };
 
 struct Parameter {
-    string name;
+    std::string name;
     float value;
 
-    Parameter(string name, float value) : name(std::move(name)), value(value) {}
+    Parameter(std::string name, float value) : name(std::move(name)), value(value) {}
 };
 
 struct RunParams {
@@ -72,11 +69,11 @@ struct RunParams {
     std::vector<float> sigmas{0.0, 0.0, 0.0, 0.0};
     tvb::Monitor *monitor = nullptr;
     std::vector<Parameter> params;
-    string file_out;
-    string file_prefix;
-    string path_out;
-    string file_weights;
-    string file_lengths;
+    std::string file_out;
+    std::string file_prefix;
+    std::string path_out;
+    std::string file_weights;
+    std::string file_lengths;
     float speed = 1e6;
 
     RunParams() = default;
@@ -85,7 +82,8 @@ struct RunParams {
 };
 
 
-void save_fig(tvb::Monitor* monitor, const string& file_prefix) {
+/*
+void save_fig(tvb::Monitor* monitor, const std::string& file_prefix) {
     if (monitor == nullptr) return;
 
     int n_records = monitor->getRecords().size();
@@ -114,7 +112,7 @@ void save_fig(tvb::Monitor* monitor, const string& file_prefix) {
         // plt::plot(x, w,"r--");
         // Plot a line whose name will show up as "log(x)" in the legend.
 
-        string title = "Reduced Wong Wang";
+        std::string title = "Reduced Wong Wang";
 
         plt::title(title);
         plt::ylabel("Ie");
@@ -128,15 +126,16 @@ void save_fig(tvb::Monitor* monitor, const string& file_prefix) {
         plt::clf();
     }
 }
+*/
 
 
 RunParams run(RunParams rp) {
 
-    string f_prefix = (path(rp.path_out) / path(rp.file_prefix)).lexically_normal().string();
+    std::string f_prefix = (path(rp.path_out) / path(rp.file_prefix)).lexically_normal().string();
     for (auto const &p: rp.params) {
         f_prefix += string_format("_%s_%.2f", p.name.c_str(), p.value);
     }
-    string filename = f_prefix + ".png";
+    std::string filename = f_prefix + ".png";
 
     if (!rp.force_output && std::filesystem::exists(filename)) {
         std::cout << string_format("File %s already exists", filename.c_str()) << std::endl;
@@ -230,7 +229,7 @@ RunParams run(RunParams rp) {
         model->set_param("J_i", J_i);
         auto [converged, sim_result] = tvb::simulate(sim_config, 1.0, rp.voi);
 
-        save_fig(sim_result, f_prefix);
+        // save_fig(sim_result, f_prefix);
 
         std::ofstream out_txt(f_prefix + ".txt");
         out_txt << string_format("MINIMUM = %f at a=%f, b = %f\n", distance, a, b);
@@ -273,9 +272,9 @@ void run_seq(RunParams rp) {
     float a = 1.0;
     float b = 0.5;
     for (auto G: tvb::range(0.5, 5.0, 45)) {
-        string f_prefix = (path(rp.path_out) / path(rp.file_prefix)).lexically_normal().string();
+        std::string f_prefix = (path(rp.path_out) / path(rp.file_prefix)).lexically_normal().string();
         f_prefix += string_format("_G_%.2f", G);
-        string filename = f_prefix + ".png";
+        std::string filename = f_prefix + ".png";
 
         auto *model = new tvb::ReducedWongWangExcInh(N);
 
@@ -346,7 +345,7 @@ void run_seq(RunParams rp) {
         model->set_param("J_i", J_i);
         auto [converged, sim_result] = tvb::simulate(sim_config, 1.0, rp.voi);
 
-        save_fig(sim_result, f_prefix);
+        // save_fig(sim_result, f_prefix);
 
         std::ofstream out_txt(f_prefix + ".txt");
         if (converged)

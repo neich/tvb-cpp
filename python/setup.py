@@ -14,7 +14,7 @@ from setuptools import find_packages
 
 setup(
     name="tvbcpp",
-    version="0.0.5",
+    version="0.0.6",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     cmake_install_dir="src/tvbcpp",

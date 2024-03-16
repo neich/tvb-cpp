@@ -12,7 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "tvb-cpp/simulator/monitors/bold_tvb.h"
+#include "tvb-cpp/simulator/monitors/_old_bold_tvb.h"
 
 #include <tvb-cpp/tools/scipy/stats/stats.h>
 #include <tvb-cpp/tools/numpy/numpy.h>
@@ -25,7 +25,7 @@ int calc_length(int start, int end, int step) {
     return 1 + (end - start - 1) / step;
 }
 
-TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of an input BOLD signal
+TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of an input BOLDModel signal
     int N = signal.rows();
     int Tmax = signal.cols();
     TArray2d signal_filtered;

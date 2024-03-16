@@ -9,7 +9,8 @@ from ._core import (__doc__, __version__,
                     set_num_threads,
                     add_raw_monitor,
                     add_temporal_average_monitor,
-                    add_bold_monitor,
+                    create_bold,
                     run_sim, run_sweep,
                     get_model_parameters,
-                    set_initial_state)
+                    set_initial_state,
+                    BOLDModel)

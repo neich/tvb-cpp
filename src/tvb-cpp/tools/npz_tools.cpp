@@ -17,7 +17,7 @@ TArray2d load_data_matrix(cnpy::NpyArray &w_npy) {
 
     for (unsigned r = 0; r < rows; ++r)
         for (unsigned c = 0; c < cols; ++c)
-            w(r, c) = loaded_data[r + c * rows];
+            w(r, c) = loaded_data[c + r * cols];
 
     return w;
 }
@@ -145,7 +145,7 @@ void tvb::Matrixd2np(const TArray2d& data, const std::string& filename, const st
     double* raw_data = new double[mat_size];
     for (int col = 0; col < data.cols(); ++col)
         for (int row = 0; row < data.rows(); ++row)
-        raw_data[col*data.rows() + row] = data(row, col);
+        raw_data[row*data.cols() + col] = data(row, col);
     if (index.size() > 0)
         cnpy::npz_save(filename, index, raw_data, { (size_t)data.rows(),  (size_t)data.cols()});
     else

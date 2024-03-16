@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15...3.22)
 
-project(tvb_root_cpp_python VERSION "0.0.5")
+project(tvb_root_cpp_python VERSION "0.0.6")
 set(CMAKE_CXX_STANDARD 20)
 
 #if(SKBUILD)
@@ -46,12 +46,12 @@ set(TVB_SOURCES
         ../src/tvb-cpp/simulator/simulate.h
         ../src/tvb-cpp/simulator/simulate.cpp
         ../src/tvb-cpp/simulator/monitor.h
-        ../src/tvb-cpp/simulator/monitors/bold_tvb.h
-        ../src/tvb-cpp/simulator/monitors/bold_tvb.cpp
-        ../src/tvb-cpp/simulator/monitors/bold_Stephan2007.h
-        ../src/tvb-cpp/simulator/monitors/bold_Stephan2007.cpp
-        ../src/tvb-cpp/simulator/monitors/bold_BalloonWindkessel.h
-        ../src/tvb-cpp/simulator/monitors/bold_BallonWindkessel.cpp
+        ../src/tvb-cpp/simulator/bold/bold_tvb.h
+        ../src/tvb-cpp/simulator/bold/bold_tvb.cpp
+        ../src/tvb-cpp/simulator/bold/bold_Stephan2007.h
+        ../src/tvb-cpp/simulator/bold/bold_Stephan2007.cpp
+        ../src/tvb-cpp/simulator/bold/bold_BalloonWindkessel.h
+        ../src/tvb-cpp/simulator/bold/bold_BallonWindkessel.cpp
         ../src/tvb-cpp/datatypes/equation.h
         ../src/tvb-cpp/eigen/circshift.h
         )

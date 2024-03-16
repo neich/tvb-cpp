@@ -52,6 +52,7 @@ namespace tvb {
             m_istep = lround(m_period/m_dt);
         }
 
+
     public:
         Monitor(tvb::Float period, tvb::Float dt, const std::vector<int>& voi) {
             init(period, dt, voi);
@@ -61,29 +62,37 @@ namespace tvb {
 
         void setStartTime(tvb::Float st) { m_start_time = st; }
 
-        virtual void from_records(const std::vector<Record>& from, std::vector<Record>& to) {
-            throw std::runtime_error("Method from_records() not implemented");
+        [[nodiscard]] virtual TArray2d apply_to_voi(const TArray2d& ts, tvb::Float ts_dt) const {
+            throw std::runtime_error("Method apply_to_voi() not implemented");
         }
 
         void record(int step, const State &observed) {
             this->sample(step, observed);
         }
 
-        virtual void sample(int step, const State &state) = 0;
+        virtual void sample(int step, const State &state) {
+            throw std::runtime_error("This monitor cannot be used inside a simulation. Use apply_to_voi() instead as a postprocess.");
+        }
 
-        const std::vector<Record>& getRecords() const {
+
+        [[nodiscard]] virtual const std::vector<Record>& getRecords() const {
             return m_records;
         }
 
-        [[nodiscard]] TArray2d voi2Array(int index) const {
-            int N = getRecords()[0].record.rows();
-            TArray2d result(N, getRecords().size());
+        /**
+         *
+         * @param index of the VOIO to extract
+         * @return time series as TArray2d(n_time_samples, n_rois)
+         */
+         [[nodiscard]] TArray2d voi2Array(int index) const {
+            auto N = getRecords()[0].record.rows();
+            TArray2d result(getRecords().size(), N);
             for (int i = 0; i < getRecords().size(); ++i)
-                result.col(i) = getRecords()[i].record.col(index);
+                result.row(i) = getRecords()[i].record.col(index);
             return result;
         }
 
-        virtual Monitor* clone() const {
+        [[nodiscard]] virtual Monitor* clone() const {
             throw std::runtime_error("Method clone() not defined for this monitor!");
         }
     };
@@ -97,7 +106,7 @@ namespace tvb {
             m_records.push_back(Record{m_start_time + step * m_dt, state(Eigen::all, m_vars_of_interest)});
         }
 
-        Raw *clone() const override {
+        [[nodiscard]] Raw *clone() const override {
             return new Raw(*this);
         };
     };
@@ -134,7 +143,7 @@ namespace tvb {
             }
         }
 
-        TemporalAverage* clone() const override {
+        [[nodiscard]] TemporalAverage* clone() const override {
             return new TemporalAverage(*this);
         };
 

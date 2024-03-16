@@ -12,9 +12,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "tvb-cpp/simulator/monitors/bold_tvb.h"
-#include <tvb-cpp/tools/scipy/stats/stats.h>
-
 #include "fc.h"
 
 

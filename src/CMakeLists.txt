@@ -38,25 +38,30 @@ set(TVB_SOURCES
         tvb-cpp/simulator/simulate.h
         tvb-cpp/simulator/simulate.cpp
         tvb-cpp/simulator/monitor.h
-        tvb-cpp/simulator/monitors/bold_tvb.h
-        tvb-cpp/simulator/monitors/bold_tvb.cpp
-        tvb-cpp/simulator/monitors/bold_Stephan2007.h
-        tvb-cpp/simulator/monitors/bold_Stephan2007.cpp
-        tvb-cpp/simulator/monitors/bold_BalloonWindkessel.h
-        tvb-cpp/simulator/monitors/bold_BallonWindkessel.cpp
+        # tvb-cpp/simulator/monitors/bold_tvb.h
+        # tvb-cpp/simulator/monitors/bold_tvb.cpp
+        # tvb-cpp/simulator/bold/bold_BalloonWindkessel.h
+        # tvb-cpp/simulator/bold/bold_BallonWindkessel.cpp
         tvb-cpp/datatypes/equation.h
         tvb-cpp/eigen/circshift.h
         tvb-cpp/tools/npz_tools.h
         tvb-cpp/tools/npz_tools.cpp
-        )
+        tvb-cpp/simulator/bold/BOLDModel.h
+        tvb-cpp/param_object.h
+        tvb-cpp/simulator/bold/bold_tvb.h
+        tvb-cpp/simulator/bold/bold_tvb.cpp
+        tvb-cpp/simulator/bold/bold_Stephan2007.h
+        tvb-cpp/simulator/bold/bold_Stephan2007.cpp
+        tvb-cpp/simulator/noise/thomsonsed/xoshiro_256p.h
+)
 
 set(TVB_TOOLS_SOURCES
-#        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
+        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
         tvb-cpp/tools/observers/fc.h
         tvb-cpp/tools/observers/sw_fcd.h
         tvb-cpp/tools/observers/gbc.h
         tvb-cpp/tools/observers/sw_fcd.cpp
-#        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
+        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
         tvb-cpp/tools/bold_filters.h
         tvb-cpp/tools/bold_filters.cpp
         tvb-cpp/tools/scipy/stats/stats.h

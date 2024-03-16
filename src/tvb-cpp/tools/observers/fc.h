@@ -37,6 +37,11 @@ public:
     m_filter(filter)
     {}
 
+    /**
+     *
+     * @param signal time series as TArray(n_time_samples, n_rois)
+     * @return time series
+     */
     [[nodiscard]] virtual tvb::TArray2d from_fMRI(const tvb::TArray2d& signal) const = 0;
 
     virtual void init(int numSubjects, int N) = 0;

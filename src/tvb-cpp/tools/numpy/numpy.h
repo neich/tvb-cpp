@@ -26,19 +26,6 @@ tvb::TArray1di searchsorted(const tvb::TArray1d &a, const tvb::TArray1d &v, cons
 
 tvb::Float polyval(const std::vector<tvb::Float> &p, tvb::Float x);
 
-
-template<typename _Scalar>
-Eigen::Array<_Scalar, Eigen::Dynamic,1> arange(_Scalar start, _Scalar end, _Scalar step = 1) {
-    assert(step != 0);
-    _Scalar d = abs(end - start);
-    int N = int(d / step);
-    if (step >= 1.0 && int(d) % int(step) != 0) N++;
-    Eigen::Array<_Scalar, Eigen::Dynamic,1> result(N);
-    for (int i = 0; i < N; ++i, start+=step)
-        result[i] = start;
-    return result;
-}
-
 inline
 tvb::TArray1d cumsum(const tvb::TArray1d& a) {
     tvb::TArray1d result(a.size());

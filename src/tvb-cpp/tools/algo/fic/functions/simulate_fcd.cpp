@@ -14,7 +14,7 @@
 
 #include <tvb-cpp/tools/simulate_fcd.h>
 #include <tvb-cpp/tools/numpy/numpy.h>
-#include <tvb-cpp/simulator/monitors/bold_tvb.h>
+#include <tvb-cpp/simulator/monitors/_old_bold_tvb.h>
 
 using namespace tvb;
 
