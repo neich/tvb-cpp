@@ -153,12 +153,12 @@ int main(int argc, char ** argv) {
     // tvb::TArray1d sigmas(6);
     // sigmas << 0,0,0,0,1e-3,1e-3;
 
-    // auto *model = new tvb::ReducedWongWangExcInh(N);
-    // tvb::TArray1d sigmas(2);
-    // sigmas << 1e-5,1e-5;
-    auto *model = new tvb::ZerlautAdaptationSecondOrder(N);
-    tvb::TArray1d sigmas(8);
-    sigmas << 0,0,0,0,0,0,0,1e-5;
+    auto *model = new tvb::ReducedWongWangExcInh(N);
+    tvb::TArray1d sigmas(2);
+    sigmas << 1e-5,1e-5;
+    // auto *model = new tvb::ZerlautAdaptationSecondOrder(N);
+    // tvb::TArray1d sigmas(8);
+    // sigmas << 0,0,0,0,0,0,0,1e-5;
     Float G = 1.0;
     auto g_it = std::find_if(params.begin(), params.end(), [](const std::pair<std::string, Float>&p) { return p.first == "G"; });
     if (g_it != params.end()) {
@@ -195,40 +195,36 @@ int main(int argc, char ** argv) {
     simulator.run(model,
                   &con,
                   integrator,
-                  {},
+                  {monitor},
                   coupling,
-                  0, 10000,
+                  0, 300000,
                   nullptr,
                   &initial_state);
 
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now() - start);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
     std::cout << string_format("Simulation time (%s): %d msecs", filename.c_str(), duration.count()) << std::endl;
 
-//    TArray2d voi_0 = monitor->voi2Array(voi);
-//    size_t n_records = monitor->getRecords().size();
-//
-//    auto *bold_model = new BoldStephan2007b(2500.0);
-//    auto [t_samples, data] = bold_model->compute_bold(voi_0, 1.0);
-//
-//    tvb::TArray2dMap map;
-//    map["t_samples"] = t_samples;
-//    map["data"] = data;
-//    tvb::MatrixdMap2npz("test_sim_bold_2007b.npz", map);
-//
-//    tvb::TArray2dMap map_raw;
-//    map_raw["t_samples"] = tvb::nrange(0.0, 1.0, n_records);
-//    map_raw["data"] = voi_0;
-//    tvb::MatrixdMap2npz("test_sim_raw.npz", map_raw);
-//
-//    auto *bold_model_tvb = new BoldTVB(2500.0);
-//    tvb::TArray2dMap map_bold_tvb;
-//    auto [t_samples_bold_tvb, data_tvb] = bold_model_tvb->compute_bold(voi_0, 1.0);
-//    map_bold_tvb["t_samples"] = tvb::nrange(0.0, 1.0, n_records);
-//    map_bold_tvb["data"] = data_tvb;
-//    tvb::MatrixdMap2npz("test_sim_bold_tvb.npz", map_bold_tvb);
+    TArray2d voi_0 = monitor->voi2Array(voi);
+    size_t n_records = monitor->getRecords().size();
+
+    tvb::TArray2dMap map_raw;
+    // n_records = 10;
+    // N = 5;
+    map_raw["t_samples"] = tvb::nrange(0.0, 1.0, n_records);
+    map_raw["data"] = voi_0;
+    // map_raw["data"] = TArray2d::Random(n_records, N);
+    tvb::MatrixdMap2npz("paper_RWW_TVBCPP.npz", map_raw);
+
+    auto map = tvb::npz2MatrixdMap("paper_RWW_TVBCPP.npz");
+
+    auto *bold_model_tvb = new BoldTVB(2000.0);
+    tvb::TArray2dMap map_bold_tvb;
+    auto [t_samples_bold_tvb, data_tvb] = bold_model_tvb->compute_bold(voi_0, 1.0);
+    map_bold_tvb["t_samples"] = t_samples_bold_tvb;
+    map_bold_tvb["data"] = data_tvb;
+    tvb::MatrixdMap2npz("paper_RWW_BOLD_TVBCPP.npz", map_bold_tvb);
 
     return 0;
 
