@@ -15,21 +15,21 @@
 #include <string>
 #include <chrono>
 
-#include <tvb-root-cpp/tools/npz_tools.h>
-#include <tvb-root-cpp/simulator/simulate.h>
-#include <tvb-root-cpp/simulator/monitor.h>
-#include <tvb-root-cpp/simulator/models/reduced_ww_ext.h>
-#include <tvb-root-cpp/simulator/models/montbrio.h>
-#include <tvb-root-cpp/simulator/integrators/euler_stochastic.h>
-#include <tvb-root-cpp/tools/threadpool.h>
-#include <tvb-root-cpp/tools/csv_tools.h>
-#include <tvb-root-cpp/simulator/integrators/euler_deterministic.h>
-#include <tvb-root-cpp/simulator/models/zerlaut.h>
-#include <tvb-root-cpp/simulator/simulator.h>
-#include <tvb-root-cpp/simulator/monitors/bold_tvb.h>
-#include <tvb-root-cpp/simulator/monitors/bold_BalloonWindkessel.h>
+#include <tvb-cpp/tools/npz_tools.h>
+#include <tvb-cpp/simulator/simulate.h>
+#include <tvb-cpp/simulator/monitor.h>
+#include <tvb-cpp/simulator/models/reduced_ww_ext.h>
+#include <tvb-cpp/simulator/models/montbrio.h>
+#include <tvb-cpp/simulator/integrators/euler_stochastic.h>
+#include <tvb-cpp/tools/threadpool.h>
+#include <tvb-cpp/tools/csv_tools.h>
+#include <tvb-cpp/simulator/integrators/euler_deterministic.h>
+#include <tvb-cpp/simulator/models/zerlaut.h>
+#include <tvb-cpp/simulator/simulator.h>
+#include <tvb-cpp/simulator/bold/bold_tvb.h>
+#include <tvb-cpp/simulator/bold/bold_BalloonWindkessel.h>
 
-#include <tvb-root-cpp/matplotlibcpp.h>
+// #include <tvb-cpp/matplotlibcpp.h>
 #include <chrono>
 #include <filesystem>
 #include <thread>
@@ -40,18 +40,18 @@
 using namespace boost::program_options;
 using namespace tvb;
 using namespace std::chrono;
-namespace plt = matplotlibcpp;
+// amespace plt = matplotlibcpp;
 
 struct SweepParam {
-    string name;
+    std::string name;
     std::vector<float> values;
 };
 
 struct Parameter {
-    string name;
+    std::string name;
     float value;
 
-    Parameter(string name, float value) : name(std::move(name)), value(value) {}
+    Parameter(std::string name, float value) : name(std::move(name)), value(value) {}
 };
 
 struct RunParams {
@@ -61,10 +61,10 @@ struct RunParams {
     bool force_output = false;
     tvb::Monitor *monitor = nullptr;
     std::vector<Parameter> params;
-    string file_out;
-    string file_prefix;
-    string file_weights;
-    string file_lengths;
+    std::string file_out;
+    std::string file_prefix;
+    std::string file_weights;
+    std::string file_lengths;
     float speed = 1e6;
 
     RunParams() = default;
@@ -77,7 +77,7 @@ void save_fig(RunParams &rp);
 
 RunParams run(RunParams rp) {
 
-    string filename = rp.file_prefix;
+    std::string filename = rp.file_prefix;
     for (auto const &p: rp.params) {
         filename += string_format("_%s_%.2f", p.name.c_str(), p.value);
     }
@@ -180,25 +180,25 @@ void save_fig(RunParams &rp) {
     std::vector<Float> ls(n_records);
     std::transform(rp.monitor->getRecords().begin(), rp.monitor->getRecords().end(), ls.begin(),
                    [](const Monitor::Record &r) { return r.time/1000; });
-    for (unsigned n = 0; n < N; ++n) {
-        plt::plot(ls, y_plot[n]);
-    }
+//    for (unsigned n = 0; n < N; ++n) {
+//        plt::plot(ls, y_plot[n]);
+//    }
     // Plot a red dashed line from given x and y data.
     // plt::plot(x, w,"r--");
     // Plot a line whose name will show up as "log(x)" in the legend.
 
-    string title = "Reduced Wong Wang: ";
+    std::string title = "Reduced Wong Wang: ";
     for (auto const &p: rp.params) {
         title += string_format(" %s_%.2f", p.name.c_str(), p.value);
     }
 
-    plt::title(title);
-    plt::ylabel("Se");
-    plt::xlabel("Seconds");
-    // Save the image (file format is determined by the extension)
-    plt::save(rp.file_out, 300);
-
-    plt::clf();
+//    plt::title(title);
+//    plt::ylabel("Se");
+//    plt::xlabel("Seconds");
+//    // Save the image (file format is determined by the extension)
+//    plt::save(rp.file_out, 300);
+//
+//    plt::clf();
 
     delete rp.monitor;
 }
