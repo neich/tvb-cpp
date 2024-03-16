@@ -56,12 +56,12 @@ set(TVB_SOURCES
 )
 
 set(TVB_TOOLS_SOURCES
-#        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
+        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
         tvb-cpp/tools/observers/fc.h
         tvb-cpp/tools/observers/sw_fcd.h
         tvb-cpp/tools/observers/gbc.h
         tvb-cpp/tools/observers/sw_fcd.cpp
-#        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
+        tvb-cpp/tools/algo/fic/functions/balance_fic.cpp
         tvb-cpp/tools/bold_filters.h
         tvb-cpp/tools/bold_filters.cpp
         tvb-cpp/tools/scipy/stats/stats.h
