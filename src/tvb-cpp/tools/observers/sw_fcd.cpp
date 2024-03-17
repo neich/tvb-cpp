@@ -12,8 +12,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "tvb-cpp/simulator/monitors/_old_bold_tvb.h"
-
 #include <tvb-cpp/tools/scipy/stats/stats.h>
 #include <tvb-cpp/tools/numpy/numpy.h>
 #include "sw_fcd.h"
@@ -33,8 +31,6 @@ TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of
         signal_filtered = m_filter.apply(signal);  // Filters seem to be always applied...
     else
         signal_filtered = signal;
-
-//    Isubdiag = np.tril_values(N, k=-1)  // Indices of triangular lower part of matrix
 
     // For each pair of sliding windows calculate the FC at t and t2 and
     // compute the correlation between the two.
