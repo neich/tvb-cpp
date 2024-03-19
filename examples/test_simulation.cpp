@@ -124,6 +124,7 @@ int main(int argc, char ** argv) {
         throw std::runtime_error(string_format("Unknown file extension for: %s", file_weights.c_str()));
 
     int N = C.rows();
+    std::cout << string_format("Connectivity matrix size: %i", N) << std::endl;
 
     C = C / C.maxCoeff() * 0.2;
     // tvb::csv_save("sc_d_norm.csv", C);
@@ -210,7 +211,7 @@ int main(int argc, char ** argv) {
     auto [t_samples_bold_tvb, data_tvb] = bold_model_tvb->compute_bold(voi_0, 1.0);
     map_bold_tvb["t_samples"] = t_samples_bold_tvb;
     map_bold_tvb["data"] = data_tvb;
-    tvb::MatrixdMap2npz(out_prefix+"BOLD.npz", map_bold_tvb);
+    tvb::MatrixdMap2npz(out_prefix+"_BOLD.npz", map_bold_tvb);
 
     return 0;
 }
