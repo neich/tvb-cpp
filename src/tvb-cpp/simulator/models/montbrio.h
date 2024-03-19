@@ -186,7 +186,7 @@ namespace tvb {
 
     };
 
-    class MontbrioSimple : public Model {
+    /*class MontbrioSimple : public Model {
     public:
 
         TArray1d tau_e;
@@ -323,7 +323,7 @@ namespace tvb {
                          const TArray2d &coupling,
                          const TArray1d &local_coupling) const override;
 
-    };
+    };*/
 
 }
 

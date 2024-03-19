@@ -12,6 +12,8 @@ endif()
 
 
 set(TVB_SOURCES
+        tvb-cpp/simulator/factory.h
+        tvb-cpp/simulator/factory.cpp
         tvb-cpp/simulator/simulator.h
         tvb-cpp/simulator/simulator.cpp
         tvb-cpp/simulator/integrator.h
@@ -38,8 +40,6 @@ set(TVB_SOURCES
         tvb-cpp/simulator/simulate.h
         tvb-cpp/simulator/simulate.cpp
         tvb-cpp/simulator/monitor.h
-        # tvb-cpp/simulator/monitors/bold_tvb.h
-        # tvb-cpp/simulator/monitors/bold_tvb.cpp
         # tvb-cpp/simulator/bold/bold_BalloonWindkessel.h
         # tvb-cpp/simulator/bold/bold_BallonWindkessel.cpp
         tvb-cpp/datatypes/equation.h

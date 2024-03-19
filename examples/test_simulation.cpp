@@ -16,6 +16,7 @@
 #include <chrono>
 
 #include <tvb-cpp/tools/npz_tools.h>
+#include <tvb-cpp/simulator/factory.h>
 #include <tvb-cpp/simulator/simulate.h>
 #include <tvb-cpp/simulator/monitor.h>
 #include <tvb-cpp/simulator/models/reduced_ww_ext.h>
@@ -62,66 +63,57 @@ int main(int argc, char ** argv) {
 
     std::vector<std::pair<std::string, Float>> params;
     variables_map vm;
-    try {
-        options_description desc{"Options"};
-        desc.add_options()
-                ("help,h", "Help screen")
-                ("params", value<std::vector<std::string>>()->multitoken(), "Model parameters")
-                ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
-                ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
-                ("speed", value<float>()->default_value(1e6), "Signal speed")
-                ("time-start", value<float>()->default_value(0.0), "Start of simulation (ms)")
-                ("time-end", value<float>()->default_value(10000.0), "End of simulation (ms)")
-                ("dt", value<float>()->default_value(0.1), "Integration step (ms)")
-                ("force-output", bool_switch()->default_value(false), "Force overwrite output files")
-                ("params-file", value<std::string>(), "NPZ file with simulation parameters")
-                ("out-file-prefix", value<std::string>()->required(), "Output file prefix");
 
-        store(parse_command_line(argc, argv, desc), vm);
-        notify(vm);
+    options_description desc{"Options"};
+    desc.add_options()
+            ("help,h", "Help screen")
+            ("params", value<std::vector<std::string>>()->multitoken(), "Model parameters")
+            ("noise", value<std::vector<tvb::Float>>()->multitoken(), "Vector with noise sigmas for each state variable")
+            ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
+            ("model", value<std::string>()->required(), "Whole brain model")
+            ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
+            ("speed", value<float>()->default_value(1e6), "Signal speed")
+            ("time-start", value<float>()->default_value(0.0), "Start of simulation (ms)")
+            ("time-end", value<float>()->default_value(10000.0), "End of simulation (ms)")
+            ("dt", value<float>()->default_value(0.1), "Integration step (ms)")
+            ("params-file", value<std::string>(), "NPZ file with simulation parameters")
+            ("out-file-prefix", value<std::string>()->default_value("out_sim"), "Output file prefix");
 
-        if (vm.count("help"))
-            std::cout << desc << '\n';
-        else if (vm.count("params")) {
-            bool param_started = false;
-            for (auto &s: vm["params"].as<std::vector<std::string>>()) {
-                if (std::isalpha(s[0])) {
-                    if (param_started)
-                        throw std::runtime_error(string_format("Invalid value for parameter %s", params.back().first.c_str()));
-                    params.emplace_back();
-                    params.back().first = s;
-                    param_started = true;
-                } else {
-                    if (!param_started)
-                        throw std::runtime_error(string_format("Value %f has no parameter associated", s.c_str()));
-                    try {
-                        float value = std::stof(s);
-                        params.back().second = value;
-                        param_started = false;
-                    } catch (const error &ex) {
-                        throw std::runtime_error("Syntax error in sweep parameters");
-                    }
-                }
-            }
-            if (param_started)
-                throw std::runtime_error(string_format("Parameter %s has no associated value\n", params.back().first.c_str()));
-        }
-    }
-    catch (const error &ex) {
-        std::cerr << ex.what() << '\n';
-    }
+    store(parse_command_line(argc, argv, desc), vm);
 
-    std::string filename = vm["out-file-prefix"].as<std::string>();
-    for (auto const &p: params) {
-        filename += string_format("_%s_%.2f", p.first.c_str(), p.second);
-    }
-    filename += ".png";
-
-
-    if (vm.count("force-output") == 0 && std::filesystem::exists(filename)) {
-        std::cout << string_format("File %s already exists", filename.c_str()) << std::endl;
+    if (vm.count("help")) {
+        std::cout << desc << '\n';
         return 0;
     }
+
+    notify(vm);
+
+    if (vm.count("params")) {
+        bool param_started = false;
+        for (auto &s: vm["params"].as<std::vector<std::string>>()) {
+            if (std::isalpha(s[0])) {
+                if (param_started)
+                    throw std::runtime_error(string_format("Invalid value for parameter %s", params.back().first.c_str()));
+                params.emplace_back();
+                params.back().first = s;
+                param_started = true;
+            } else {
+                if (!param_started)
+                    throw std::runtime_error(string_format("Value %f has no parameter associated", s.c_str()));
+                try {
+                    float value = std::stof(s);
+                    params.back().second = value;
+                    param_started = false;
+                } catch (const error &ex) {
+                    throw std::runtime_error("Syntax error in sweep parameters");
+                }
+            }
+        }
+        if (param_started)
+            throw std::runtime_error(string_format("Parameter %s has no associated value\n", params.back().first.c_str()));
+    }
+
+    std::string out_prefix = vm["out-file-prefix"].as<std::string>();
 
     tvb::TArray2d C;
     std::string file_weights = vm["sc-matrix"].as<std::string>();
@@ -135,9 +127,9 @@ int main(int argc, char ** argv) {
         throw std::runtime_error(string_format("Unknown file extension for: %s", file_weights.c_str()));
 
     int N = C.rows();
+    std::cout << string_format("Connectivity matrix size: %i", N) << std::endl;
 
     C = C / C.maxCoeff() * 0.2;
-    // tvb::csv_save("sc_d_norm.csv", C);
 
     tvb::TArray2d tl;
     if (vm.count("length-matrix") > 0)
@@ -146,19 +138,14 @@ int main(int argc, char ** argv) {
         tl = tvb::TArray2d::Zero(C.rows(), C.cols());
     tvb::Connectivity con(C, tl, vm["speed"].as<float>());
 
-    milliseconds total_time(0);
-    std::cout << string_format("Starting computation for: %s", filename.c_str()) << std::endl;
+    auto *model = tvb::Factory::new_model(vm["model"].as<std::string>(), N);
+    std::vector<tvb::Float> noise = vm["noise"].as<std::vector<tvb::Float>>();
 
-    //auto *model = new tvb::Montbrio(N);
-    // tvb::TArray1d sigmas(6);
-    // sigmas << 0,0,0,0,1e-3,1e-3;
+    if (model->n_vars() != noise.size())
+        throw std::runtime_error(string_format("Provided noise size (%i) does not mathc with model number of state variables (%i)", noise.size(), model->n_vars()));
 
-    auto *model = new tvb::ReducedWongWangExcInh(N);
-    tvb::TArray1d sigmas(2);
-    sigmas << 1e-5,1e-5;
-    // auto *model = new tvb::ZerlautAdaptationSecondOrder(N);
-    // tvb::TArray1d sigmas(8);
-    // sigmas << 0,0,0,0,0,0,0,1e-5;
+    tvb::TArray1d sigmas = Eigen::Map<TArray1d, Eigen::Unaligned>(noise.data(), noise.size());
+
     Float G = 1.0;
     auto g_it = std::find_if(params.begin(), params.end(), [](const std::pair<std::string, Float>&p) { return p.first == "G"; });
     if (g_it != params.end()) {
@@ -186,6 +173,7 @@ int main(int argc, char ** argv) {
     coupling->setScale(G);
     int voi = 0;
 
+    std::cout << string_format("Starting computation for: %s", out_prefix.c_str()) << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
 
     Simulator simulator{};
@@ -197,25 +185,22 @@ int main(int argc, char ** argv) {
                   integrator,
                   {monitor},
                   coupling,
-                  0, 300000,
+                  0, vm["time-end"].as<float>(),
                   nullptr,
                   &initial_state);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
-    std::cout << string_format("Simulation time (%s): %d msecs", filename.c_str(), duration.count()) << std::endl;
+    std::cout << string_format("Simulation time: %d msecs", duration.count()) << std::endl;
 
     TArray2d voi_0 = monitor->voi2Array(voi);
     size_t n_records = monitor->getRecords().size();
 
     tvb::TArray2dMap map_raw;
-    // n_records = 10;
-    // N = 5;
     map_raw["t_samples"] = tvb::nrange(0.0, 1.0, n_records);
     map_raw["data"] = voi_0;
-    // map_raw["data"] = TArray2d::Random(n_records, N);
-    tvb::MatrixdMap2npz("paper_RWW_TVBCPP.npz", map_raw);
+    tvb::MatrixdMap2npz(out_prefix + "_RAW.npz", map_raw);
 
     auto map = tvb::npz2MatrixdMap("paper_RWW_TVBCPP.npz");
 
@@ -224,9 +209,7 @@ int main(int argc, char ** argv) {
     auto [t_samples_bold_tvb, data_tvb] = bold_model_tvb->compute_bold(voi_0, 1.0);
     map_bold_tvb["t_samples"] = t_samples_bold_tvb;
     map_bold_tvb["data"] = data_tvb;
-    tvb::MatrixdMap2npz("paper_RWW_BOLD_TVBCPP.npz", map_bold_tvb);
+    tvb::MatrixdMap2npz(out_prefix+"_BOLD.npz", map_bold_tvb);
 
     return 0;
-
-    // Plot line from given x and y data. Color is selected automatically.
 }
