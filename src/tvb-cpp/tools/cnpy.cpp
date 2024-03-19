@@ -292,16 +292,17 @@ cnpy::npz_t cnpy::npz_load(const std::string& fname) {
 }
 
 cnpy::NpyArray cnpy::npz_load(const std::string& fname, const std::string& varname) {
-    std::fstream fp(fname, std::ios::binary | std::ios::in);
+    std::fstream fp;
+    fp.open(fname, std::ios::binary | std::ios::in);
 
-    if(fp.bad())
+    if(!fp)
         throw std::runtime_error("npz_load: Unable to open file "+fname);
 
     while(true) {
         std::vector<char> local_header(30);
         fp.read(&local_header[0], 30);
         if (!fp)
-            throw std::runtime_error("npz_load: error reading  header");
+            throw std::runtime_error("npz_load: error reading header");
 
         //if we've reached the global header, stop reading
         if(local_header[2] != 0x03 || local_header[3] != 0x04) break;
