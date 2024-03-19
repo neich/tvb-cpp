@@ -28,7 +28,7 @@ First build the library.
 $ cd src
 $ mkdir build
 $ cd build
-$ cmake ..
+$ cmake .. -DCMAKE_BUILD_TYPE=Release
 $ make
 ```
 
@@ -38,14 +38,14 @@ Then proceed with the examples.
 $ cd examples
 $ mkdir build
 $ cd build
-$ cmake ..
+$ cmake .. -DCMAKE_BUILD_TYPE=Release
 $ make
 ```
 
 
 ### Example of usage
 
-Use the `test_simulation` to run from the commandline.
+Use the `test_simulation` to run from the command line.
 
 ```shell
 examples/build/test_simulation -h
