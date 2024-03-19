@@ -1,4 +1,4 @@
-### Beware: this is aplha code at best
+### Beware: this is alpha code at best
 
 This is an attempt to implement the core functionality of [The Virtual Brain](https://www.thevirtualbrain.org/tvb/zwei/brainsimulator-software) brain simulator [root](https://github.com/the-virtual-brain/tvb-root) project in C++.
 
@@ -32,7 +32,7 @@ $ cmake ..
 $ make
 ```
 
-Then proceed with the examples. Make sure, that the `CPATH` environment variable points to directories with `Python.h` and `numpy` headers (e.g. `env/lib/python3.10/site-packages/numpy/core/include`).
+Then proceed with the examples. 
 
 ```shell
 $ cd examples
@@ -40,4 +40,33 @@ $ mkdir build
 $ cd build
 $ cmake ..
 $ make
+```
+
+
+### Example of usage
+
+Use the `test_simulation` to run from the commandline.
+
+```shell
+examples/build/test_simulation -h
+Options:
+  -h [ --help ]                    Help screen
+  --params arg                     Model parameters
+  --noise arg                      Vector with noise sigmas for each state 
+                                   variable
+  --sc-matrix arg                  Structural connectivity matrix
+  --model arg                      Whole brain model
+  --length-matrix arg              Connection lengths matrix matrix
+  --speed arg (=1000000)           Signal speed
+  --time-start arg (=0)            Start of simulation (ms)
+  --time-end arg (=10000)          End of simulation (ms)
+  --dt arg (=0.100000001)          Integration step (ms)
+  --params-file arg                NPZ file with simulation parameters
+  --out-file-prefix arg (=out_sim) Output file prefix
+```
+
+Following line runs the Zerlaut model on a connectome of 66 nodes for 10s of simulated time. 
+
+```shell
+$ examples/build/test_simulation --model ZerlautAdaptationSecondOrder --sc-matrix Data_Raw/Human_66.npz --noise 0.0 0.0 0.0 0.0  0.0 0.0 0.0 0.1
 ```
