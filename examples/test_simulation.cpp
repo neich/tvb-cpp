@@ -16,6 +16,7 @@
 #include <chrono>
 
 #include <tvb-cpp/tools/npz_tools.h>
+#include <tvb-cpp/simulator/factory.h>
 #include <tvb-cpp/simulator/simulate.h>
 #include <tvb-cpp/simulator/monitor.h>
 #include <tvb-cpp/simulator/models/reduced_ww_ext.h>
@@ -67,7 +68,9 @@ int main(int argc, char ** argv) {
     desc.add_options()
             ("help,h", "Help screen")
             ("params", value<std::vector<std::string>>()->multitoken(), "Model parameters")
+            ("noise", value<std::vector<tvb::Float>>()->multitoken(), "Vector with noise sigmas for each state variable")
             ("sc-matrix", value<std::string>()->required(), "Structural connectivity matrix")
+            ("model", value<std::string>()->required(), "Whole brain model")
             ("length-matrix", value<std::string>(), "Connection lengths matrix matrix")
             ("speed", value<float>()->default_value(1e6), "Signal speed")
             ("time-start", value<float>()->default_value(0.0), "Start of simulation (ms)")
@@ -127,7 +130,6 @@ int main(int argc, char ** argv) {
     std::cout << string_format("Connectivity matrix size: %i", N) << std::endl;
 
     C = C / C.maxCoeff() * 0.2;
-    // tvb::csv_save("sc_d_norm.csv", C);
 
     tvb::TArray2d tl;
     if (vm.count("length-matrix") > 0)
@@ -136,19 +138,14 @@ int main(int argc, char ** argv) {
         tl = tvb::TArray2d::Zero(C.rows(), C.cols());
     tvb::Connectivity con(C, tl, vm["speed"].as<float>());
 
-    milliseconds total_time(0);
-    std::cout << string_format("Starting computation for: %s", out_prefix.c_str()) << std::endl;
+    auto *model = tvb::Factory::new_model(vm["model"].as<std::string>(), N);
+    std::vector<tvb::Float> noise = vm["noise"].as<std::vector<tvb::Float>>();
 
-    //auto *model = new tvb::Montbrio(N);
-    // tvb::TArray1d sigmas(6);
-    // sigmas << 0,0,0,0,1e-3,1e-3;
+    if (model->n_vars() != noise.size())
+        throw std::runtime_error(string_format("Provided noise size (%i) does not mathc with model number of state variables (%i)", noise.size(), model->n_vars()));
 
-    auto *model = new tvb::ReducedWongWangExcInh(N);
-    tvb::TArray1d sigmas(2);
-    sigmas << 1e-5,1e-5;
-    // auto *model = new tvb::ZerlautAdaptationSecondOrder(N);
-    // tvb::TArray1d sigmas(8);
-    // sigmas << 0,0,0,0,0,0,0,1e-5;
+    tvb::TArray1d sigmas = Eigen::Map<TArray1d, Eigen::Unaligned>(noise.data(), noise.size());
+
     Float G = 1.0;
     auto g_it = std::find_if(params.begin(), params.end(), [](const std::pair<std::string, Float>&p) { return p.first == "G"; });
     if (g_it != params.end()) {
@@ -176,6 +173,7 @@ int main(int argc, char ** argv) {
     coupling->setScale(G);
     int voi = 0;
 
+    std::cout << string_format("Starting computation for: %s", out_prefix.c_str()) << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
 
     Simulator simulator{};
