@@ -95,7 +95,9 @@ set(TVB_TOOLS_SOURCES
         tvb-cpp/tools/observers/ph_fcd.h
         tvb-cpp/tools/observers/ph_fcd.cpp
         tvb-cpp/tools/observers/phase_interaction_matrix.cpp
-        tvb-cpp/tools/observers/phase_interaction_matrix.h)
+        tvb-cpp/tools/observers/phase_interaction_matrix.h
+        tvb-cpp/tools/cl_params.cpp
+        tvb-cpp/tools/cl_params.h)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 
