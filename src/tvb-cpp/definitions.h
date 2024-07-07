@@ -34,6 +34,7 @@ namespace tvb {
     typedef typename std::complex<Float> complexd;
     // Eigen::ColMajor is the default
     typedef typename Eigen::Array<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TArray2d;
+    typedef typename Eigen::Array<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> TArrayRM2d;
     typedef typename Eigen::Array<complexd, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TArray2dc;
     typedef typename Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TMatrix;
     typedef typename Eigen::ArrayXXi TArray2di;
@@ -41,7 +42,8 @@ namespace tvb {
     typedef typename Eigen::Matrix<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TVector;
     typedef typename Eigen::ArrayXi TArray1di;
     typedef typename Eigen::Array<complexd, Eigen::Dynamic, 1> TArray1dc;
-    typedef typename std::unordered_map<std::string, TArray2d> TArray2dMap;
+    typedef typename std::map<std::string, TArray2d> TArray2dMap;
+    typedef typename std::unordered_map<std::string, TArray2d> TArray2dUMap;
 
     typedef typename Eigen::Array<Float *, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> Matrixdp;
 
