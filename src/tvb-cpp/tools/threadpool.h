@@ -20,9 +20,9 @@ namespace tvb {
 
 
         void start() {
-            threads.resize(max_threads);
+            threads.reserve(max_threads);
             for (uint32_t i = 0; i < max_threads; i++) {
-                threads.at(i) = std::thread(&ThreadPool<R>::ThreadLoop, this);
+                threads.emplace_back(&ThreadPool<R>::ThreadLoop, this);
             }
         }
 
