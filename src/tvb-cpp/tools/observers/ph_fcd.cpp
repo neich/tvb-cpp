@@ -31,17 +31,18 @@ TArray2d PhFCD::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of
 
     TArray1d phfcd = TArray1d::Zero(size_kk3);
     if (!tvb::isnan(signal_filt)) {
-        TArray2d phIntMatr_upTri = TArray2d::Zero(npattmax,
+        TArrayRM2d phIntMatr_upTri = TArray2d::Zero(npattmax,
                                                   int(N * (N - 1) / 2)); // The int() is not needed, but... (see above)
         for (unsigned t = 0; t < npattmax; ++t)
             phIntMatr_upTri.row(t) = tril_values(phIntMatr[t], N, -1, true);
         int kk3 = 0;
         for (unsigned t = 0; t < npattmax - 2; ++t) {
-            TVector p1 = phIntMatr_upTri(Eigen::seq(t, t + 2), Eigen::all).colwise().mean();
+            TVector p1 = phIntMatr_upTri(Eigen::seq(t, t + 2), Eigen::all).colwise().sum();
+            auto p1_norm = p1.norm();
             for (unsigned t2 = t + 1; t2 < npattmax - 2; ++t2) {
-                TVector p2 = phIntMatr_upTri(Eigen::seq(t2, t2 + 2), Eigen::all).colwise().mean();
-                phfcd[kk3] = p1.dot(p2) / p1.norm() / p2.norm();  // this (phFCD) what I want to get
-                kk3 = kk3 + 1;
+                TVector p2 = phIntMatr_upTri.row(t2) + phIntMatr_upTri.row(t2+1) + phIntMatr_upTri.row(t2+2);;
+                phfcd[kk3] = p1.dot(p2) / (p1_norm * p2.norm());
+                kk3 += 1;
             }
         }
     }
