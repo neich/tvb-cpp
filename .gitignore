@@ -1,3 +1,6 @@
 **/cmake-build*/**
 Data_Produced
 venv
+**/.vs
+**/.vscode
+**/.idea
