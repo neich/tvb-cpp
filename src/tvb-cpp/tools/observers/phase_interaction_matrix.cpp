@@ -36,7 +36,7 @@ std::vector<TArray2d> phase_matrix(const TArray2d& signal, unsigned discard_offs
 
         for (unsigned n = 0; n < N; ++n) {
             TArray1dc Xanalytic = hilbert_signal(signal.row(n) - signal.row(n).mean());
-            phases.row(n) = Xanalytic.unaryExpr([](const std::complex<tvb::Float> &v) { return arg(v); });
+            phases.row(n) = Xanalytic.array().arg();
         }
 
         // Isubdiag = tril_indices_column(N, k=-1)  # Indices of triangular lower part of matrix
@@ -44,12 +44,13 @@ std::vector<TArray2d> phase_matrix(const TArray2d& signal, unsigned discard_offs
             // kudata = np.sum(np.cos(phases[:, t - 1]) + 1j * np.sin(phases[:, t - 1])) / N
             // syncdata[t - 10] = abs(kudata)
             for (unsigned i = 0; i < N; ++i)
-                for (unsigned j = 0; j < N; ++j) {
+                for (unsigned j = 0; j < i+1; ++j) {
                     // print(f'processing {t}: ({i}, {j})')
                     tvb::Float da = fabs(phases(i, index_circ(t-1, Tmax)) - phases(j, index_circ(t-1, Tmax)));
-                    da = da > M_PI ? 2.0 * M_PI - da : da;
+                    auto dcos = cos(da > M_PI ? 2.0 * M_PI - da : da);
                     // da = fmod(da + 180.0, 360.0) - 180.0;
-                    dFC(i, j) = cos(da);
+                    dFC(i, j) = dcos;
+                    dFC(j, i) = dcos;
                 }
             PhIntMatr[index_circ(t - discard_offset, Tmax)] = dFC;
 
