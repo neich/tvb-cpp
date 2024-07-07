@@ -53,6 +53,8 @@ set(TVB_SOURCES
         tvb-cpp/simulator/bold/bold_Stephan2007.h
         tvb-cpp/simulator/bold/bold_Stephan2007.cpp
         tvb-cpp/simulator/noise/thomsonsed/xoshiro_256p.h
+        tvb-cpp/simulator/models/naskar.cpp
+        tvb-cpp/simulator/models/naskar.h
 )
 
 set(TVB_TOOLS_SOURCES
@@ -97,14 +99,15 @@ set(TVB_TOOLS_SOURCES
         tvb-cpp/tools/observers/phase_interaction_matrix.cpp
         tvb-cpp/tools/observers/phase_interaction_matrix.h
         tvb-cpp/tools/cl_params.cpp
-        tvb-cpp/tools/cl_params.h)
+        tvb-cpp/tools/cl_params.h
+        tvb-cpp/tools/threadpool.cpp)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED ${TVB_SOURCES} ${TVB_TOOLS_SOURCES})
 
 find_package(MKL CONFIG)
 
 if (UNIX)
-    set(CMAKE_CXX_FLAGS_RELDEBPROFILE  "-O2 -march=native -pg -DEIGEN_NO_DEBUG")
+    set(CMAKE_CXX_FLAGS_RELDEBPROFILE  "-O3  -pg -DEIGEN_NO_DEBUG")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g -DEIGEN_NO_DEBUG")
     set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -DEIGEN_NO_DEBUG -DNDEBUG")
     # set(CMAKE_CXX_FLAGS_DEBUG  "-g -save-temps" CACHE STRING "" FORCE)
