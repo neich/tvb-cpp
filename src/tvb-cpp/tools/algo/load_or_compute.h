@@ -18,7 +18,7 @@
 #include <fstream>
 
 #include <tvb-cpp/definitions.h>
-#include <tools/npz_tools.h>
+#include <tvb-cpp/tools/npz_tools.h>
 
 namespace tvb {
 
@@ -35,18 +35,32 @@ namespace tvb {
         }
     }
 
-    TArray2d
-    load_or_compute_index(const std::string &filename, const std::string &index,
-                          const std::function<TArray1d()> &func) {
-        std::ifstream f(filename.c_str());
-        if (f.good())
-            return npz2Matrixd(filename, index);
-        else {
-            TArray2d result = func();
-            Matrixd2npz(result, filename, index);
-            return result;
-        }
-    }
+//    TArray1d
+//    load_or_compute_index_1d(const std::string &filename, const std::string &index,
+//                          const std::function<TArray1d()> &func) {
+//        std::ifstream f(filename.c_str());
+//        if (f.good())
+//            return npz2Matrixd(filename, index);
+//        else {
+//            TArray1d result = func();
+//            MatrixdMap2npz(result, filename, index);
+//            return result;
+//        }
+//    }
+//
+//    TArray2d
+//    load_or_compute_index_2d(const std::string &filename, const std::string &index,
+//                          const std::function<TArray2d()> &func) {
+//        std::ifstream f(filename.c_str());
+//        if (f.good())
+//            return npz2Matrixd(filename, index);
+//        else {
+//            TArray2d result = func();
+//            Matrixd2npz(result, filename, index);
+//            return result;
+//        }
+//    }
+
 
 }
 
