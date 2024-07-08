@@ -34,18 +34,24 @@ namespace tvb {
     typedef typename std::complex<Float> complexd;
     // Eigen::ColMajor is the default
     typedef typename Eigen::Array<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TArray2d;
+    typedef typename std::unique_ptr<TArray2d> TArray2d_uptr;
+    typedef typename std::shared_ptr<TArray2d> TArray2d_sptr;
+
     typedef typename Eigen::Array<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> TArrayRM2d;
     typedef typename Eigen::Array<complexd, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TArray2dc;
     typedef typename Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TMatrix;
     typedef typename Eigen::ArrayXXi TArray2di;
     typedef typename Eigen::Array<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TArray1d;
+    typedef typename std::unique_ptr<TArray1d> TArray1d_uptr;
     typedef typename Eigen::Matrix<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TVector;
     typedef typename Eigen::ArrayXi TArray1di;
     typedef typename Eigen::Array<complexd, Eigen::Dynamic, 1> TArray1dc;
-    typedef typename std::map<std::string, TArray2d> TArray2dMap;
+    typedef typename std::map<std::string, TArray2d_sptr> TArray2dMap;
     typedef typename std::unordered_map<std::string, TArray2d> TArray2dUMap;
 
     typedef typename Eigen::Array<Float *, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> Matrixdp;
+
+
 
 //    typedef typename Eigen::MatrixXd TArray2d;
 //    typedef typename Eigen::MatrixXi TArray2di;
@@ -201,6 +207,15 @@ std::string string_format(const std::string &format, Args ... args) {
     snprintf(buf.get(), size, format.c_str(), args ...);
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
+
+template<typename ... Args>
+void printff(const std::string &format, Args ... args) {
+    if (sizeof...(Args) == 0)
+        std::cout << format << std::flush;
+    else
+        std::cout << string_format(format, args...) << std::flush;
+}
+
 
 #define FE_0(WHAT)
 #define FE_1(WHAT, X) WHAT(X)
