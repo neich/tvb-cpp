@@ -24,9 +24,8 @@ namespace tvb {
 
     // Load from npz
 
-    TArray2d npz2Matrixd(const std::string &filename, const std::string &index);
-    TArray2d npy2Matrixd(const std::string &filename);
-    TArray1d npy2Vector(const std::string& filename);
+    TArray2d_uptr npz2Matrixd(const std::string &filename, const std::string &index);
+    TArray2d_uptr npy2Matrixd(const std::string &filename);
 
     TArray2dMap npz2MatrixdMap(const std::string &filename);
 

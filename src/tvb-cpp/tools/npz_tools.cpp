@@ -7,17 +7,17 @@
 using namespace tvb;
 
 template<typename Numeric>
-TArray2d load_data_matrix(cnpy::NpyArray &w_npy) {
+TArray2d_uptr load_data_matrix(cnpy::NpyArray &w_npy) {
     unsigned rows = w_npy.shape[0];
     unsigned cols = w_npy.shape[1];
 
     auto* loaded_data = w_npy.data<Numeric>();
 
-    TArray2d w(rows, cols);
+    TArray2d_uptr w = std::make_unique<TArray2d>(rows, cols);
 
     for (unsigned r = 0; r < rows; ++r)
         for (unsigned c = 0; c < cols; ++c)
-            w(r, c) = loaded_data[c + r * cols];
+            (*w)(r, c) = loaded_data[c + r * cols];
 
     return w;
 }
@@ -37,7 +37,7 @@ TArray2d load_data_vector(cnpy::NpyArray &w_npy) {
 }
 
 
-TArray2d tvb::npz2Matrixd(const std::string& filename, const std::string& index) {
+TArray2d_uptr tvb::npz2Matrixd(const std::string& filename, const std::string& index) {
     cnpy::NpyArray w_npy = cnpy::npz_load(filename, index);
     assert(w_npy.shape.size() == 2);
     if (w_npy.word_size == sizeof(float)) return load_data_matrix<float>(w_npy);
@@ -45,7 +45,7 @@ TArray2d tvb::npz2Matrixd(const std::string& filename, const std::string& index)
     else throw std::runtime_error(string_format("Unknown data format for file <%s>", filename.c_str()));
 }
 
-TArray2d tvb::npy2Matrixd(const std::string& filename) {
+TArray2d_uptr tvb::npy2Matrixd(const std::string& filename) {
     cnpy::NpyArray w_npy = cnpy::npy_load(filename);
     assert(w_npy.shape.size() == 2);
     if (w_npy.word_size == sizeof(float)) return load_data_matrix<float>(w_npy);
@@ -53,13 +53,13 @@ TArray2d tvb::npy2Matrixd(const std::string& filename) {
     else throw std::runtime_error(string_format("Unknown data format for file <%s>", filename.c_str()));
 }
 
-TArray1d tvb::npy2Vector(const std::string& filename) {
-    cnpy::NpyArray w_npy = cnpy::npy_load(filename);
-    assert(w_npy.shape.size() == 1);
-    if (w_npy.word_size == sizeof(float)) return load_data_vector<float>(w_npy);
-    else if (w_npy.word_size == sizeof(double )) return load_data_vector<double>(w_npy);
-    else throw std::runtime_error(string_format("Unknown data format for file <%s>", filename.c_str()));
-}
+//TArray1d tvb::npy2Vector(const std::string& filename) {
+//    cnpy::NpyArray w_npy = cnpy::npy_load(filename);
+//    assert(w_npy.shape.size() == 1);
+//    if (w_npy.word_size == sizeof(float)) return load_data_vector<float>(w_npy);
+//    else if (w_npy.word_size == sizeof(double )) return load_data_vector<double>(w_npy);
+//    else throw std::runtime_error(string_format("Unknown data format for file <%s>", filename.c_str()));
+//}
 
 
 
@@ -76,11 +76,11 @@ TArray2dMap tvb::npz2MatrixdMap(const std::string& filename) {
 
         Float *loaded_data = w_npy.data<Float>();
 
-        TArray2d w(rows, cols);
+        TArray2d_sptr w = std::make_shared<TArray2d>(rows, cols);
 
         for (unsigned r = 0; r < rows; ++r)
             for (unsigned c = 0; c < cols; ++c)
-                w(r, c) = loaded_data[r + c * rows];
+                (*w)(r, c) = loaded_data[r + c * rows];
 
         result[key] = w;
     }
@@ -162,8 +162,13 @@ void tvb::MatrixdMap2npz(const std::string &filename, const TArray2dMap& mmap) {
     bool first = true;
     for (auto& [key, matrix]: mmap) {
         std::string mode = first ? "w" : "a";
-        Eigen::Matrix<tvb::Float, -1, -1, Eigen::RowMajor> mrowmajor = matrix;
-        cnpy::npz_save(filename, key, mrowmajor.data(), { (size_t)mrowmajor.rows(),  (size_t)mrowmajor.cols()}, mode);
+        if (matrix->rows() == 1 || matrix->cols() == 1) {
+            cnpy::npz_save(filename, key, matrix->data(), { (size_t)matrix->rows(),  (size_t)matrix->cols()}, mode);
+        }
+        else {
+            Eigen::Matrix<tvb::Float, -1, -1, Eigen::RowMajor> mrowmajor = *matrix;
+            cnpy::npz_save(filename, key, mrowmajor.data(), { (size_t)mrowmajor.rows(),  (size_t)mrowmajor.cols()}, mode);
+        }
         first = false;
     }
 }
