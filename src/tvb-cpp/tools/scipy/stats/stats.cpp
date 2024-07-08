@@ -355,24 +355,29 @@ std::pair<double, double> ks_2samp(const TArray1d &d1,
     static vector<string> alternatives = {"two-sided", "greater", "less"};
     assert(("ks_2samp must take one of these three alternatives: two-sided, greater, less", find(alternatives.begin(), alternatives.end(), alternative) != alternatives.end()));
     unsigned MAX_AUTO_N = 10000;  // "auto" will attempt to be exact if n1,n2 <= MAX_AUTO_N
-    TArray1d data1 = d1;
-    TArray1d data2 = d2;
-    sort(data1.begin(), data1.end());
-    sort(data2.begin(), data2.end());
-    auto n1 = data1.size();
-    auto n2 = data2.size();
+    TArray1d_sptr data1 = std::make_shared<TArray1d >(d1);
+    TArray1d_sptr data2 = std::make_shared<TArray1d >(d2);
+    sort(data1->begin(), data1->end());
+    sort(data2->begin(), data2->end());
+    auto n1 = data1->size();
+    auto n2 = data2->size();
     assert(n1 > 0 && n2 > 0);
 
-    TArray1d data_all(n1 + n2);
-    data_all << data1, data2;
+    TArray1d_sptr data_all = std::make_shared<TArray1d>(n1 + n2);
+    *data_all << *data1, *data2;
+    data1.reset();
+    data2.reset();
     // using searchsorted solves equal data problem
-    TArray1d cdf1 = searchsorted(data1, data_all, "right").cast<Float>() / Float(n1);
-    TArray1d cdf2 = searchsorted(data2, data_all, "right").cast<Float>() / Float(n2);
+    TArray1d_sptr cdf1 = std::make_shared<TArray1d >(searchsorted(data_all->block(0, 0, n1, 1), *data_all, "right").cast<Float>() / Float(n1));
+    TArray1d_sptr cdf2 = std::make_shared<TArray1d >(searchsorted(data_all->block(n1, 0, n2, 1), *data_all, "right").cast<Float>() / Float(n2));
+    data_all.reset();
 //    TArray1d cdf1(cdfi1.size()), cdf2(cdfi2.size());
 //    std::transform(cdfi1.begin(), cdfi1.end(), cdf1.begin(), [n1](int v) { return double(v)/n1; });
 //    std::transform(cdfi2.begin(), cdfi2.end(), cdf2.begin(), [n2](int v) { return double(v)/n2; });
 
-    TArray1d cddiffs = cdf1 - cdf2;
+    TArray1d cddiffs = *cdf1 - *cdf2;
+    cdf1.reset();
+    cdf2.reset();
     Float minS = std::clamp(-cddiffs.minCoeff(), Float(0.0), Float(1.0));  // Ensure sign of minS is not negative.
     Float maxS = cddiffs.maxCoeff();
     unordered_map<string, Float>  alt2Dvalue = {{"less", minS},
