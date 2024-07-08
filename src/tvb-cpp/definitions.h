@@ -41,8 +41,11 @@ namespace tvb {
     typedef typename Eigen::Array<complexd, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TArray2dc;
     typedef typename Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor> TMatrix;
     typedef typename Eigen::ArrayXXi TArray2di;
+
     typedef typename Eigen::Array<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TArray1d;
     typedef typename std::unique_ptr<TArray1d> TArray1d_uptr;
+    typedef typename std::shared_ptr<TArray1d> TArray1d_sptr;
+
     typedef typename Eigen::Matrix<Float, Eigen::Dynamic, 1, Eigen::ColMajor> TVector;
     typedef typename Eigen::ArrayXi TArray1di;
     typedef typename Eigen::Array<complexd, Eigen::Dynamic, 1> TArray1dc;
