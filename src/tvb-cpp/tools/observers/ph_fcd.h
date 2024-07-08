@@ -19,7 +19,7 @@
 
 class PhFCD : public FunctionalConnectivity {
 protected:
-    tvb::TArray1d m_buffer;
+    tvb::TArray2d_uptr m_buffer;
     unsigned m_discard_offset = 0;
 
 public:
@@ -30,17 +30,20 @@ public:
     tvb::TArray2d from_fMRI(const tvb::TArray2d &signal) const override;
 
     void init(int numSubjects, int N) override {
-        m_buffer = tvb::TArray1d();
+        m_buffer = std::make_unique<tvb::TArray2d>();
     }
 
     void accumulate(const tvb::TArray2d &signal, int nsub = 0) override {
-        tvb::TArray1d new_buffer = tvb::TArray1d(m_buffer.size() + signal.rows());
-        new_buffer << m_buffer, signal.col(0);
-        m_buffer = new_buffer;
+        assert(("Signal for phFCD has to be a vector (1 column)!", signal.cols() == 1));
+        tvb::TArray2d_uptr new_buffer = tvb::TArray2d_uptr(new tvb::TArray2d(m_buffer->rows() + signal.rows(), 1));
+        if (m_buffer->size() > 0)
+            *new_buffer << *m_buffer, signal.col(0);
+        m_buffer = std::move(new_buffer);
     }
 
-    tvb::TArray2d postprocess() const override {
-        return m_buffer;
+    TArray2d_uptr postprocess() override {
+        auto uptr = std::move(m_buffer);
+        return uptr;
     }
 
     double distance(const tvb::TArray2d &fcd1, const tvb::TArray2d &fcd2) const override {

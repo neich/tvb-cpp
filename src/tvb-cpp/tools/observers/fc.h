@@ -50,7 +50,7 @@ public:
 
     [[nodiscard]] virtual double distance(const tvb::TArray2d& fcd1, const tvb::TArray2d& fcd2) const = 0;
 
-    [[nodiscard]] virtual tvb::TArray2d postprocess() const = 0;
+    [[nodiscard]] virtual tvb::TArray2d_uptr postprocess() = 0;
 
     // Static funcions
 
@@ -108,11 +108,11 @@ public:
         return FunctionalConnectivity::fc_similarity(fcd1, fcd2);
     }
 
-    [[nodiscard]] tvb::TArray2d postprocess() const override {
-        tvb::TArray2d result = tvb::TArray2d::Zero(m_buffer[0].rows(), m_buffer[0].cols());
+    [[nodiscard]] tvb::TArray2d_uptr postprocess() override {
+        auto result = TArray2d_uptr(new tvb::TArray2d(tvb::TArray2d::Zero(m_buffer[0].rows(), m_buffer[0].cols())));
         for (const tvb::TArray2d& m : m_buffer)
-            result += m;
-        result /= (double)m_buffer.size();
+            (*result) += m;
+        (*result) /= (double)m_buffer.size();
         return result;
     }
 };
