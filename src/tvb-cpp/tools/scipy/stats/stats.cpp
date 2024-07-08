@@ -351,9 +351,9 @@ std::pair<double, double> ks_2samp(const TArray1d &d1,
                                    const std::string& alternative,
                                    std::string mode) {
     static vector<string> modes = {"auto", "exact", "asymp"};
-    assert(find(modes.begin(), modes.end(), mode) != modes.end());
+    assert(("ks_2samp must take one of these three modes: auto, exact,asymp", find(modes.begin(), modes.end(), mode) != modes.end()));
     static vector<string> alternatives = {"two-sided", "greater", "less"};
-    assert(find(alternatives.begin(), alternatives.end(), alternative) != alternatives.end());
+    assert(("ks_2samp must take one of these three alternatives: two-sided, greater, less", find(alternatives.begin(), alternatives.end(), alternative) != alternatives.end()));
     unsigned MAX_AUTO_N = 10000;  // "auto" will attempt to be exact if n1,n2 <= MAX_AUTO_N
     TArray1d data1 = d1;
     TArray1d data2 = d2;
