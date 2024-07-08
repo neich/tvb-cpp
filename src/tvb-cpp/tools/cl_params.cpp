@@ -16,7 +16,7 @@ struct SweepParam {
 };
 
 void tvb::CLParser::load_data() {
-    tvb::TArray2d C;
+    tvb::TArray2d_uptr C;
 
     std::string file(vm[o_sc_matrix].as<std::string>());
     if (file.ends_with(".csv"))
@@ -28,9 +28,9 @@ void tvb::CLParser::load_data() {
     else
         throw std::runtime_error(string_format("Unknown file extension for: %s", file.c_str()));
 
-    assert(("Connectivity matrix has to be square!", C.rows() == C.cols()));
+    assert(("Connectivity matrix has to be square!", C->rows() == C->cols()));
 
-    sc_matrix.reset(new tvb::TArray2d(C));
+    sc_matrix = std::move(C);
 
     n_rois = sc_matrix->rows();
 
@@ -45,12 +45,12 @@ void tvb::CLParser::load_data() {
         else
             throw std::runtime_error(string_format("Unknown file extension for: %s", file_weights.c_str()));
 
-        assert(("Lengths matrix has to be the same size than connectivity matrix", C.rows() == sc_matrix->rows() && C.cols() == sc_matrix->cols()));
+        assert(("Lengths matrix has to be the same size than connectivity matrix", C->rows() == sc_matrix->rows() && C->cols() == sc_matrix->cols()));
 
-        length_matrix.reset(new tvb::TArray2d(C));
+        length_matrix = std::move(C);
     }
     else {
-        length_matrix.reset(new TArray2d(n_rois, n_rois));
+        length_matrix = std::make_shared<TArray2d>(n_rois, n_rois);
         // Make lengths very small so speed is equivalent to infinity and there is no delays
         length_matrix->setConstant(1e-10);
     }
