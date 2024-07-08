@@ -8,7 +8,7 @@
 #include <tvb-cpp/definitions.h>
 
 namespace tvb {
-    tvb::TArray2d csv_load(const std::string &path);
+    tvb::TArray2d_uptr csv_load(const std::string &path);
 
     void csv_save(const std::string &path, const tvb::TArray2d &data);
 

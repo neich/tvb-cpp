@@ -7,7 +7,7 @@
 using namespace tvb;
 using namespace std;
 
-TArray2d tvb::csv_load(const string& path) {
+TArray2d_uptr tvb::csv_load(const string& path) {
     vector<Float> matrixEntries;
     //vector<double> matrixEntries;
 
@@ -40,7 +40,7 @@ TArray2d tvb::csv_load(const string& path) {
 
     // here we convet the vector variable into the matrix and return the resulting object,
     // note that matrixEntries.data() is the pointer to the first memory location at which the entries of the vector matrixEntries are stored;
-    return Eigen::Map<TArray2d>(matrixEntries.data(), matrixRowNumber, matrixEntries.size() / matrixRowNumber);
+    return std::make_unique<TArray2d >(TArray2d(Eigen::Map<TArray2d>(matrixEntries.data(), matrixRowNumber, matrixEntries.size() / matrixRowNumber)));
 }
 
 void tvb::csv_save(const std::string &filename, const tvb::TArray2d& data) {
