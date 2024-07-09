@@ -50,7 +50,8 @@ void BoldTVB::config() const {
 void BoldTVB::update(int step, const State &state) const {
 }
 
-std::pair<TArray1d, TArray2d> BoldTVB::compute_bold(const TArray2d &ts, tvb::Float ts_dt) const {
+std::pair<TArray1d_uptr, TArray2d_uptr> BoldTVB::compute_bold(const TArray2d &ts, tvb::Float ts_dt) const {
+
     m_n_nodes = ts.cols(); // number of ROIsn
     int n_samples = ts.rows();
     m_dt = ts_dt;
@@ -58,9 +59,10 @@ std::pair<TArray1d, TArray2d> BoldTVB::compute_bold(const TArray2d &ts, tvb::Flo
     this->config();
 
     int n_bold = n_samples / m_istep;
-    TArray2d data(n_bold, m_n_nodes);
-    TArray1d t_samples(n_bold);
+    TArray2d_uptr data = std::make_unique<TArray2d>(n_bold, m_n_nodes);
+    TArray1d_uptr t_samples = std::make_unique<TArray1d>(n_bold);
     int index = 0;
+
     for (int step = 1; step <= n_samples; ++step) {
         if (step % m_interim_step == 0) {
             int start = step-m_interim_step;
@@ -71,9 +73,11 @@ std::pair<TArray1d, TArray2d> BoldTVB::compute_bold(const TArray2d &ts, tvb::Flo
                 a_sample += sample;
             }
             a_sample /= tvb::Float(m_interim_step);
-            this->m_stock[(step / m_interim_step % m_stock_steps) - 1] = a_sample;
+            int i = ((step-1) / m_interim_step % m_stock_steps);
+            this->m_stock[i] = a_sample;
         }
         if (step % m_istep == 0) {
+
             int shift = int(step / m_interim_step % m_stock_steps) - 1;
             TArray2d hrf = circshift(m_hemodynamic_response_function, shift);
             auto *fov = dynamic_cast<FirstOrderVolterra *>(m_hrf_kernel.get());
@@ -97,10 +101,11 @@ std::pair<TArray1d, TArray2d> BoldTVB::compute_bold(const TArray2d &ts, tvb::Flo
                     }
 
             }
-            t_samples[index] = step * m_dt;
-            data.row(index) = bold;
+            (*t_samples)[index] = step * m_dt;
+            (*data).row(index) = bold;
             index++;
+
         }
     }
-    return {t_samples, data};
+    return {std::move(t_samples), std::move(data)};
 }
