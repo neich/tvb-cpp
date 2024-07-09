@@ -368,18 +368,19 @@ std::pair<double, double> ks_2samp(const TArray1d &d1,
     data1.reset();
     data2.reset();
     // using searchsorted solves equal data problem
-    TArray1d_sptr cdf1 = std::make_shared<TArray1d >(searchsorted(data_all->block(0, 0, n1, 1), *data_all, "right").cast<Float>() / Float(n1));
-    TArray1d_sptr cdf2 = std::make_shared<TArray1d >(searchsorted(data_all->block(n1, 0, n2, 1), *data_all, "right").cast<Float>() / Float(n2));
+    TArray1d_sptr cdf1 = std::make_shared<TArray1d>(searchsorted(data_all->block(0, 0, n1, 1), *data_all, "right").cast<Float>() / Float(n1));
+    TArray1d_sptr cdf2 = std::make_shared<TArray1d>(searchsorted(data_all->block(n1, 0, n2, 1), *data_all, "right").cast<Float>() / Float(n2));
     data_all.reset();
 //    TArray1d cdf1(cdfi1.size()), cdf2(cdfi2.size());
 //    std::transform(cdfi1.begin(), cdfi1.end(), cdf1.begin(), [n1](int v) { return double(v)/n1; });
 //    std::transform(cdfi2.begin(), cdfi2.end(), cdf2.begin(), [n2](int v) { return double(v)/n2; });
 
-    TArray1d cddiffs = *cdf1 - *cdf2;
+    TArray1d_sptr cddiffs = std::make_shared<TArray1d>(*cdf1 - *cdf2);
     cdf1.reset();
     cdf2.reset();
-    Float minS = std::clamp(-cddiffs.minCoeff(), Float(0.0), Float(1.0));  // Ensure sign of minS is not negative.
-    Float maxS = cddiffs.maxCoeff();
+    Float minS = std::clamp(-cddiffs->minCoeff(), Float(0.0), Float(1.0));  // Ensure sign of minS is not negative.
+    Float maxS = cddiffs->maxCoeff();
+    cddiffs.reset();
     unordered_map<string, Float>  alt2Dvalue = {{"less", minS},
                                                  {"greater", maxS},
                                                  {"two-sided", max(minS, maxS)}};
