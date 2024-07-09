@@ -205,230 +205,6 @@ TArray2d_uptr load_data(const string &file_weights) {
 }
 
 
-//RunParams run(RunParams rp, unsigned n = 1, unsigned total = 1) {
-//
-//
-//    string f_prefix = getPrefix(rp.params);
-//
-//    path out_dir = rp.path_out;
-//
-//    tvb::TArray2d C;
-//    tvb::TArray2d tl;
-//
-//    load_data(rp.file_weights, rp.file_lengths, C, tl);
-//
-//    if (rp.norm.size() > 0) {
-//        if (rp.norm[0] == "Gus") {
-//            auto factor = boost::lexical_cast<double>(rp.norm[1]);
-//            double maxC = C.rowwise().sum().maxCoeff();
-//            C = C / maxC * factor;
-//        } else {
-//            throw std::runtime_error(string_format("Unsupported normalization method <%s>\n", rp.norm[0].c_str()));
-//        }
-//    }
-//
-//    int N = C.rows();
-//
-//    Float k = 0.15 / (C.rowwise().sum().sum() / N);
-//    // C *= k;
-//    // tvb::csv_save("sc_d_norm.csv", C);
-//
-//    auto *con = new tvb::Connectivity(C, tl, rp.speed);
-//
-//    milliseconds total_time(0);
-//    std::cout << string_format("Starting computation (%d of %d)for: %s", n, total, f_prefix.c_str()) << std::endl;
-//
-//    // auto *model = new tvb::Montbrio(N, rp.t_start, rp.t_end, dt);
-//    // auto *model = new tvb::ReducedWongWangExcInh(N);
-//    tvb::Model *model;
-//    TArray1d sigmas;
-//    if (rp.model == "ZerlautGABA") {
-//        model = new ZerlautGABA(N);
-//        sigmas = TArray1d::Constant(model->n_vars(), 0.0);
-//        sigmas[model->n_vars() - 1] = 1.0;
-//        model->configure();
-//        if (gaba_vector.size() > 0)
-//            model->set_param("gaba_ratio", gaba_vector);
-//        else
-//            model->set_param("gaba_ratio", TArray1d::Ones(N));
-//    } else if (rp.model == "Montbrio") {
-//        model = new Montbrio(N);
-//        sigmas = TArray1d::Constant(model->n_vars(), 0.0);
-//        model->configure();
-//    }
-//    else {
-//        throw std::runtime_error(string_format("Unknown model <%s>\n", rp.model.c_str()));
-//    }
-//
-//    float G = 1.0;
-//    auto g_it = std::find(rp.params.begin(), rp.params.end(), "G");
-//    if (g_it != rp.params.end()) {
-//        G = g_it->value;
-//        // rp.params.erase(g_it);
-//    }
-//
-//    for (auto const &p: rp.params)
-//        if (std::isalpha(p.name[0]) && p.name != "G") model->set_param(p.name, p.value);
-//
-//    model->init_dependant();
-//    // rp.monitor = new tvb::BoldTVB(N, 720.0, dt, {0});
-//    // rp.monitor = new tvb::BoldBalloonWindkessel(N, 1.0, 720.0, dt, {0});
-//    // rp.monitor = new tvb::RawSubSample(1.0, dt, {3});
-//
-///*
-//    for (auto const &p: rp.params)
-//        if (p.name[0] == '_') {
-//            auto idx = std::stoi(p.name.substr(2, 1));
-//            sigmas[idx] = p.value;
-//        }
-//*/
-//
-//
-//    sigmas << 0, 0, 0, 0, 0, 0, 0, 1;
-//    auto *integrator = new tvb::EulerStochastic(dt, new Additive(sigmas, dt));
-//    // auto *integrator = new tvb::EulerDeterministic(dt);
-//
-//    auto coupling = new tvb::CouplingLinearSparse(con->weights(), con->delays(), model->cvars());
-//    coupling->setScale(G);
-//
-//    if (rp.algo == "explore_G") {
-//        path npy_file = out_dir;
-//        npy_file /= rp.job_id + f_prefix + ".npy";
-//
-//        if (!rp.force_output && std::filesystem::exists(npy_file)) {
-//            std::cout << string_format("File %s already exists", npy_file.c_str()) << std::endl;
-//            delete rp.monitor;
-//            rp.monitor = nullptr;
-//            return rp;
-//        }
-//
-//        auto start = std::chrono::high_resolution_clock::now();
-//
-//        SimConfig sim_config;
-//
-//        sim_config.setModel(model);
-//        sim_config.setConnectivity(con);
-//        sim_config.setIntegrator(integrator);
-//        // sim_config.setMonitor(rp.monitor);
-//        sim_config.setCoupling(coupling);
-//        sim_config.setIntegrationInterval(rp.t_start, rp.t_end);
-//        sim_config.setNumIterations(1);
-//        sim_config.setDeltaIntegration(0.00001);
-//
-//        Simulator simulator{};
-//        TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
-//        auto *monitor = new TemporalAverage(con->weights().cols(), rp.ta_period, dt, {0});
-//
-//        simulator.run(sim_config.model(),
-//                      sim_config.connectivity(),
-//                      sim_config.integrator(),
-//                      {monitor},
-//                      sim_config.coupling(),
-//                      0, rp.t_end,
-//                      nullptr,
-//                      &initial_state);
-//
-//        auto stop = std::chrono::high_resolution_clock::now();
-//        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-//                std::chrono::high_resolution_clock::now() - start);
-//
-//        // std::cout << string_format("Computation time (%s): %d msecs", npy_file.c_str(), duration.count()) << std::endl;
-//        std::cout << string_format("Computation time: %d msecs", duration.count()) << std::endl;
-//
-//        total_time += duration;
-//
-//        // save_fig(monitor, f_prefix);
-//        TArray2d data = monitor->voi2Array(0);
-//        // Matrixd2np(data, npy_file.string());
-//
-//        delete monitor;
-//        // rp.file_out = npy_file.string();
-//
-//        delete model;
-//        delete coupling;
-//    } else {
-//
-//        path npz_file = out_dir;
-//        // npz_file /= rp.job_id + f_prefix + ".npz";
-//        npz_file /= f_prefix + ".npz";
-//
-//        if (std::filesystem::exists(npz_file) && !rp.force_output) {
-//            std::cout << string_format("File %s already exists\n", npz_file.c_str()) << std::flush;
-//            auto data = npz2MatrixdMap(npz_file.string());
-//            saveJSON(rp, f_prefix, out_dir, data["fit"](0,0));
-//            delete rp.monitor;
-//            rp.monitor = nullptr;
-//            delete model;
-//            delete coupling;
-//            return rp;
-//        }
-//
-//        path pe_file = out_dir / "fNeuro_emp.npy";
-//        if (!exists(pe_file))
-//            throw std::runtime_error(string_format("Preprocessed file does not exists %s\n", pe_file.c_str()));
-//
-//        TArray2dMap data = npz2MatrixdMap(pe_file.string());
-//        TArray2d processed_emp = data["swFCD"];
-//
-//        BandPassFilter bpf(0.008, 0.08, 2.5);
-//        // SW_FC measure(30, 10, true, bpf);
-//        PhFCD measure(5, true, bpf);
-//
-//        int N = data["nsub"](0, 0);
-//        measure.init(N, N);
-//        auto start = std::chrono::high_resolution_clock::now();
-//
-//        SimConfig sim_config;
-//
-//        sim_config.setModel(model);
-//        sim_config.setConnectivity(con);
-//        sim_config.setIntegrator(integrator);
-//        sim_config.setCoupling(coupling);
-//        sim_config.setNumIterations(1);
-//        sim_config.setDeltaIntegration(0.00001);
-//
-//        Simulator simulator{};
-//        TemporalAverage* ta_mon = new TemporalAverage(N, 1, dt, {0});
-//        TArray2d initial_state = TArray2d::Zero(C.cols(), model->n_vars());
-//
-//        simulator.run(sim_config.model(),
-//                      sim_config.connectivity(),
-//                      sim_config.integrator(),
-//                      {ta_mon},
-//                      sim_config.coupling(),
-//                      0, rp.t_end,
-//                      nullptr,
-//                      &initial_state);
-//
-//
-//        TArray2d raw_signal = ta_mon->voi2Array(0);
-//        BoldTVB *btvb = new BoldTVB(TR);
-//        auto [bold_times, bold_signal] = btvb->compute_bold(raw_signal, 1.0);
-//        TArray2d proc_signal = measure.from_fMRI(bold_signal);
-//        measure.accumulate(proc_signal);
-//
-//
-//        auto measureValues = measure.postprocess();
-//        auto fitting = measure.distance(measureValues, processed_emp);
-//        cout << string_format("Distance for <%s> : <%f>\n", f_prefix.c_str(), fitting);
-//
-//        TArray2dMap npz_data;
-//        npz_data["measure"] = measureValues;
-//        npz_data["fit"] = {{(double) fitting}};
-//        MatrixdMap2npz(npz_file.string(), npz_data);
-//
-//        auto stop = std::chrono::high_resolution_clock::now();
-//        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-//                std::chrono::high_resolution_clock::now() - start);
-//        cout << string_format("Computed time series (%d, %d) for <%s> (time: <%d>)\n", bold_signal.rows(),
-//                              bold_signal.cols(), f_prefix.c_str(), duration.count()) << flush;
-//
-//        saveJSON(rp, f_prefix, out_dir, fitting);
-//    }
-//
-//    return rp;
-//}
-
 void saveJSON(const RunParams &rp, const string &f_prefix, const path &out_dir, double fitting) {
 //    auto json_file = out_dir / (rp.job_id + "_" + f_prefix + ".json");
 //    ofstream jsonf(json_file, std::ios_base::out | std::ios_base::trunc);
@@ -598,11 +374,11 @@ int main(int argc, char **argv) {
 
 
             TArray2d raw_signal = ta_mon->voi2Array(0);
-            BoldTVB *btvb = new BoldTVB(TR*1000.0);
+            BoldTVB btvb(TR*1000.0);
             printff("Computing BOLD for we = %f.2\n", we);
-            auto [bold_times, bold_signal] = btvb->compute_bold(raw_signal, 1.0);
+            auto [bold_times, bold_signal] = btvb.compute_bold(raw_signal, 1.0);
             printff("From fMRI ... \n");
-            TArray2d proc_signal = measure.from_fMRI(bold_signal.transpose());
+            TArray2d proc_signal = measure.from_fMRI(bold_signal->transpose());
             printff("Accumulate ... \n");
             measure.accumulate(proc_signal);
 
@@ -621,45 +397,25 @@ int main(int argc, char **argv) {
             auto stop = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::high_resolution_clock::now() - start);
-            printff("Computed time series (%d, %d) for we = <%f.2> (time: <%d>)\n", bold_signal.rows(),
-                                  bold_signal.cols(), we, duration.count());
+            printff("Computed time series (%d, %d) for we = <%f.2> (time: <%d>)\n", bold_signal->rows(),
+                                  bold_signal->cols(), we, duration.count());
 
             // saveJSON(rp, f_prefix, out_dir, fitting);
         }
-        if (vm["srun"].as<bool>()) {
+        else {
             cout << "Running jobs using srun/slurm" << endl;
             std::vector<child *> processes;
             auto srun = search_path("srun");
-            unsigned srun_pack_size = 100;
+            auto srun_pack_size = 200;
+
+            for (auto we: tvb::range(1.0, 20.0, 19)) {
+
                 string args = "";
-                args += string_format(" -N 1 -n 1 -c 1 --exclusive --mem-per-cpu=2000MB %s",
+                args += string_format(" -N 1 -n 1 -c 1 --exclusive --time=2-00 %s",
                                       std::filesystem::canonical("/proc/self/exe").c_str());
-                args += string_format(" --sc-matrix %s", vm["sc-matrix"].as<string>().c_str());
+                args += string_format(" --we %f", we);
                 args += string_format(" --out-path %s", vm["out-path"].as<string>().c_str());
-                args += string_format(" --algo %s", vm["algo"].as<string>().c_str());
-                args += string_format(" --experiment-name %s", vm["experiment-name"].as<string>().c_str());
-                args += string_format(" --job-id %s", vm["job-id"].as<string>().c_str());
-                if (vm.count("norm")) {
-                    args += " --norm";
-                    for (auto &s: vm["norm"].as<vector<string>>())
-                        args += " " + s;
-                }
-                if (vm.count("gaba-vector") > 0)
-                    args += string_format(" --gaba-vector %s", vm["gaba-vector"].as<string>().c_str());
-                if (vm["force-output"].as<bool>())
-                    args += " --force-output";
-                if (vm.count("tr") > 0)
-                    args += string_format(" --tr %f", vm["tr"].as<float>());
-                if (vm.count("model") > 0)
-                    args += string_format(" --model %s", vm["model"].as<string>().c_str());
-                if (vm.count("time-series") > 0)
-                    args += string_format(" --time-series %s", vm["time-series"].as<string>().c_str());
-                if (vm.count("ta-period") > 0)
-                    args += string_format(" --ta-period %f", vm["ta-period"].as<float>());
-                if (vm.count("time-end") > 0)
-                    args += string_format(" --time-end %f", vm["time-end"].as<float>());
-                if (vm.count("time-start") > 0)
-                    args += string_format(" --time-start %f", vm["time-start"].as<float>());
+                args += string_format(" --data-path %s", vm["data-path"].as<string>().c_str());
 
 
                 cout << string_format("Executing [%s, %s]\n", srun.c_str(), args.c_str()) << std::endl;
@@ -671,7 +427,7 @@ int main(int argc, char **argv) {
                         c->wait();
                     processes.clear();
                 }
-
+            }
 
             for (auto c: processes)
                 c->wait();
@@ -681,6 +437,8 @@ int main(int argc, char **argv) {
 
         }
 }
+
+
 
 void collect_results(const string &job_id, const path &out_dir, const vector<RunParams> &param_combs) {
     auto json_file = out_dir / (job_id + ".json");
