@@ -59,7 +59,7 @@ namespace tvb {
 
         ADD_GETTERS_AND_SETTERS_SCALAR(m_taus, m_tauf, m_tauo, m_alpha, m_eo, m_te, m_vo, m_r0, m_theta0, m_tr)
 
-        [[nodiscard]] std::pair<TArray1d, TArray2d> compute_bold(const TArray2d &ts, tvb::Float ts_dt) const override;
+        [[nodiscard]] std::pair<TArray1d_uptr, TArray2d_uptr> compute_bold(const TArray2d &ts, Float ts_dt) const override;
     };
 
 
