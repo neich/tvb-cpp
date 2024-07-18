@@ -50,18 +50,18 @@ void BoldTVB::config() const {
 void BoldTVB::update(int step, const State &state) const {
 }
 
-std::pair<TArray1d_uptr, TArray2d_uptr> BoldTVB::compute_bold(const TArray2d &ts, tvb::Float ts_dt) const {
+TArray2d_uptr BoldTVB::compute_bold(const TArray2d &ts, tvb::Float ts_dt) const {
 
-    m_n_nodes = ts.cols(); // number of ROIsn
-    int n_samples = ts.rows();
+    m_n_nodes = ts.rows(); // number of ROIs
+    int n_samples = ts.cols();
     m_dt = ts_dt;
     m_hrf_length = m_tr * 10.0;
     this->config();
 
     int n_bold = n_samples / m_istep;
-    TArray2d_uptr data = std::make_unique<TArray2d>(n_bold, m_n_nodes);
-    TArray1d_uptr t_samples = std::make_unique<TArray1d>(n_bold);
+    TArray2d_uptr data = std::make_unique<TArray2d>(m_n_nodes, n_bold);
     int index = 0;
+
 
     for (int step = 1; step <= n_samples; ++step) {
         if (step % m_interim_step == 0) {
@@ -69,7 +69,7 @@ std::pair<TArray1d_uptr, TArray2d_uptr> BoldTVB::compute_bold(const TArray2d &ts
             int finish = step;
             TArray1d a_sample = TArray1d::Zero(m_n_nodes);
             for (int i = start; i < finish; ++i) {
-                const TArray1d& sample = ts.row(i);
+                const TArray1d& sample = ts.col(i);
                 a_sample += sample;
             }
             a_sample /= tvb::Float(m_interim_step);
@@ -101,11 +101,10 @@ std::pair<TArray1d_uptr, TArray2d_uptr> BoldTVB::compute_bold(const TArray2d &ts
                     }
 
             }
-            (*t_samples)[index] = step * m_dt;
-            (*data).row(index) = bold;
+            (*data).col(index) = bold;
             index++;
 
         }
     }
-    return {std::move(t_samples), std::move(data)};
+    return std::move(data);
 }

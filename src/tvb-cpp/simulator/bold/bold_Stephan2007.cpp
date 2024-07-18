@@ -16,7 +16,7 @@
 
 using namespace tvb;
 
-std::pair<TArray1d_uptr, TArray2d_uptr> BoldStephan2007::compute_bold(const TArray2d &ts_bold, Float ts_dt) const {
+TArray2d_uptr BoldStephan2007::compute_bold(const TArray2d &ts_bold, Float ts_dt) const {
     TArray2d ts = ts_bold.transpose(); // Transpose to get memory contiguous vector operations
 
     int n_t = ts.cols(); // number of time samples
@@ -42,6 +42,5 @@ std::pair<TArray1d_uptr, TArray2d_uptr> BoldStephan2007::compute_bold(const TArr
     TArray2d q = x3; // (Eigen::all, Eigen::seq(n_min, m_istep - 1));
     TArray2d b = m_vo * (k1 * (Float(1.0) - q) + k2 * (Float(1.0) - q / v) + k3 * (Float(1.0) - v));
 
-    return {std::make_unique<TArray1d>(tvb::nrange(0.0, ts_dt, n_t)),
-            std::make_unique<TArray2d>(b.transpose())};
+    return std::make_unique<TArray2d>(b.transpose());
 }

@@ -24,7 +24,7 @@ namespace tvb {
         *
         * n_time_samples_bold is usually <= n_time_samples
         */
-        [[nodiscard]] virtual std::pair<TArray1d_uptr, TArray2d_uptr>  compute_bold(const tvb::TArray2d &ts, tvb::Float ts_dt) const = 0;
+        [[nodiscard]] virtual TArray2d_uptr compute_bold(const tvb::TArray2d &ts, tvb::Float ts_dt) const = 0;
 
     };
 
