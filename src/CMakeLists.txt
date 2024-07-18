@@ -52,6 +52,8 @@ set(TVB_SOURCES
         tvb-cpp/simulator/bold/bold_tvb.cpp
         tvb-cpp/simulator/bold/bold_Stephan2007.h
         tvb-cpp/simulator/bold/bold_Stephan2007.cpp
+        tvb-cpp/simulator/bold/bold_Stephan2008.h
+        tvb-cpp/simulator/bold/bold_Stephan2008.cpp
         tvb-cpp/simulator/noise/thomsonsed/xoshiro_256p.h
         tvb-cpp/simulator/models/naskar.cpp
         tvb-cpp/simulator/models/naskar.h
