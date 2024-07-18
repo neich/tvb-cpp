@@ -54,6 +54,43 @@ namespace tvb {
 
     };
 
+    class CouplingNoDelays : public Coupling {
+    protected:
+        int m_ntime;
+        double m_dt;
+        double m_scale;
+
+        TArray2d m_buffer;
+
+    public:
+        CouplingNoDelays(const TArray2d &weights, const TArray2d &delays, const std::vector<int> &cvars) : Coupling(
+                weights, delays, cvars), m_scale(1.0) {};
+
+        void init(double dt, const State &init_state) override {
+            m_dt = dt;
+            m_buffer = TArray2d(this->m_nnodes, this->m_nvars);
+            // tvb::transform(m_delays, m_idelays, rint(boost::phoenix::placeholders::arg1 / dt));
+            this->update(0, init_state);
+        }
+
+        virtual TArray2d couple(int step) const override {
+            TArray2d result(m_nnodes, m_nvars);
+
+            for (int c = 0; c < m_cvars.size(); ++c) {
+                result.col(c) = m_weights.matrix() * this->m_buffer.col(c).matrix();
+            }
+
+            return result;
+        }
+
+        virtual void update(int step, const State &state) override {
+            for (int c = 0; c < m_nvars; ++c)
+                m_buffer.col(c) = state.col(m_cvars[c]);
+        }
+
+    };
+
+
     class CouplingLinearDense : public Coupling {
     protected:
         TArray2di m_idelays;
