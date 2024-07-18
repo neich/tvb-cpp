@@ -86,9 +86,9 @@ namespace tvb {
          */
          [[nodiscard]] TArray2d voi2Array(int index) const {
             auto N = getRecords()[0].record.rows();
-            TArray2d result(getRecords().size(), N);
+            TArray2d result(N, getRecords().size());
             for (int i = 0; i < getRecords().size(); ++i)
-                result.row(i) = getRecords()[i].record.col(index);
+                result.col(i) = getRecords()[i].record.col(index);
             return result;
         }
 
