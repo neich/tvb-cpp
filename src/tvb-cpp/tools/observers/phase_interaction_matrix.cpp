@@ -21,7 +21,7 @@
 #include <tvb-cpp/tools/numpy/numpy.h>
 
 
-std::vector<TArray2d> phase_matrix(const TArray2d& signal, unsigned discard_offset) {
+std::vector<TArray2d> tvb::phase_matrix(const TArray2d& signal, unsigned discard_offset) {
     int N = signal.rows();
     int Tmax = signal.cols();
     auto npattmax = Tmax - (2*discard_offset-1);
@@ -57,7 +57,7 @@ std::vector<TArray2d> phase_matrix(const TArray2d& signal, unsigned discard_offs
         }
     }
     else {
-        PhIntMatr = std::vector<TArray2d>(npattmax, TArray2d::Constant(N, N, NAN));
+        throw std::runtime_error("tvb::phase_matrix produced a result that contains nan!");
     }
 
     return PhIntMatr;

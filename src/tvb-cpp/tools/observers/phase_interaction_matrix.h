@@ -14,5 +14,6 @@
 
 #include "fc.h"
 
-
-std::vector<tvb::TArray2d> phase_matrix(const tvb::TArray2d &signal, unsigned discard_offset = 0);
+namespace tvb {
+    std::vector<tvb::TArray2d> phase_matrix(const tvb::TArray2d &signal, unsigned discard_offset = 0);
+}
