@@ -27,14 +27,16 @@
 class FunctionalConnectivity {
 
 protected:
+    typedef typename std::unique_ptr<Filter> Filter_uptr;
+
     bool m_apply_filters = false;
-    const Filter& m_filter;
+    Filter_uptr m_filter;
 
 public:
 
-    explicit FunctionalConnectivity(bool applyFilters = false, const Filter& filter = Filter()):
+    explicit FunctionalConnectivity(bool applyFilters = false, Filter_uptr filter = nullptr):
     m_apply_filters(applyFilters),
-    m_filter(filter)
+    m_filter(std::move(filter))
     {}
 
     /**
@@ -42,7 +44,7 @@ public:
      * @param signal time series as TArray(n_time_samples, n_rois)
      * @return time series
      */
-    [[nodiscard]] virtual tvb::TArray2d from_fMRI(const tvb::TArray2d& signal) const = 0;
+    [[nodiscard]] virtual tvb::TArray2d_uptr from_fMRI(const tvb::TArray2d& signal) const = 0;
 
     virtual void init(int numSubjects, int N) = 0;
 
@@ -79,19 +81,19 @@ protected:
 
 public:
 
-    explicit FunctionalConnectivityStandard(bool applyFilters = false, const Filter& filter = Filter()):
-            FunctionalConnectivity(applyFilters, filter)
+    explicit FunctionalConnectivityStandard(bool applyFilters = false, Filter_uptr filter = nullptr):
+            FunctionalConnectivity(applyFilters, std::move(filter))
     {}
 
-    [[nodiscard]] virtual tvb::TArray2d from_fMRI(const tvb::TArray2d& signal) const override {
+    [[nodiscard]] virtual tvb::TArray2d_uptr from_fMRI(const tvb::TArray2d& signal) const override {
         tvb::TArray2d signal_filtered;
-        if (m_apply_filters) {
-            signal_filtered = m_filter.apply(signal);
+        if (m_apply_filters && m_filter) {
+            signal_filtered = m_filter->apply(signal);
             signal_filtered.transposeInPlace();
         } else {
             signal_filtered = signal.transpose();
         }
-        auto cc = corrcoef(signal_filtered, tvb::TArray2d(), false);
+        TArray2d_uptr cc = std::make_unique<TArray2d>(corrcoef(signal_filtered, tvb::TArray2d(), false));
         return cc;
     }
 

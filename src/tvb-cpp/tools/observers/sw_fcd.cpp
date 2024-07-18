@@ -23,12 +23,12 @@ int calc_length(int start, int end, int step) {
     return 1 + (end - start - 1) / step;
 }
 
-TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of an input BOLDModel signal
+TArray2d_uptr SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of an input BOLDModel signal
     int N = signal.rows();
     int Tmax = signal.cols();
     TArray2d signal_filtered;
-    if (m_apply_filters)
-        signal_filtered = m_filter.apply(signal);  // Filters seem to be always applied...
+    if (m_apply_filters && m_filter)
+        signal_filtered = m_filter->apply(signal);  // Filters seem to be always applied...
     else
         signal_filtered = signal;
 
@@ -36,7 +36,7 @@ TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of
     // compute the correlation between the two.
     int lastWindow = Tmax - m_windowSize;  // 190 = 220 - 30
     int N_windows = calc_length(0, lastWindow, m_windowStep);  // N_windows = len(np.arange(0, lastWindow, windowStep))
-    TArray1d cotsampling = TArray1d::Zero((int(N_windows * (N_windows - 1) / 2)));
+    TArray2d_uptr cotsampling = std::make_unique<TArray2d>(int(N_windows * (N_windows - 1) / 2), 1);
     int kk = 0;
     int ii2 = 0;
     for (int t = 0; t < lastWindow; t+=m_windowStep) {
@@ -48,7 +48,7 @@ TArray2d SW_FC::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of
                 TArray2d sfilt2 = signal_filtered(Eigen::all, Eigen::seqN(t2, m_windowSize + 1)).transpose();
                 TArray2d cc2 = corrcoef(sfilt2, TArray2d(), false);  // Pearson correlation coefficients
                 double ca = pearson_r(tril_values(cc, N, -1), tril_values(cc2, N, -1));  // Correlation between both FC
-                cotsampling[kk++] = ca;
+                (*cotsampling)(kk++, 0) = ca;
             }
             jj2++;
         }

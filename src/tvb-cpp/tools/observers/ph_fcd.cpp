@@ -16,20 +16,20 @@
 
 #include <tvb-cpp/tools/observers/phase_interaction_matrix.h>
 
-TArray2d PhFCD::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of an input BOLD signal
+TArray2d_uptr PhFCD::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of an input BOLD signal
     int N = signal.rows();
     int Tmax = signal.cols();
     auto npattmax = Tmax - (2*m_discard_offset-1);
     auto size_kk3 = int((npattmax - 3) * (npattmax - 2) / 2);  // The int() is not needed because N*(N-1) is always even, but "it will produce an error in the future"...
 
     // Isubdiag = tril_indices_column(N, k=-1)  // Indices of triangular lower part of matrix
-    auto signal_filt = signal;
-    if (m_apply_filters)
-        signal_filt = m_filter.apply(signal);
+    TArray2d signal_filt = signal;
+    if (m_apply_filters && m_filter)
+        signal_filt = m_filter->apply(signal);
 
     auto phIntMatr = phase_matrix(signal_filt, m_discard_offset);  // Compute the Phase-Interaction Matrix
 
-    TArray1d phfcd = TArray1d::Zero(size_kk3);
+    TArray2d_uptr phfcd = std::make_unique<TArray2d>(size_kk3, 1);
     if (!tvb::isnan(signal_filt)) {
         TArrayRM2d phIntMatr_upTri = TArray2d::Zero(npattmax,
                                                   int(N * (N - 1) / 2)); // The int() is not needed, but... (see above)
@@ -41,13 +41,13 @@ TArray2d PhFCD::from_fMRI(const TArray2d& signal) const {  // Compute the FCD of
             auto p1_norm = p1.norm();
             for (unsigned t2 = t + 1; t2 < npattmax - 2; ++t2) {
                 TVector p2 = phIntMatr_upTri.row(t2) + phIntMatr_upTri.row(t2+1) + phIntMatr_upTri.row(t2+2);;
-                phfcd[kk3] = p1.dot(p2) / (p1_norm * p2.norm());
+                (*phfcd)(kk3, 0) = p1.dot(p2) / (p1_norm * p2.norm());
                 kk3 += 1;
             }
         }
     }
     else
-        phfcd = TArray1d::Constant(size_kk3, NAN);
+        throw std::runtime_error("Filtered signal contains nan!");
 
     return phfcd;
 }

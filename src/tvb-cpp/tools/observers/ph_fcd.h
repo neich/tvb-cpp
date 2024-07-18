@@ -23,11 +23,11 @@ protected:
     unsigned m_discard_offset = 0;
 
 public:
-    explicit PhFCD(unsigned discard_offset = 0, bool applyFilters = true, const Filter &filter = Filter()) :
-            FunctionalConnectivity(applyFilters, filter),
+    explicit PhFCD(unsigned discard_offset = 0, bool applyFilters = false, Filter_uptr filter = nullptr) :
+            FunctionalConnectivity(applyFilters, std::move(filter)),
             m_discard_offset(discard_offset) {}
 
-    tvb::TArray2d from_fMRI(const tvb::TArray2d &signal) const override;
+    tvb::TArray2d_uptr from_fMRI(const tvb::TArray2d &signal) const override;
 
     void init(int numSubjects, int N) override {
         m_buffer = std::make_unique<tvb::TArray2d>();

@@ -24,13 +24,13 @@ protected:
     tvb::TArray2d_uptr m_buffer;
 
 public:
-    explicit SW_FC(bool applyFilters = false, const Filter &filter = Filter()) : FunctionalConnectivity(applyFilters, filter) {}
+    explicit SW_FC(bool applyFilters = false, Filter_uptr filter = nullptr) : FunctionalConnectivity(applyFilters, std::move(filter)) {}
 
-    SW_FC(int windowSize, int windowStep, bool applyFilters = false, const Filter &filter = Filter()) :
-            FunctionalConnectivity(applyFilters, filter),
+    SW_FC(int windowSize, int windowStep, bool applyFilters = false, Filter_uptr filter = nullptr) :
+            FunctionalConnectivity(applyFilters, std::move(filter)),
             m_windowSize(windowSize), m_windowStep(windowStep) {}
 
-    tvb::TArray2d from_fMRI(const tvb::TArray2d &signal) const override;
+    tvb::TArray2d_uptr from_fMRI(const tvb::TArray2d &signal) const override;
 
     void init(int numSubjects, int N) override {
         m_buffer = std::make_unique<tvb::TArray2d>();
