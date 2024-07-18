@@ -22,6 +22,7 @@
 #include <cstdarg>
 #include <memory>
 #include <unordered_map>
+#include <optional>
 
 #include <Eigen/Dense>
 #include "tools/cnpy.h"
@@ -122,35 +123,21 @@ namespace tvb {
     }
 
     inline
-    bool isnan(const TArray1d &vector) {
-        for (auto const &v: vector)
-            if (std::isnan(v))
-                return true;
-        return false;
+    std::optional<std::tuple<int, int>> isnan(const TArray2d &matrix) {
+        for (int c = 0; c < matrix.cols(); ++c)
+            for (int r = 0; r < matrix.rows(); ++r)
+                if (std::isnan(matrix(r,c)))
+                    return std::make_optional<std::tuple<int, int>>(r, c);
+        return std::nullopt;
     }
 
     inline
-    bool isfinite(const TArray1d &vector) {
-        for (auto const &v: vector)
-            if (!std::isfinite(v))
-                return false;
-        return true;
-    }
-
-    inline
-    bool isnan(const TArray2d &matrix) {
-        for (auto const &v: matrix.reshaped())
-            if (std::isnan(v))
-                return true;
-        return false;
-    }
-
-    inline
-    bool isfinite(const TArray2d &matrix) {
-        for (auto const &v: matrix.reshaped())
-            if (!std::isfinite(v))
-                return false;
-        return true;
+    std::optional<std::tuple<int, int>> isfinite(const TArray2d &matrix) {
+        for (int c = 0; c < matrix.cols(); ++c)
+            for (int r = 0; r < matrix.rows(); ++r)
+                if (!std::isfinite(matrix(r,c)))
+                    return std::make_optional<std::tuple<int, int>>(r, c);
+        return std::nullopt;
     }
 
 
