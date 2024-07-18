@@ -9,7 +9,7 @@ using namespace tvb;
 template<typename Numeric>
 TArray2d_uptr load_data_matrix(cnpy::NpyArray &w_npy) {
     unsigned rows = w_npy.shape[0];
-    unsigned cols = w_npy.shape[1];
+    unsigned cols = w_npy.shape.size() == 2 ? w_npy.shape[1] : 1;
 
     auto* loaded_data = w_npy.data<Numeric>();
 
@@ -39,7 +39,6 @@ TArray2d load_data_vector(cnpy::NpyArray &w_npy) {
 
 TArray2d_uptr tvb::npz2Matrixd(const std::string& filename, const std::string& index) {
     cnpy::NpyArray w_npy = cnpy::npz_load(filename, index);
-    assert(w_npy.shape.size() == 2);
     if (w_npy.word_size == sizeof(float)) return load_data_matrix<float>(w_npy);
     else if (w_npy.word_size == sizeof(double )) return load_data_matrix<double>(w_npy);
     else throw std::runtime_error(string_format("Unknown data format for file <%s>", filename.c_str()));
@@ -47,7 +46,6 @@ TArray2d_uptr tvb::npz2Matrixd(const std::string& filename, const std::string& i
 
 TArray2d_uptr tvb::npy2Matrixd(const std::string& filename) {
     cnpy::NpyArray w_npy = cnpy::npy_load(filename);
-    assert(w_npy.shape.size() == 2);
     if (w_npy.word_size == sizeof(float)) return load_data_matrix<float>(w_npy);
     else if (w_npy.word_size == sizeof(double )) return load_data_matrix<double>(w_npy);
     else throw std::runtime_error(string_format("Unknown data format for file <%s>", filename.c_str()));
