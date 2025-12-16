@@ -1,4 +1,4 @@
-### Beware: this is aplha code at best
+### Beware: this is alpha code at best
 
 This is an attempt to implement the core functionality of [The Virtual Brain](https://www.thevirtualbrain.org/tvb/zwei/brainsimulator-software) brain simulator [root](https://github.com/the-virtual-brain/tvb-root) project in C++.
 
