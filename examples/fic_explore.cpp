@@ -40,6 +40,7 @@
 
 using namespace boost::program_options;
 using namespace std::filesystem;
+using std::string;
 using namespace tvb;
 using namespace std::chrono;
 
